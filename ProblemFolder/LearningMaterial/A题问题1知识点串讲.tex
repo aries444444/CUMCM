@@ -1,0 +1,392 @@
+\documentclass[12pt,a4paper]{ctexart}
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{geometry}
+\usepackage{enumitem}
+\usepackage{xcolor}
+\usepackage[hidelinks]{hyperref}
+\geometry{margin=2.5cm}
+\setlength{\parskip}{0.5em}
+\setlength{\parindent}{2em}
+\linespread{1.25}
+
+\title{\bfseries 2026 CUMCM A 题 问题 1 知识点串讲\\——从题目到解法的完整推演}
+\author{仅覆盖问题 1（预热平衡阶段）\\（配合同目录《A题物理化学补习指南》使用）}
+\date{2026 年 9 月}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+本文以问题 1 为主线，按「读题 $\to$ 几何简化 $\to$ 物理图像 $\to$ 三大定律 $\to$ 方程组装 $\to$ 无量纲判据 $\to$ 量级估计 $\to$ 数值求解 $\to$ 验证与提交」的顺序，把第一问用到的全部知识点串成一条链。每一节都从一个具体问题出发，引出解决问题所需的知识，逐步推到最终的数学模型与求解方案。文中数值均来自实际计算（守恒型有限差分 $+$ Crank--Nicolson，已与 Bessel 级数解析解核对），可直接对照论文结果做 sanity check。
+\end{abstract}
+
+\tableofcontents
+\newpage
+
+%=====================================================================
+\section{读题：问题 1 到底要我们做什么}
+
+问题 1 的场景可以压缩成三句话：
+
+\begin{enumerate}[leftmargin=2.5em]
+\item 一根\textbf{长圆柱药材}（长 25\,cm、半径 2\,cm），初始状态\textbf{处处均匀}：温度 $T=28\,^\circ$C，水分浓度 $C=2.55$\,kg/kg；
+\item 药材被放进烘房，烘房的热湿环境\textbf{随时间变化}，由附件 1 给出（0--14400\,s，每 60\,s 一个点）；
+\item 要求预测\textbf{前 30\,min（0--1800\,s）内药材内部每一点的温度 $T(r,t)$ 与水分浓度 $C(r,t)$}，按表 1、表 2 的格式给出 7 个时刻 $\times$ 5 个半径位置的数值，并把每隔 1\,s、每隔 0.1\,cm 的完整结果写入 result1.xlsx（保留 4 位小数）。
+\end{enumerate}
+
+题目称这一阶段为\textbf{预热平衡阶段}，对应干燥工程中的「干燥三阶段」之一——预热段：药材升温快、失水少，热量主要用来提高药材自身温度。这条工程直觉先放在这里，本文结尾会用计算结果验证它。
+
+先把边界条件的数据看清楚。附件 1 前 1800\,s 的实际数据（已核对）：
+
+\begin{center}
+\begin{tabular}{lccc}
+\toprule
+时间 $t$/s & 0 & 600 & 1800 \\
+\midrule
+烘房温度 $T_{\mathrm{air}}/\,^\circ$C & 28.000 & 33.202 & 41.513 \\
+烘房水分浓度 $C_{\mathrm{air}}$/(kg/kg) & 0.01963 & 0.02428 & 0.03307 \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+两点观察：(1) 30\,min 内烘房只从 28\,$^\circ$C 升到 41.5\,$^\circ$C，驱动力（温差）是\textbf{逐渐增大}的，不是常数；(2) 烘房空气始终较干（$C_{\mathrm{air}}\approx0.02\sim0.03$），远低于药材的初始水分 2.55——这意味着表面水分有向外蒸发的驱动。
+
+\section{第一刀：几何简化——从三维圆柱到一维轴对称}
+
+\textbf{问}：药材是三维圆柱，直接建三维模型吗？
+
+\textbf{答}：不需要。圆柱长 25\,cm、半径 2\,cm，长径比 $L/R=12.5$；两端面的总面积只占药材总表面积的
+\[
+\frac{2\pi R^2}{2\pi RL}=\frac{R}{L}\approx 8\%,
+\]
+端部传热传质只占约 $8\%$，在本题精度（4 位小数、工程量级）下可忽略。于是：
+
+\begin{center}
+\fbox{\parbox{0.85\textwidth}{\textbf{知识点 1（几何简化 / 维数分析）}：忽略端部效应，场量只沿半径方向变化，$T=T(r,t)$、$C=C(r,t)$，求解域由三维柱体降为一维区间 $0\le r\le R=0.02$\,m（轴对称）。论文中作为基本假设列出，并注明 $8\%$ 的误差量级。}}
+\end{center}
+
+降维之后，未知函数从三维场变成只含两个自变量 $(r,t)$ 的函数——这是后面一切求解的前提。
+
+\section{第二刀：物理图像——两条输运链}
+
+\textbf{问}：热量是怎么进去的？水分是怎么出来的？
+
+\textbf{答}：两个物理过程各是一条「三段式」的链：
+
+\begin{itemize}[leftmargin=2.5em]
+\item \textbf{热量链}：烘房热空气 $\xrightarrow{\text{对流}}$ 药材表面 $\xrightarrow{\text{热传导}}$ 药材内部。温度由外向内渗透。
+\item \textbf{水分链}：药材内部 $\xrightarrow{\text{扩散}}$ 药材表面 $\xrightarrow{\text{对流传质}}$ 烘房空气。水分由内向外排出。
+\end{itemize}
+
+\begin{center}
+\fbox{\parbox{0.85\textwidth}{\textbf{知识点 2（传递现象的「三段式」结构）}：任何输运过程都由「\textbf{驱动力}（温差 / 浓度差）$\to$ \textbf{通量定律}（傅里叶 / 菲克 / 牛顿）$\to$ \textbf{守恒律}（能量守恒 / 质量守恒）」三件套构成。传热与传质\textbf{完全同构}：$T\leftrightarrow C$，$\alpha\leftrightarrow D$，$k\leftrightarrow\rho D$，$h\leftrightarrow h_m$。学会一套，两处通用——问题 1 的两个方程可以共用一个求解器。}}
+\end{center}
+
+接下来的任务就是把这两条链各自翻译成数学：每条链需要一个\textbf{体内控制方程}（守恒律 $+$ 通量定律）和一个\textbf{表面边界条件}（通量连续）。
+
+\section{热量链：从傅里叶定律到热传导方程}
+
+\subsection{知识点 3：傅里叶导热定律}
+
+热量沿温度梯度从高温流向低温，热流密度与梯度成正比：
+\begin{equation}
+q=-k\,\nabla T,
+\end{equation}
+$k$ 为热传导系数。本题 $k=0.36$\,W/(m$\cdot$K)——比金属（铜约 400）小三个量级，接近植物组织。第一个物理直觉：\textbf{这药材导热很慢}，热量渗透需要时间。
+
+\subsection{知识点 4：热传导方程（微元体能量守恒）}
+
+在药材内部取一个微元体，做能量守恒：\textbf{净流入的热量 $=$ 微元体储存的热量}。流入由傅里叶定律给出，储存表现为温度升高（比热容 $c_p$：单位质量升温 1\,K 所需热量）：
+\begin{equation}
+\rho\,c_p\,\frac{\partial T}{\partial t}=\nabla\cdot(k\nabla T),
+\label{eq:heat}
+\end{equation}
+系数物理解读：$\rho c_p$ 是「热惯性」（升温需要的能量储备），$k$ 是「导热能力」。物性为常数时化为
+\begin{equation}
+\frac{\partial T}{\partial t}=\alpha\,\nabla^2 T,\qquad \alpha=\frac{k}{\rho c_p},
+\end{equation}
+$\alpha$ 称\textbf{热扩散率}，是「温度传播速度」的唯一指标。本题 $\alpha=0.36/(820\times2600)\approx1.7\times10^{-7}$\,m$^2$/s。
+
+\subsection{知识点 5：牛顿冷却定律与第三类边界条件}
+
+\textbf{问}：表面温度是已知的吗？不是——表面温度由「内部导热供给的热 $=$ 表面被空气带走的热」这个\textbf{供需平衡}隐式决定。这是\textbf{第三类（Robin）边界条件}，与给定表面温度的 Dirichlet 条件、给定热流的 Neumann 条件并列：
+
+\begin{equation}
+-k\frac{\partial T}{\partial r}\bigg|_{r=R}=h\,\big(T(R,t)-T_{\mathrm{air}}(t)\big),
+\label{eq:bcT}
+\end{equation}
+$h=25$\,W/(m$^2\cdot$K) 为对流换热系数（牛顿冷却定律 $q_{\mathrm{conv}}=h(T_{\mathrm{air}}-T_s)$ 中的比例常数），对应低速热风的量级。注意 $T_{\mathrm{air}}(t)$ 是\textbf{随时间变化的已知函数}——这是问题 1 区别于教科书例题的地方。
+
+\section{水分链：从干基含水率到扩散方程}
+
+\subsection{知识点 6：干基含水率——为什么水分浓度用这个定义}
+
+题目中的水分浓度是\textbf{干基含水率}：
+\begin{equation}
+C=\frac{m_{\text{水}}}{m_{\text{绝干料}}},\qquad \text{单位 kg/kg（无量纲）}.
+\end{equation}
+\textbf{问}：为什么干燥工程用干基而不是湿基（$w=m_{\text{水}}/(m_{\text{水}}+m_{\text{干料}})$）？
+
+\textbf{答}：干燥过程中\textbf{绝干料质量不变}，用干基写质量守恒最简洁；湿基的分母本身在变。初始 $C=2.55$\,kg/kg 意味着每 1\,kg 干药材含 2.55\,kg 水，换算成湿基 $2.55/3.55\approx72\%$——这是\textbf{鲜药材}，含水量很高。
+
+这里还有一个容易被忽略的\textbf{量纲自洽点}：$C$ 无量纲，对流传质系数 $h_m=8\times10^{-7}$\,m/s，所以边界条件
+\[
+-D\frac{\partial C}{\partial r}=h_m(C-C_{\mathrm{air}})
+\]
+两侧量纲同为 (kg/kg)$\cdot$m/s，\textbf{不需要再乘密度}。这正是题目选用干基含水率当「浓度」的原因。
+
+\subsection{知识点 7：菲克定律与扩散方程}
+
+水分在药材内部靠\textbf{浓度梯度驱动}的扩散运动，与傅里叶定律完全同构：
+\begin{equation}
+J=-D\,\nabla C,\qquad \frac{\partial C}{\partial t}=\nabla\cdot(D\nabla C),
+\end{equation}
+$J$ 为水分通量，$D$ 为水分扩散系数。常数 $D$ 时就是熟悉的扩散方程 $\partial C/\partial t=D\nabla^2 C$。
+
+\subsection{知识点 8：对流传质边界条件}
+
+表面水分通量由「内部扩散送到表面的水 $=$ 表面蒸发进空气的水」给出，同样是第三类边界：
+\begin{equation}
+-D\frac{\partial C}{\partial r}\bigg|_{r=R}=h_m\,\big(C(R,t)-C_{\mathrm{air}}(t)\big),
+\label{eq:bcC}
+\end{equation}
+$C_{\mathrm{air}}(t)$ 同样来自附件 1、随时间变化。
+
+\subsection{知识点 9：非线性扩散系数——问题 1 的核心难点与关键简化}
+
+题目给出的扩散系数是浓度$C$的函数：
+\begin{equation}
+D=7\times10^{-9}\,e^{-0.89/C}\quad (\text{m}^2/\text{s}),
+\label{eq:D1}
+\end{equation}
+所以扩散方程是\textbf{拟线性抛物方程}，没有一般解析解，必须数值求解。注意两个事实：
+
+\begin{enumerate}[leftmargin=2.5em]
+\item $D$ 随 $C$ 下降而\textbf{减小}：$C=2.55$ 时 $D\approx4.9\times10^{-9}$，$C=0.15$ 时 $D\approx1.9\times10^{-11}$，相差两个多量级——越干扩散越慢，符合降速干燥阶段干燥速率持续下降的物理直觉（问题 2--4 的 $e^{-0.45/C}$、$e^{-0.30/C}$ 同此规律）；
+\item \textbf{$D$ 只含 $C$、不含 $T$}，且问题 1 其余物性全是常数（附录 2）——因此\textbf{热方程与质方程解耦}：温度方程独立求解，解出 $C$ 后再解水分方程即可。
+\end{enumerate}
+
+\begin{center}
+\fbox{\parbox{0.85\textwidth}{\textbf{关键洞察}：问题 1 本质上是\textbf{两个彼此独立的圆柱一维抛物问题}（一个线性、一个拟线性）。对比问题 2：$D$ 含 $T$ 且 $\rho,c_p,k$ 全随 $C$ 变，热质\textbf{双向耦合}，必须交错迭代。问题 1 是本题中最「温和」的一问，正适合用来建立和验证整套数值框架。}}
+\end{center}
+
+\section{组装：问题 1 的完整数学模型}
+
+\subsection{知识点 10：圆柱轴对称坐标系}
+
+轴对称（场量与角度、轴向无关）时，拉普拉斯算子为
+\begin{equation}
+\nabla^2=\frac{1}{r}\frac{\partial}{\partial r}\bigg(r\frac{\partial}{\partial r}\bigg).
+\end{equation}
+
+把三大定律装进圆柱坐标系，问题 1 的完整数学模型为：
+
+\begin{equation}
+\boxed{\;\rho c_p\frac{\partial T}{\partial t}=\frac{1}{r}\frac{\partial}{\partial r}\bigg(r\,k\,\frac{\partial T}{\partial r}\bigg),\quad 0<r<R,\;t>0\;}
+\label{eq:modelT}
+\end{equation}
+\begin{equation}
+\boxed{\;\frac{\partial C}{\partial t}=\frac{1}{r}\frac{\partial}{\partial r}\bigg(r\,D(C)\,\frac{\partial C}{\partial r}\bigg),\quad D(C)=7\times10^{-9}e^{-0.89/C}\;}
+\label{eq:modelC}
+\end{equation}
+
+初始条件（药材初始均匀）：
+\begin{equation}
+T(r,0)=28\,^\circ\text{C},\qquad C(r,0)=2.55\;\text{kg/kg},\qquad 0\le r\le R.
+\end{equation}
+
+边界条件：
+\begin{itemize}[leftmargin=2.5em]
+\item \textbf{中心} $r=0$：轴对称（第二类齐次边界）
+\begin{equation}
+\frac{\partial T}{\partial r}\bigg|_{r=0}=0,\qquad \frac{\partial C}{\partial r}\bigg|_{r=0}=0;
+\end{equation}
+\item \textbf{表面} $r=R=0.02$\,m：对流传热/传质（第三类边界，式 \eqref{eq:bcT}、\eqref{eq:bcC}），其中 $T_{\mathrm{air}}(t)$、$C_{\mathrm{air}}(t)$ 由附件 1 数据\textbf{线性插值}给出（数据每 60\,s 一个点，插值后再代入边界，切忌当作阶跃函数）。
+\end{itemize}
+
+\section{建模路线判据：三个无量纲数}
+
+方程建好了，先别急着解。三个无量纲数回答三个「怎么建才合适」的问题。
+
+\subsection{知识点 11：毕渥数 Bi——能不能偷懒用集总参数法？}
+
+\textbf{问}：能不能假设药材内部温度处处均匀（一个 ODE 就完事）？
+
+\textbf{答}：用\textbf{毕渥数}判断：$\mathrm{Bi}=$ 内部导热阻力 $/$ 表面对流阻力 $=hL_c/k$（特征长度 $L_c=V/A=R/2=0.01$\,m）。本题
+\begin{equation}
+\mathrm{Bi}=\frac{25\times0.01}{0.36}\approx0.69\quad(\text{或按 }hR/k\text{ 计为 }1.39)\;\gg\;0.1,
+\end{equation}
+远超集总参数法的适用门槛（$\mathrm{Bi}\ll0.1$）——\textbf{内部温度梯度不可忽略，必须解 PDE}。这就是「问题 1 为什么必须建立分布参数模型」的定量回答，也是论文的标准起手式。
+
+\subsection{知识点 12：傅里叶数 Fo——30 分钟意味着什么？}
+
+\textbf{问}：题目为什么卡 1800\,s 输出？
+
+\textbf{答}：用\textbf{傅里叶数} $\mathrm{Fo}=\alpha t/R^2$ 看时间尺度。热渗透时间
+\begin{equation}
+\frac{R^2}{\alpha}=\frac{4\times10^{-4}}{1.7\times10^{-7}}\approx2400\;\text{s}\approx40\;\text{min},
+\end{equation}
+而 $\mathrm{Fo}(1800\,\text{s})\approx0.76<1$——\textbf{30\,min 结束时热量刚好渗透到中心}。这正是捕捉「温度由外向内传播」过程的窗口期：算 10\,s 内部纹丝不动，算 2\,h 则内外趋同，都看不到传播过程。1800\,s 的输出要求恰好把传播过程完整覆盖。
+
+\subsection{知识点 13：对流传质毕渥数 $\mathrm{Bi}_m$——水分结果的形态预告}
+
+对流传质对应地有 $\mathrm{Bi}_m=h_mR/D$。取初始 $D\approx4.9\times10^{-9}$：
+\begin{equation}
+\mathrm{Bi}_m=\frac{8\times10^{-7}\times0.02}{4.9\times10^{-9}}\approx3.2\;>\;1,
+\end{equation}
+表明\textbf{内部扩散阻力仍占主导}（$\mathrm{Bi}_m>1$）：表面水分逐渐跟随烘房浓度下降，但干燥速率由\textbf{内部扩散}控制。预告：水分变化将集中在表面薄层，内部几乎不动——与下一节的量级估计相互印证。
+
+\section{量级估计：动手求解前先预测结果长什么样}
+
+数学建模的规矩：\textbf{先估计、后求解}，解出来才知道对不对。
+
+\begin{enumerate}[leftmargin=2.5em]
+\item \textbf{温度渗透深度}：$\sqrt{\alpha t}\big|_{1800\,\text{s}}=\sqrt{1.7\times10^{-7}\times1800}\approx1.7$\,cm$\approx R$。温度在 30\,min 内刚好「走」到中心。
+\item \textbf{水分渗透深度}：$\sqrt{Dt}\big|_{1800\,\text{s}}=\sqrt{4.9\times10^{-9}\times1800}\approx3.0$\,mm。水分在 30\,min 内只动表面约 3\,mm 的薄层，\textbf{中心水分纹丝不动}。
+\end{enumerate}
+
+结合附件 1（烘房 1800\,s 才升到 41.5\,$^\circ$C），可以预告：表 1 的数值应全部落在 $[28,41.5]$\,$^\circ$C 之间、由表面向中心递减且中心刚启动；表 2 中心为 2.5500 不动、表面明显下降。实际数值计算结果如下（守恒型有限差分 $+$ Crank--Nicolson，$\Delta r=0.1$\,cm、$\Delta t=1$\,s；温度场已与 Bessel 级数解析解核对至 4 位小数，见第 8.2 节）：
+
+\begin{center}
+\textbf{表 1 预览：30 分钟内药材的温度（$^\circ$C）}
+\begin{tabular}{lccccc}
+\toprule
+时间/s & \multicolumn{5}{c}{到药材中心的距离/cm} \\
+ & 0 & 0.5 & 1 & 1.5 & 2 \\
+\midrule
+100 & 28.0001 & 28.0004 & 28.0041 & 28.0326 & 28.1788 \\
+300 & 28.0412 & 28.0638 & 28.1516 & 28.3678 & 28.8473 \\
+600 & 28.4539 & 28.5365 & 28.8042 & 29.3157 & 30.1645 \\
+900 & 29.3249 & 29.4587 & 29.8757 & 30.6160 & 31.7301 \\
+1200 & 30.5432 & 30.7102 & 31.2226 & 32.1125 & 33.4273 \\
+1500 & 31.9961 & 32.1870 & 32.7662 & 33.7463 & 35.1206 \\
+1800 & 33.5755 & 33.7722 & 34.3643 & 35.3622 & 36.7855 \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\begin{center}
+\textbf{表 2 预览：30 分钟内药材的水分浓度（kg/kg）}
+\begin{tabular}{lccccc}
+\toprule
+时间/s & \multicolumn{5}{c}{到药材中心的距离/cm} \\
+ & 0 & 0.5 & 1 & 1.5 & 2 \\
+\midrule
+100 & 2.5500 & 2.5500 & 2.5500 & 2.5500 & 2.2841 \\
+300 & 2.5500 & 2.5500 & 2.5500 & 2.5486 & 2.0595 \\
+600 & 2.5500 & 2.5500 & 2.5500 & 2.5340 & 1.8767 \\
+900 & 2.5500 & 2.5500 & 2.5495 & 2.5035 & 1.7509 \\
+1200 & 2.5500 & 2.5500 & 2.5478 & 2.4638 & 1.6527 \\
+1500 & 2.5500 & 2.5499 & 2.5439 & 2.4198 & 1.5714 \\
+1800 & 2.5500 & 2.5496 & 2.5375 & 2.3745 & 1.5018 \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+两组数字与量级估计完全吻合：温度由外向内逐层渗透，中心 1800\,s 时才开始升温（33.6\,$^\circ$C）；水分变化集中在表面约 5\,mm 的薄层内（$r=1$\,cm 处仅从 2.5500 降到 2.5375，中心 2.5500 分毫未动），且表面浓度的降幅越到后期越缓——这正是 $D$ 随 $C$ 减小而减小的直接体现。这同时验证了开头的工程直觉：\textbf{预热阶段升温快、失水少且失水仅限表面薄层}。
+
+\section{求解方案：有限差分 + Crank--Nicolson}
+
+\subsection{知识点 14：为什么解析解不够用}
+
+\textbf{问}：这个方程有解析解吗？
+
+\textbf{答}：分情况。(1) 若烘房条件为\textbf{常数}且 $D$ 冻结为常数，温度方程可用\textbf{分离变量法}求得 Bessel 级数解：
+\begin{equation}
+T(r,t)=T_{\mathrm{air}}+(T_0-T_{\mathrm{air}})\sum_{n=1}^{\infty}A_n J_0\!\Big(\frac{\beta_n r}{R}\Big)e^{-\alpha\beta_n^2 t/R^2},
+\end{equation}
+其中 $\beta_n$ 是特征方程 $\beta J_1(\beta)=\mathrm{Bi}\,J_0(\beta)$ 的根，$A_n=\dfrac{2J_1(\beta_n)}{\beta_n\big(J_0^2(\beta_n)+J_1^2(\beta_n)\big)}$；时变边界还可用\textbf{Duhamel 原理}（叠加原理）处理——这是数学背景建模者的加分项。(2) 但问题 1 同时有\textbf{时变边界}（附件 1）和\textbf{非线性 $D(C)$}（式 \eqref{eq:D1}），解析式不闭合。因此实用解走数值路线，解析解降级为\textbf{验证锚点}。
+
+\subsection{知识点 15：空间离散——圆柱的守恒型格式}
+
+圆柱扩散项要写成\textbf{通量守恒形式}再离散（先对控制体积分，再差商），不能直接对 $1/r$ 项做中心差分——后者在 $r=0$ 处爆炸。内部节点 $i$（$r_i=i\Delta r$）：
+\begin{equation}
+\frac{1}{r}\frac{\partial}{\partial r}\bigg(r\frac{\partial u}{\partial r}\bigg)\bigg|_{r_i}\approx
+\frac{r_{i+1/2}(u_{i+1}-u_i)-r_{i-1/2}(u_i-u_{i-1})}{r_i\,\Delta r^2},\qquad r_{i\pm1/2}=\big(i\pm\tfrac12\big)\Delta r.
+\end{equation}
+
+\subsection{知识点 16：$r=0$ 的奇性处理}
+
+中心点用对称性 $\partial u/\partial r=0$ 加洛必达法则：$(1/r)\partial(ru_r)/\partial r\to 2\,\partial^2u/\partial r^2$，离散为
+\begin{equation}
+\frac{4\,(u_1-u_0)}{\Delta r^2}.
+\end{equation}
+
+\subsection{知识点 17：时间推进——显式的陷阱与隐式的解药}
+
+显式 Euler 在圆柱中心处有稳定性上限 $\Delta t\le\Delta r^2/(2\alpha)$；取 $\Delta r=1$\,mm 时 $\Delta t\le3$\,s，要输出 1\,s 间隔则贴边不稳。改用\textbf{Crank--Nicolson}：无条件稳定、时间二阶精度，代价是每步解一个三对角线性方程组——用\textbf{Thomas 追赶法}，21 个节点瞬解。离散时间步为
+\begin{equation}
+\frac{u^{n+1}-u^n}{\Delta t}=\frac12\big(\mathcal{L}u^{n+1}+\mathcal{L}u^n\big),
+\end{equation}
+$\mathcal{L}$ 为式 \eqref{eq:modelT}/\eqref{eq:modelC} 右端的离散算子（含边界贡献）。
+
+网格选取：$\Delta r=0.1$\,cm 与输出格点（0, 0.5, $\ldots$, 2\,cm）完全重合，$\Delta t=1$\,s 与输出时刻完全重合，计算结果\textbf{直接落表，无需插值}。
+
+\subsection{知识点 18：非线性系数的处理——系数滞后迭代}
+
+$D(C)$ 用\textbf{上一时刻的浓度}计算（系数滞后），每步仍解线性三对角系统：
+\begin{equation}
+D_i^n=D(C_i^n)\;\Longrightarrow\;C^{n+1}\text{ 由线性方程组求出}.
+\end{equation}
+1800\,s 内表面 $C$ 从 2.55 降到约 1.50，$D$ 由 $4.9\times10^{-9}$ 缓降至约 $3.9\times10^{-9}$，是平滑函数，滞后误差可忽略；如需更高精度可在每步内做 1--2 次 Picard 迭代。
+
+\subsection{知识点 19：时变边界条件的插值}
+
+附件 1 每 60\,s 一个数据点，用线性插值得到任意 $t$ 的 $T_{\mathrm{air}}(t)$、$C_{\mathrm{air}}(t)$ 代入边界条件（式 \eqref{eq:bcT}、\eqref{eq:bcC}），\textbf{切忌}把离散数据当阶跃函数使用。
+
+\section{验证与提交：论文的硬通货}
+
+\subsection{验证清单}
+
+\begin{enumerate}[leftmargin=2.5em]
+\item \textbf{解析锚点}：烘房条件取常数（如 $T_{\mathrm{air}}\equiv41.513\,^\circ$C）、$D$ 冻结时，数值解与 Bessel 级数解对比。实测：$t=1800$\,s 处中心 37.8046\,$^\circ$C vs 解析 37.8050\,$^\circ$C，表面 39.4487 vs 39.4483——\textbf{4 位小数吻合}。
+\item \textbf{网格收敛}：$\Delta r$、$\Delta t$ 同步减半，解的变化小于 1\%。
+\item \textbf{质量守恒}：药材总水量减少量 $=$ 表面累计通量 $\iint h_m(C_s-C_{\mathrm{air}})\,\mathrm{d}A\,\mathrm{d}t$（数值验证两边相等）。
+\item \textbf{渐近行为}：边界取常数时，$t\to\infty$ 有 $T\to T_{\mathrm{air}}$、$C\to C_{\mathrm{air}}$。
+\item \textbf{量级直觉}：$\sqrt{\alpha t}\approx1.7$\,cm、$\sqrt{Dt}\approx3.0$\,mm 与表 1、表 2 形态一致（第 6 节已给出）。
+\end{enumerate}
+
+\subsection{提交格式}
+
+表 1、表 2 按题目模板给出 7 行 $\times$ 5 列、保留 4 位小数；result1.xlsx 含「温度」「水分浓度」两个工作表：A 列为时间（1--1800\,s，间隔 1\,s），第 1 行为到药材中心的距离（0:0.1:2\,cm，共 21 列），全部保留 4 位小数。
+
+\section{一句话总结}
+
+\textbf{问题 1 = 两个解耦的圆柱一维抛物问题 + 时变 Robin 边界 + 非线性扩散系数}。几何上靠长径比降维，物理上靠「傅里叶 $+$ 菲克 $+$ 牛顿」三大定律建模，路线上靠 Bi 数判定必须用 PDE、靠 Fo 数理解 30\,min 的时间尺度、靠 $\mathrm{Bi}_m$ 预告水分形态，数值上靠守恒型有限差分 $+$ Crank--Nicolson $+$ Thomas 求解，最后靠 Bessel 解析解、网格收敛、质量守恒与量级估计四重验证。解出来的表 1、表 2 恰好复现了「预热段升温快、失水少、失水仅限表面薄层」的工程直觉——模型、数值、直觉三者闭环。
+
+\section*{附录：知识点总表}
+\addcontentsline{toc}{section}{附录：知识点总表}
+
+\begin{center}
+\small
+\begin{tabular}{clll}
+\toprule
+编号 & 知识点 & 学科 & 在问题 1 中的作用 \\
+\midrule
+1 & 几何简化 / 维数分析 & 建模方法 & 三维柱体降为一维轴对称 \\
+2 & 传递现象「三段式」与热质类比 & 传递原理 & 建立物理图像；一套求解器通吃 \\
+3 & 傅里叶导热定律 & 传热学 & 热通量定律（$k=0.36$ 导热慢） \\
+4 & 热传导方程 & 传热学 & 温度控制方程（能量守恒） \\
+5 & 牛顿冷却定律 / 第三类边界 & 传热学 & 表面热边界（时变 $T_{\mathrm{air}}(t)$） \\
+6 & 干基含水率 & 干燥工程 & 状态变量定义；量纲自洽 \\
+7 & 菲克定律 / 扩散方程 & 传质学 & 水分控制方程（质量守恒） \\
+8 & 对流传质系数 & 传质学 & 表面质边界（时变 $C_{\mathrm{air}}(t)$） \\
+9 & 非线性扩散系数 $D(C)$ & 传质学 & 拟线性方程；热质解耦判据 \\
+10 & 圆柱坐标系与轴对称 & 数学物理 & 方程降维至 $(r,t)$ \\
+11 & 毕渥数 $\mathrm{Bi}$ & 传热学 & 判定必须用 PDE（$\approx0.69$） \\
+12 & 傅里叶数 $\mathrm{Fo}$ & 传热学 & 30\,min 时间尺度（$R^2/\alpha\approx40$\,min） \\
+13 & 传质毕渥数 $\mathrm{Bi}_m$ & 传质学 & 预告水分形态（表面薄层变化） \\
+14 & 分离变量 / Bessel 级数 / Duhamel & 数学物理 & 解析锚点与验证 \\
+15 & 守恒型有限差分 & 数值分析 & 圆柱扩散项空间离散 \\
+16 & $r=0$ 奇性处理 & 数值分析 & 中心点格式（洛必达） \\
+17 & Crank--Nicolson / Thomas & 数值分析 & 无条件稳定时间推进 \\
+18 & 系数滞后迭代 & 数值分析 & 非线性 $D(C)$ 处理 \\
+19 & 边界数据插值 & 数据处理 & 附件 1 进入边界条件 \\
+20 & 验证清单 & 建模规范 & 解析锚点 / 网格收敛 / 守恒 \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\end{document}

@@ -165,10 +165,10 @@ $h=25$\,W/(m$^2\cdot$K) 对应低速热风/自然对流量级（典型 5--100）
 注意量纲：$C$ 是 kg/kg（无量纲浓度），$h_m$ 是 m/s，方程两侧都是 (kg/kg)$\cdot$m/s，自洽——\textbf{不需要}再乘密度。这正是题面用「干基含水率」当浓度变量的原因。
 
 \subsection{非线性扩散——本题核心难点之一}
-题给 $D=7\times10^{-9}\,e^{-0.89C}$（问题 1）或 $D=2.4\times10^{-3}\,e^{-0.45C}\,e^{-3850/T}$（问题 2--4）：$D$ 是 $C$（和 $T$）的函数 $\Rightarrow$ 方程是\textbf{拟线性抛物方程}，必须数值求解；解析解只对「冻结 $D$」成立（可作验证）。
+题给 $D=7\times10^{-9}\,e^{-0.89/C}$（问题 1）或 $D=2.4\times10^{-3}\,e^{-0.45/C}\,e^{-3850/T}$（问题 2--4）：$D$ 是 $C$（和 $T$）的函数 $\Rightarrow$ 方程是\textbf{拟线性抛物方程}，必须数值求解；解析解只对「冻结 $D$」成立（可作验证）。注意 $C$ 在指数\textbf{分母}上：$D$ 随 $C$ 下降而减小，越干扩散越慢。
 
 \subsection{对流传质毕渥数 $\mathrm{Bi}_m=h_m R/D$}
-问题 1：$\mathrm{Bi}_m=8\times10^{-7}\times0.02\,/\,7\times10^{-10}\approx22\gg1$ $\Rightarrow$ 内部扩散阻力主导，表面 $C$ 很快趋近 $C_{\mathrm{air}}$（表面边界近似 Dirichlet）。这是很好的论文分析点。
+问题 1：$\mathrm{Bi}_m=8\times10^{-7}\times0.02\,/\,4.9\times10^{-9}\approx3.2>1$ $\Rightarrow$ 内部扩散阻力主导，表面 $C$ 较快趋近 $C_{\mathrm{air}}$，干燥由内部扩散控制。这是很好的论文分析点。
 
 \subsection{水分浓度 $C$ 的定义（干燥工程专用变量）}
 \begin{itemize}
@@ -197,7 +197,7 @@ $h=25$\,W/(m$^2\cdot$K) 对应低速热风/自然对流量级（典型 5--100）
 \end{itemize}
 
 \subsection{本题的模型如何自动体现三阶段}
-扩散$+$对流传质模型本身就会给出「表面先干、中心滞后」的行为。论文中结合模拟曲线讨论「预热段失水仅限表面约 1\,mm 薄层（$\sqrt{Dt}$ 估算）、恒温段速率趋稳、降速段指数衰减」会非常加分。
+扩散$+$对流传质模型本身就会给出「表面先干、中心滞后」的行为。论文中结合模拟曲线讨论「预热段失水仅限表面约 3\,mm 薄层（$\sqrt{Dt}$ 估算）、恒温段速率趋稳、降速段指数衰减」会非常加分。
 
 \section{模块 D：物理化学基础}
 
@@ -296,7 +296,7 @@ $\rho=650+128C$、$c_p=1450+2736\cdot C/(C+1)$、$k=0.21+0.38\cdot C/(C+1)$ 之�
 \text{热：}\quad 820\times2600\,\frac{\partial T}{\partial t}=\frac{1}{r}\frac{\partial}{\partial r}\Big(r\cdot0.36\cdot\frac{\partial T}{\partial r}\Big)
 \end{equation}
 \begin{equation}
-\text{质：}\quad \frac{\partial C}{\partial t}=\frac{1}{r}\frac{\partial}{\partial r}\Big(r\,D(C)\,\frac{\partial C}{\partial r}\Big),\qquad D=7\times10^{-9}\,e^{-0.89C}
+\text{质：}\quad \frac{\partial C}{\partial t}=\frac{1}{r}\frac{\partial}{\partial r}\Big(r\,D(C)\,\frac{\partial C}{\partial r}\Big),\qquad D=7\times10^{-9}\,e^{-0.89/C}
 \end{equation}
 \begin{align*}
 &\text{初值：}\ T(r,0)=28,\quad C(r,0)=2.55\\
@@ -308,7 +308,7 @@ $T_{\mathrm{air}}(t)$、$C_{\mathrm{air}}(t)$ 来自附件 1（离散数据插�
 
 \begin{itemize}
 \item \textbf{关键洞察}：$D$ 只含 $C$、物性全是常数 $\Rightarrow$ 热方程与质方程\textbf{解耦}，两个独立抛物线问题。
-\item 预期形态：1800\,s 内温度从外向内渗透（$\sqrt{\alpha t}\approx1.7$\,cm），水分只在表面约 1\,mm 薄层变化（$\sqrt{Dt}\approx1$\,mm），中心 $C$ 几乎不动。
+\item 预期形态：1800\,s 内温度从外向内渗透（$\sqrt{\alpha t}\approx1.7$\,cm），水分只在表面约 3\,mm 薄层变化（$\sqrt{Dt}\approx3$\,mm），中心 $C$ 几乎不动。
 \item \textbf{附件 1 实际数据}：前 1800\,s 烘房仅升至 $\approx29.7\,^\circ$C、$C_{\mathrm{air}}\approx0.021$ —— 预热初期驱动很弱，药材温度、水分变化都很小（可作为论文 sanity check：表 1 数值应非常接近初值）。
 \item 数学加分项：线性问题可用 Duhamel 原理$+$卷积处理时变烘房温度；常数边界下 $T$ 有 $J_0$ Bessel 级数解析解，$\beta_n$ 由 $\beta J_1(\beta)=\mathrm{Bi}\,J_0(\beta)$ 给出——用来验证数值解。
 \end{itemize}
@@ -318,7 +318,7 @@ $T_{\mathrm{air}}(t)$、$C_{\mathrm{air}}(t)$ 来自附件 1（离散数据插�
 \rho=650+128C,\quad c_p=1450+2736\cdot\frac{C}{C+1},\quad k=0.21+0.38\cdot\frac{C}{C+1}
 \end{equation}
 \begin{equation}
-D=2.4\times10^{-3}\,e^{-0.45C}\,e^{-3850/T}\quad \leftarrow\ T\ \text{用开尔文！}
+D=2.4\times10^{-3}\,e^{-0.45/C}\,e^{-3850/T}\quad \leftarrow\ T\ \text{用开尔文！}
 \end{equation}
 方程与边界同上（$h=25$、$h_m=8\times10^{-7}$ 沿用附录 2），初值 $T(r,0)=28$、$C(r,0)=2.55$（从头跑全程）。
 
@@ -341,7 +341,7 @@ D=2.4\times10^{-3}\,e^{-0.45C}\,e^{-3850/T}\quad \leftarrow\ T\ \text{用开尔�
 \rho=760+90C,\quad c_p=1850+2150\cdot\frac{C}{C+1},\quad k=0.12+0.20\cdot\frac{C}{C+1}
 \end{equation}
 \begin{equation}
-D=4.2\times10^{-4}\,e^{-0.30C}\,e^{-3850/T}
+D=4.2\times10^{-4}\,e^{-0.30/C}\,e^{-3850/T}
 \end{equation}
 域：$0\le r\le R(t)$，$R(t)$ 由附件 2 插值 $\Rightarrow$ Landau 变换 $\zeta=r/R(t)$（见第 7.5 节）。
 输出：表 6（每 6\,h $\times$ 0、0.5、$\ldots$、药材表面），result4.xlsx（每 60\,s $\times$ 每 0.1\,cm）。
@@ -360,7 +360,7 @@ D=4.2\times10^{-4}\,e^{-0.30C}\,e^{-3850/T}
 \item \textbf{解析锚点}：常数烘房条件下，$T(r,t)$ 与 $J_0$-Bessel 级数解对比（问题 1 冻结 $D$ 同理对比 $C$）。
 \item \textbf{渐近行为}：$t\to\infty$ 时 $T\to T_{\mathrm{air}}$、$C\to C_{\mathrm{air}}$（边界为常数时）。
 \item \textbf{量级直觉}：$\sqrt{\alpha t}$、$\sqrt{Dt}$ 渗透深度与曲线形态对照（30\,min 内水分只动表面薄层）。
-\item \textbf{Bi 数分析}：$\mathrm{Bi}\approx0.7$ $\Rightarrow$ 内部温度梯度不可忽略（呼应用 PDE 的必要性）；$\mathrm{Bi}_m\approx22$ $\Rightarrow$ 表面水分快速跟随烘房。
+\item \textbf{Bi 数分析}：$\mathrm{Bi}\approx0.7$ $\Rightarrow$ 内部温度梯度不可忽略（呼应用 PDE 的必要性）；$\mathrm{Bi}_m\approx3.2$ $\Rightarrow$ 内部扩散主导，表面水分较快跟随烘房。
 \end{enumerate}
 
 \section{补习路线图（按此顺序学，每天 3--4\,h）}
