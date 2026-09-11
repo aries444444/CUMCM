@@ -1,0 +1,290 @@
+\documentclass[12pt,a4paper]{ctexart}
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{geometry}
+\usepackage{enumitem}
+\usepackage{xcolor}
+\usepackage[hidelinks]{hyperref}
+\geometry{margin=2.5cm}
+\setlength{\parskip}{0.5em}
+\setlength{\parindent}{2em}
+\linespread{1.25}
+
+\title{\bfseries 梯度与散度：从向量场看懂热传导\\——2026 CUMCM A 题数学工具讲解}
+\author{配套《A题问题1知识点串讲》使用}
+\date{2026 年 9 月}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+热传导方程 $\rho c_p\,\partial T/\partial t=\nabla\cdot(k\nabla T)$ 中涉及两个场论算子：\textbf{梯度} $\nabla$ 与\textbf{散度} $\nabla\cdot$。本文给出二者的严格定义与基本命题，辅以一维退化情形与离散数值例子，最后指明它们在 A 题论文中的具体位置。文中出现的全部符号见第 \ref{sec:notation} 节符号表。
+\end{abstract}
+
+\tableofcontents
+\newpage
+
+%=====================================================================
+\section{预备：符号表与「场」的定义}
+\label{sec:notation}
+
+\subsection{符号表}
+
+\begin{center}
+\begin{tabular}{lll}
+\toprule
+符号 & 含义 & 单位（题面约定） \\
+\midrule
+$T=T(x,y,z,t)$ & 药材温度场（标量场） & $^\circ$C（代入经验公式时用 K） \\
+$C=C(x,y,z,t)$ & 水分浓度场（干基含水率，标量场） & kg/kg（无量纲） \\
+$\rho$ & 药材密度 & kg/m$^3$ \\
+$c_p$ & 比热容 & J/(kg$\cdot$K) \\
+$k$ & 热传导系数 & W/(m$\cdot$K) \\
+$D$ & 水分扩散系数 & m$^2$/s \\
+$\alpha$ & 热扩散率，$\alpha=k/(\rho c_p)$ & m$^2$/s \\
+$\vec{q}$ & 热流密度向量（单位时间、单位面积流过的热量） & W/m$^2$ \\
+$\vec{J}$ & 水分通量向量（单位时间、单位面积流过的水分量） & (kg/kg)$\cdot$m/s \\
+$h$ & 对流换热系数 & W/(m$^2\cdot$K) \\
+$h_m$ & 对流传质系数 & m/s \\
+$T_{\mathrm{air}}(t)$ & 烘房空气温度（附件 1 给定） & $^\circ$C \\
+$C_{\mathrm{air}}(t)$ & 烘房空气水分浓度（附件 1 给定） & kg/kg \\
+$R$ & 药材半径（问题 1 取 $R=0.02$） & m \\
+$\nabla$ & nabla 算子（向量微分算子），见定义 \ref{def:nabla} & --- \\
+$\nabla\cdot$ & 散度算子，见定义 \ref{def:div} & --- \\
+$\nabla^2$ & 拉普拉斯算子，见定义 \ref{def:lap} & --- \\
+$x,y,z$ & 直角坐标 & m \\
+$r,\theta,z$ & 柱坐标（$\theta$ 为方位角） & m, rad, m \\
+$r,\theta,\varphi$ & 球坐标（$\theta$ 为极角，$\varphi$ 为方位角） & m, rad, rad \\
+$\hat{\boldsymbol r}$ & 径向单位向量 & --- \\
+$\vec{F}$ & 一般向量场（讲解用），$\vec{F}=(F_x,F_y,F_z)$ & 视上下文 \\
+$V$, $\partial V$, $\mathrm{d}V$, $\mathrm{d}\vec{A}$ & 空间区域、其边界曲面、体积元、有向面积元 & --- \\
+$\Delta x$ & 一维离散节点间距 & m \\
+$T_0,T_1,T_2$ & 一维离散三个节点的温度值 & $^\circ$C \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\subsection{场}
+
+\textbf{定义（标量场）}：若对空间区域 $\Omega\subset\mathbb{R}^3$ 中每一点 $P$ 都指定一个实数 $u(P)$，则称 $u$ 为 $\Omega$ 上的标量场。本文的温度 $T$、水分浓度 $C$ 均为标量场。
+
+\textbf{定义（向量场）}：若对 $\Omega$ 中每一点 $P$ 都指定一个向量 $\vec{F}(P)$，则称 $\vec{F}$ 为 $\Omega$ 上的向量场。本文的热流密度 $\vec{q}$、水分通量 $\vec{J}$ 均为向量场。
+
+本文默认所有涉及的函数在其定义域内\textbf{连续可微}（$C^1$），涉及二阶导数的函数\textbf{二阶连续可微}（$C^2$），以便下述偏导数运算合法。
+
+%=====================================================================
+\section{梯度：标量场变化最快的方向}
+
+\subsection{定义}
+\label{def:grad}
+
+\textbf{定义（梯度）}：设标量场 $T$ 在点 $P$ 可微，则 $T$ 在 $P$ 处的梯度定义为偏导数组成的向量
+\begin{equation}
+\nabla T(P)=\Big(\frac{\partial T}{\partial x}(P),\ \frac{\partial T}{\partial y}(P),\ \frac{\partial T}{\partial z}(P)\Big).
+\label{eq:grad}
+\end{equation}
+为书写简洁，下文记 $\nabla T=\big(\partial_x T,\partial_y T,\partial_z T\big)$，其中 $\partial_x T:=\partial T/\partial x$。
+
+\subsection{基本命题：方向导数与等值面}
+
+\textbf{命题 1（方向导数公式）}：设 $\boldsymbol u$ 为任意单位向量，则 $T$ 沿 $\boldsymbol u$ 方向的方向导数为
+\begin{equation}
+D_{\boldsymbol u}T=\nabla T\cdot\boldsymbol u.
+\end{equation}
+特别地，当 $\boldsymbol u=\nabla T/|\nabla T|$ 时方向导数取最大值 $|\nabla T|$；即\textbf{梯度方向是 $T$ 增长最快的方向，$|\nabla T|$ 是最大增长率}。
+
+\textbf{命题 2（与等值面正交）}：若 $\nabla T(P)\neq 0$，则 $\nabla T(P)$ 与过 $P$ 的等值面 $S=\{X:T(X)=T(P)\}$ 正交。
+
+\textbf{直观解释（非严格）}：把 $T$ 想成地形海拔，等高线即等值线。$\nabla T$ 指向最陡上坡方向，$|\nabla T|$ 为坡度；沿等高线行走时 $D_{\boldsymbol u}T=0$，恰因 $\boldsymbol u$ 与 $\nabla T$ 垂直。
+
+\subsection{一维退化情形}
+
+一维时梯度退化为普通导数：$\nabla T=\mathrm{d}T/\mathrm{d}x$。其符号表示「沿 $x$ 正方向 $T$ 的增减」。
+
+\subsection{在 A 题中的角色：傅里叶导热定律}
+
+\textbf{定律（傅里叶导热定律，唯象定律）}：热流密度与温度梯度方向相反、大小成正比：
+\begin{equation}
+\vec{q}=-k\,\nabla T,
+\label{eq:fourier}
+\end{equation}
+其中比例系数 $k>0$ 为热传导系数。负号的必要性：$\nabla T$ 指向温度升高方向，而热量自高温流向低温。
+
+\textbf{轴对称情形（本题）}：圆柱径向对称下 $T$ 只依赖 $(r,t)$，梯度仅有径向分量
+\begin{equation}
+\nabla T=\frac{\partial T}{\partial r}\,\hat{\boldsymbol r},
+\qquad
+\vec{q}=-k\,\frac{\partial T}{\partial r}\,\hat{\boldsymbol r}.
+\label{eq:grad-cyl}
+\end{equation}
+
+\textbf{实例（解析验证）}：取 $T(x,y)=100-x^2-y^2$，则 $\nabla T=(-2x,-2y)$。在点 $(1,0)$ 处 $\nabla T=(-2,0)$，指向原点——即指向 $T$ 增长最快的方向；$\vec{q}=-k\nabla T=(2k,0)$ 背离原点，即热量自中心高温区向外流动，与式 \eqref{eq:fourier} 一致。
+
+\textbf{边界条件中的梯度}：表面 Robin 边界条件
+\begin{equation}
+-k\,\frac{\partial T}{\partial r}\bigg|_{r=R}=h\,\big(T(R,t)-T_{\mathrm{air}}(t)\big)
+\end{equation}
+左端是 $\vec{q}$ 在边界外法向 $\hat{\boldsymbol r}$ 上的分量（即表面热流），右端为对流传热量；该式断言二者相等——「内部导出的热等于空气带走的热」。中心处的对称条件 $\partial T/\partial r\big|_{r=0}=0$ 则断言中心处径向热流为零。
+
+%=====================================================================
+\section{散度：向量场在每个点的「净流出」}
+
+\subsection{定义}
+\label{def:div}
+
+\textbf{定义（散度）}：设向量场 $\vec{F}=(F_x,F_y,F_z)$ 在点 $P$ 可微，则 $\vec{F}$ 在 $P$ 处的散度为标量
+\begin{equation}
+\nabla\cdot\vec{F}\,(P)=\frac{\partial F_x}{\partial x}(P)+\frac{\partial F_y}{\partial y}(P)+\frac{\partial F_z}{\partial z}(P).
+\label{eq:div}
+\end{equation}
+
+\subsection{物理意义与散度定理}
+
+\textbf{命题 3（散度定理 / 高斯定理）}：设 $V\subset\mathbb{R}^3$ 为有界闭区域，其边界 $\partial V$ 分片光滑，$\vec{F}$ 在 $V$ 上连续可微，则
+\begin{equation}
+\oint_{\partial V}\vec{F}\cdot\mathrm{d}\vec{A}=\int_V \nabla\cdot\vec{F}\;\mathrm{d}V.
+\end{equation}
+
+\textbf{推论（散度的场论含义）}：$\nabla\cdot\vec{F}(P)$ 等于「穿过包围 $P$ 的闭曲面净流出的通量」除以「闭曲面所围体积」当体积收缩到 $P$ 时的极限，即\textbf{单位体积的净流出量}。据此：
+\begin{itemize}[leftmargin=2.5em]
+\item $\nabla\cdot\vec{F}(P)>0$：$P$ 是 $\vec{F}$ 的\textbf{源}（净流出）；
+\item $\nabla\cdot\vec{F}(P)<0$：$P$ 是 $\vec{F}$ 的\textbf{汇}（净流入）；
+\item $\nabla\cdot\vec{F}(P)=0$：$P$ 处无源无汇，出入平衡。
+\end{itemize}
+
+\subsection{一维退化情形}
+
+一维流场 $q(x)$ 的散度为 $\mathrm{d}q/\mathrm{d}x$。对微元 $[x,x+\Delta x]$，净流出 $=q(x+\Delta x)-q(x)\approx q'(x)\,\Delta x$；故 $q'(x)>0$ 表示该处存在「源」。
+
+\subsection{在 A 题中的角色：能量守恒方程}
+
+\textbf{推导}：对药材内任意微元体 $V$（边界 $\partial V$），能量守恒要求
+\begin{equation}
+\text{微元体内热量的增加率}=-\oint_{\partial V}\vec{q}\cdot\mathrm{d}\vec{A}
+=-\int_V\nabla\cdot\vec{q}\,\mathrm{d}V
+\end{equation}
+（最后一步用散度定理）。左端为 $\int_V\rho c_p\,\partial T/\partial t\,\mathrm{d}V$（$\rho c_p$ 为体积热容，即单位体积升温 1\,K 所需热量）。由于 $V$ 任意，被积函数相等，得
+\begin{equation}
+\rho c_p\frac{\partial T}{\partial t}=-\nabla\cdot\vec{q}=\nabla\cdot(k\nabla T).
+\label{eq:cons}
+\end{equation}
+此即热传导方程。$k$ 为常数时，由式 \eqref{eq:cons} 得
+\begin{equation}
+\frac{\partial T}{\partial t}=\alpha\,\nabla^2 T,\qquad \alpha=\frac{k}{\rho c_p},
+\label{eq:heat-alpha}
+\end{equation}
+其中 $\alpha$ 为热扩散率。
+
+\textbf{水分链同构}：以 $C$ 代 $T$、$D$ 代 $\alpha$、$\vec{J}=-D\nabla C$（菲克定律）代傅里叶定律，重复上述推导得扩散方程 $\partial C/\partial t=\nabla\cdot(D\nabla C)$。整个推导逐字平行，故本文以热量链为模板即可。
+
+%=====================================================================
+\section{复合算子：梯度再散度 $=$ 拉普拉斯}
+
+\subsection{定义}
+\label{def:lap}
+
+\textbf{定义（拉普拉斯算子）}：对标量场 $T$，
+\begin{equation}
+\nabla^2 T:=\nabla\cdot(\nabla T)
+\end{equation}
+即\textbf{先取梯度（得向量场），再取散度（得标量场）}。直角坐标下
+\begin{equation}
+\nabla^2 T=\frac{\partial^2 T}{\partial x^2}+\frac{\partial^2 T}{\partial y^2}+\frac{\partial^2 T}{\partial z^2}.
+\end{equation}
+
+\textbf{注}：$\nabla^2$ 只是算子复合 $\nabla\cdot\nabla$ 的记号，\textbf{不是} $\nabla T$ 的模方 $|\nabla T|^2$，更不是对每个分量平方。
+
+\subsection{基本命题：凹凸度判据}
+
+\textbf{命题 4（凹凸度）}：$\nabla^2 T(P)$ 的正负刻画 $T$ 在 $P$ 处相对其邻域平均值的凹凸：
+\begin{itemize}[leftmargin=2.5em]
+\item $\nabla^2 T(P)<0$：$P$ 处 $T$ 高于邻域平均值（局部凸起），由式 \eqref{eq:heat-alpha} 知 $\partial T/\partial t<0$，热量向外散、温度下降；
+\item $\nabla^2 T(P)>0$：$P$ 处 $T$ 低于邻域平均值（局部凹陷），$\partial T/\partial t>0$，热量汇聚、温度上升。
+\end{itemize}
+极限意义下，$\nabla^2 T(P)\propto \overline{T}_{\text{球邻域}}-T(P)$（球邻域平均值与中心值之差，比例系数随半径趋于零）——扩散方程就是「把场拉平」的过程。
+
+\subsection{离散数值例子（三个节点验证全链条）}
+
+取一维等距节点，间距 $\Delta x=1$，节点温度 $T_0=0,\ T_1=1,\ T_2=0$（中间热、两边冷）。设 $k$ 为常数，逐算子计算：
+
+\begin{enumerate}[leftmargin=2.5em]
+\item \textbf{梯度}（中央差分）：左半段 $\nabla T\approx\dfrac{T_1-T_0}{\Delta x}=1$（指向 $+x$），右半段 $\nabla T\approx\dfrac{T_2-T_1}{\Delta x}=-1$（指向 $-x$）；
+\item \textbf{热流}（式 \eqref{eq:fourier}）：左半段 $\vec{q}=-k$（沿 $-x$ 流出中间节点），右半段 $\vec{q}=+k$（沿 $+x$ 流出中间节点）——热量自中间向两侧散开；
+\item \textbf{散度}（守恒型）：中间节点单位体积净流出 $\approx\dfrac{q_{\text{右}}-q_{\text{左}}}{\Delta x}=2k>0$，中间节点是「源」；
+\item \textbf{温度变化}（式 \eqref{eq:cons}）：$\rho c_p\,\partial T/\partial t=-\nabla\cdot\vec{q}<0$，中间节点降温。
+\end{enumerate}
+
+直接算二阶中心差分 $\nabla^2 T\approx\dfrac{T_0-2T_1+T_2}{\Delta x^2}=-2<0$，与上述四步结果一致（凸起 $\Rightarrow$ 降温）。
+
+\subsection{柱坐标轴对称形式}
+
+\textbf{命题 5（轴对称拉普拉斯）}：设 $T=T(r,t)$ 与 $\theta,z$ 无关，则
+\begin{equation}
+\nabla^2 T=\frac{1}{r}\frac{\partial}{\partial r}\bigg(r\frac{\partial T}{\partial r}\bigg).
+\label{eq:cyl}
+\end{equation}
+该式保持了「内层梯度、外层散度」的结构：$r\,\partial_r T$ 为通量（差常数因子），$\frac{1}{r}\partial_r$ 为散度。数值离散应沿用此\textbf{守恒型}结构（先离散通量、再取通量差），若先展开为 $\partial_r^2 T+\frac{1}{r}\partial_r T$ 再差分，$1/r$ 项在 $r=0$ 无定义。
+
+%=====================================================================
+\section{回到 A 题：两个算子在论文中的位置}
+
+\begin{center}
+\begin{tabular}{p{4.6cm}p{2.6cm}p{8.6cm}}
+\toprule
+论文中的位置 & 算子 & 内容 \\
+\midrule
+傅里叶定律（式 \eqref{eq:fourier}） & 梯度 & $\vec{q}=-k\nabla T$：梯度决定热流方向与大小 \\
+菲克定律 & 梯度 & $\vec{J}=-D\nabla C$：与传热完全同构 \\
+微元体守恒（式 \eqref{eq:cons}） & 散度 & $\rho c_p\,\partial_t T=-\nabla\cdot\vec{q}$：散度决定升温速率 \\
+表面边界条件 & 梯度的法向分量 & $-k\,\partial_r T\big|_{r=R}=h\big(T-T_{\mathrm{air}}(t)\big)$ \\
+中心边界条件 & 梯度为零 & $\partial_r T\big|_{r=0}=0$（径向对称） \\
+守恒型差分格式 & 散度的离散版 & 通量差代替导数展开，规避 $r=0$ 奇性 \\
+质量守恒检验 & 散度定理 & 内部总水量减少量 $=$ 表面累计通量 \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\textbf{记忆口诀}：\textbf{梯度管「流向」，散度管「进出」，二者复合即为扩散}。温度场与水分浓度场各执行一次这条链，即得问题 1 的全部控制方程。
+
+%=====================================================================
+\section{常见误区}
+
+\begin{enumerate}[leftmargin=2.5em]
+\item \textbf{$\nabla^2 T\neq(\nabla T)^2=|\nabla T|^2$}。前者为算子复合（定义 \ref{def:lap}），后者为梯度向量模的平方。
+\item \textbf{$\Delta T$ 记号有歧义}。部分文献以 $\Delta$ 表示拉普拉斯算子，而中文语境中 $\Delta T$ 常指温差。论文中建议统一使用 $\nabla^2$。
+\item \textbf{算子的作用对象不可混淆}。$\nabla$ 作用于标量场得向量场（梯度）；$\nabla\cdot$ 作用于向量场得标量场（散度）；顺序「先 $\nabla$ 后 $\nabla\cdot$」不可颠倒。
+\item \textbf{两处负号不可丢}。式 \eqref{eq:fourier} 中热流与梯度反向；式 \eqref{eq:cons} 中净流出对应降温。二者相消后方程右端才为正的 $k\nabla^2 T$（$k$ 为常数时）。
+\item \textbf{物性为常数才能写 $\alpha\nabla^2 T$}。$k$ 随位置或温度变化时（问题 2--4，$k=k(C)$）必须保留守恒形式 $\nabla\cdot(k\nabla T)$。
+\item \textbf{柱坐标不能以 $\partial^2/\partial r^2$ 代替 $\frac{1}{r}\partial_r(r\,\partial_r)$}。后者在 $r=0$ 需用对称性与洛必达法则处理（$\lim_{r\to0}\frac{1}{r}\partial_r(r\,\partial_r T)=2\,\partial_r^2 T$）。
+\end{enumerate}
+
+%=====================================================================
+\section*{附录：三种坐标系公式速查}
+\addcontentsline{toc}{section}{附录：三种坐标系公式速查}
+
+以下 $\vec{F}=(F_r,F_\theta,F_z)$（柱坐标）或 $(F_r,F_\theta,F_\varphi)$（球坐标）为向量场的分量表示。
+
+\begin{center}
+\begin{tabular}{ll}
+\toprule
+\textbf{直角坐标} $(x,y,z)$ & \\
+梯度 & $\nabla T=\big(\partial_x T,\ \partial_y T,\ \partial_z T\big)$ \\
+散度 & $\nabla\cdot\vec{F}=\partial_x F_x+\partial_y F_y+\partial_z F_z$ \\
+拉普拉斯 & $\nabla^2 T=\partial_x^2 T+\partial_y^2 T+\partial_z^2 T$ \\
+\midrule
+\textbf{柱坐标} $(r,\theta,z)$（本题） & \\
+梯度 & $\nabla T=\big(\partial_r T,\ \tfrac{1}{r}\partial_\theta T,\ \partial_z T\big)$ \\
+散度 & $\nabla\cdot\vec{F}=\tfrac{1}{r}\partial_r(rF_r)+\tfrac{1}{r}\partial_\theta F_\theta+\partial_z F_z$ \\
+拉普拉斯 & $\nabla^2 T=\tfrac{1}{r}\partial_r(r\,\partial_r T)+\tfrac{1}{r^2}\partial_\theta^2 T+\partial_z^2 T$ \\
+轴对称（与 $\theta,z$ 无关） & $\nabla^2 T=\dfrac{1}{r}\dfrac{\partial}{\partial r}\Big(r\dfrac{\partial T}{\partial r}\Big)$ \\
+\midrule
+\textbf{球坐标} $(r,\theta,\varphi)$（备用） & \\
+梯度 & $\nabla T=\big(\partial_r T,\ \tfrac{1}{r}\partial_\theta T,\ \tfrac{1}{r\sin\theta}\partial_\varphi T\big)$ \\
+散度 & $\nabla\cdot\vec{F}=\tfrac{1}{r^2}\partial_r(r^2 F_r)+\tfrac{1}{r\sin\theta}\partial_\theta(\sin\theta\,F_\theta)+\tfrac{1}{r\sin\theta}\partial_\varphi F_\varphi$ \\
+拉普拉斯 & $\nabla^2 T=\tfrac{1}{r^2}\partial_r(r^2\partial_r T)+\tfrac{1}{r^2\sin\theta}\partial_\theta(\sin\theta\,\partial_\theta T)+\tfrac{1}{r^2\sin^2\theta}\partial_\varphi^2 T$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\end{document}

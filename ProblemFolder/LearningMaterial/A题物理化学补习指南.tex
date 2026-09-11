@@ -19,15 +19,75 @@
 \maketitle
 
 \begin{abstract}
-本指南面向数学背景、物理化学零基础的建模者，目标是用 3--5 天补到能独立写出并数值求解本题所需的全部方程。第一节为题目识别，第二至七节按关键词讲解物理化学知识，第八节给出四大问题的完整方程组装，第九、十节为验证清单与补习路线图，第十一节汇总易错点。
+本指南面向数学背景、物理化学零基础的建模者，目标是用 3--5 天补到能独立写出并数值求解本题所需的全部方程。第一节为题目识别，第二至七节按关键词讲解物理化学知识，第八节给出四大问题的完整方程组装，第九、十节为验证清单与补习路线图，第十一节汇总易错点。全部符号的严格定义见文首符号表。
 \end{abstract}
 
 \tableofcontents
 \newpage
 
+%=====================================================================
+\section*{符号表：本文所有符号的严格定义}
+\addcontentsline{toc}{section}{符号表：本文所有符号的严格定义}
+
+本文出现的所有符号严格定义如下，单位以题面约定为准。温度代入经验公式（如 $e^{-3850/T}$）时一律用开尔文 K，其余场合为 $^\circ$C；长度一律用 m。表中「取值」列给出题给值或说明，未填者表示该符号为通用记号或由模型方程确定。本表为符号的权威定义，正文关键处亦给出语境解释，两者一致。
+
+\begin{center}
+\small
+\begin{tabular}{llll}
+\toprule
+符号 & 严格定义 & 单位 & 题给取值 / 说明 \\
+\midrule
+$r$ & 径向坐标（到药材轴线的距离） & m & $0\le r\le R$ \\
+$t$ & 时间 & s & --- \\
+$T(r,t)$ & 药材温度场 & $^\circ$C（经验公式中 K） & 初值 28 \\
+$C(r,t)$ & 水分浓度场（干基含水率，见模块 B） & kg/kg（无量纲） & 初值 2.55 \\
+$T_{\mathrm{air}}(t)$ & 烘房空气温度 & $^\circ$C & 附件 1 插值 \\
+$C_{\mathrm{air}}(t)$ & 烘房空气水分浓度（干基） & kg/kg & 附件 1 插值 \\
+$T_{\mathrm{surface}}$ & 药材表面温度 & $^\circ$C & 由边界条件决定 \\
+$R$ & 药材半径（问题 4 中为 $R(t)$） & m & 初始 $0.02$ \\
+$R'$ & 半径收缩速率，$R'=\mathrm{d}R/\mathrm{d}t$ & m/s & 附件 2 插值后求导 \\
+$q$ & 热流密度（向量） & W/m$^2$ & --- \\
+$q_{\mathrm{conv}}$ & 表面对流热流密度 & W/m$^2$ & --- \\
+$q_{\mathrm{evap}}$ & 表面蒸发带走的热流密度 & W/m$^2$ & --- \\
+$k$ & 热传导系数 & W/(m$\cdot$K) & 问题 1：0.36；问题 2--4 随 $C$ 变 \\
+$\rho$ & 密度 & kg/m$^3$ & 问题 1：820；问题 2--4 随 $C$ 变 \\
+$c_p$ & 定压比热容 & J/(kg$\cdot$K) & 问题 1：2600；问题 2--4 随 $C$ 变 \\
+$\alpha$ & 热扩散率，$\alpha=k/(\rho c_p)$ & m$^2$/s & --- \\
+$h$ & 对流换热系数 & W/(m$^2\cdot$K) & 25 \\
+$h_m$ & 对流传质系数 & m/s & $8\times10^{-7}$ \\
+$J$ & 水分通量（向量） & (kg/kg)$\cdot$m/s & --- \\
+$J_{\mathrm{evap}}$ & 表面蒸发水通量（质量通量） & kg/(m$^2\cdot$s) & --- \\
+$D$ & 水分扩散系数 & m$^2$/s & 经验公式（随问题变化） \\
+$\bar D$ & 平均扩散系数（量级估计用） & m$^2$/s & --- \\
+$m_{\text{水}}$, $m_{\text{绝干料}}$ & 水的质量、绝干料质量 & kg & --- \\
+$w$ & 湿基含水率，$w=C/(1+C)$ & kg/kg & --- \\
+$C_c$ & 临界含水率（恒速段与降速段分界） & kg/kg & --- \\
+$C_{eq}$ & 平衡含水率（与烘房空气平衡的水分） & kg/kg & --- \\
+$C_0$ & 初始水分浓度（水分比公式中） & kg/kg & 2.55 \\
+$\mathrm{MR}$ & 水分比，$\mathrm{MR}=(C-C_{eq})/(C_0-C_{eq})$ & 1 & --- \\
+$\mathrm{Bi}$ & 毕渥数，$\mathrm{Bi}=hL_c/k$ & 1 & $\approx0.7$ \\
+$\mathrm{Fo}$ & 傅里叶数，$\mathrm{Fo}=\alpha t/R^2$ & 1 & --- \\
+$\mathrm{Bi}_m$ & 传质毕渥数，$\mathrm{Bi}_m=h_mR/D$ & 1 & $\approx3.2$ \\
+$L_c$ & 特征长度，$L_c=V/A$ & m & $R/2=0.01$ \\
+$V$, $A$ & 药材体积、药材总表面积 & m$^3$, m$^2$ & --- \\
+$k_{\mathrm{rate}}$ & 阿伦尼乌斯公式中的速率常数 & 视反应级数 & --- \\
+$A_{\mathrm{r}}$ & 阿伦尼乌斯公式中的指前因子（与表面积 $A$ 相区分） & 视反应 & --- \\
+$E_a$ & 活化能 & J/mol & $\approx32.0$\,kJ/mol \\
+$R_g$ & 摩尔气体常数 & J/(mol$\cdot$K) & $8.314$ \\
+$L_v$ & 水的汽化潜热 & J/kg & $\approx2.26\times10^6$ \\
+$\zeta$ & Landau 变换后的无量纲半径，$\zeta=r/R(t)$ & 1 & $\zeta\in[0,1]$ \\
+$\Delta r$, $\Delta t$ & 空间步长、时间步长 & m, s & --- \\
+$t^*$ & 烘干时长（最湿点 $C\le0.15$\,kg/kg 的首达时刻） & s & 由模拟给出 \\
+$C_s$ & 表面浓度，$C_s=C(R,t)$ & kg/kg & --- \\
+$\nabla$, $\nabla\cdot$, $\nabla^2$ & 梯度、散度、拉普拉斯算子 & 1/m, 1/m, 1/m$^2$ & 见《梯度与散度讲解》 \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+%=====================================================================
 \section{题目识别（30 秒看懂这道题在考什么）}
 
-\textbf{本质}：一根长圆柱药材（长 25\,cm、半径 2\,cm）放在烘房里用热风吹干。烘房温度、湿度随时间变化。要预测药材\textbf{内部每一点的温度 $T(r,t)$ 和水分浓度 $C(r,t)$}（干基含水率，kg 水/kg 干料）。
+\textbf{本质}：一根长圆柱药材（长 25\,cm、半径 2\,cm）放在烘房里用热风吹干。烘房温度、湿度随时间变化，记为 $T_{\mathrm{air}}(t)$、$C_{\mathrm{air}}(t)$（附件 1 给出）。要预测药材\textbf{内部每一点的温度 $T(r,t)$ 和水分浓度 $C(r,t)$}（干基含水率，kg 水/kg 干料）。
 
 \textbf{物理过程}：
 \begin{itemize}[leftmargin=2.5em]
@@ -70,7 +130,7 @@ format2026.doc & 论文格式规范 & 写论文前先读 \\
 \textbf{由此得出的两个建模结论}：
 \begin{enumerate}[leftmargin=2.5em]
 \item \textbf{预热平衡阶段 $=$ 0--4\,h}（烘房升温爬坡期），恒温干燥阶段 $=$ 4\,h 之后（烘房条件取附件 1 末值恒定：$T_{\mathrm{air}}\approx50\,^\circ$C、$C_{\mathrm{air}}\approx0.05$\,kg/kg，论文中写明此假设）。问题 1 只要求输出前 30\,min 的结果。
-\item 附件 2 的半径数据覆盖完整 72\,h，问题 4 直接用数据插值 $R(t)$（三次样条平滑后再求 $R'$）。
+\item 附件 2 的半径数据覆盖完整 72\,h，问题 4 直接用数据插值 $R(t)$（三次样条平滑后再求收缩速率 $R'=\mathrm{d}R/\mathrm{d}t$）。
 \end{enumerate}
 
 \section{关键词 $\to$ 知识点总表}
@@ -123,7 +183,7 @@ $\alpha$ 是「温度传播速度」的唯一指标。本题圆柱轴对称（�
 \subsection{牛顿冷却定律（对流换热，Convection）}
 固体表面与流体的换热速率正比于温差：
 \begin{equation}
-q_{\mathrm{conv}}=h\,(T_{\mathrm{air}}-T_{\mathrm{surface}}) \qquad (h\text{ 为对流换热系数，W/(m}^2\cdot\text{K)})
+q_{\mathrm{conv}}=h\,(T_{\mathrm{air}}-T_{\mathrm{surface}}) \qquad (h\text{ 为对流换热系数，W/(m}^2\cdot\text{K)；}T_{\mathrm{surface}}\text{ 为药材表面温度})
 \end{equation}
 $h=25$\,W/(m$^2\cdot$K) 对应低速热风/自然对流量级（典型 5--100）。作为\textbf{第三类（Robin）边界条件}：表面导出的热 $=$ 对流带走的热：
 \begin{equation}
@@ -132,7 +192,7 @@ $h=25$\,W/(m$^2\cdot$K) 对应低速热风/自然对流量级（典型 5--100）
 
 \subsection{毕渥数 Bi（Biot Number）——本题第一个关键判断}
 \begin{equation}
-\mathrm{Bi}=\frac{\text{内部导热阻力}}{\text{表面对流阻力}}=\frac{hL_c}{k},\qquad L_c=\frac{V}{A}=\frac{R}{2}\ \text{（长圆柱特征长度）}
+\mathrm{Bi}=\frac{\text{内部导热阻力}}{\text{表面对流阻力}}=\frac{hL_c}{k},\qquad L_c=\frac{V}{A}=\frac{R}{2}\ \text{（长圆柱特征长度；}V、A\text{ 分别为药材体积与总表面积）}
 \end{equation}
 \begin{itemize}
 \item $\mathrm{Bi}\ll 0.1$：内部温度基本均匀，可用\textbf{集总参数法}（一个 ODE 就完事）。
@@ -193,7 +253,7 @@ $h=25$\,W/(m$^2\cdot$K) 对应低速热风/自然对流量级（典型 5--100）
 \item \textbf{临界含水率 $C_c$}：恒速段与降速段的分界。
 \item \textbf{平衡含水率 $C_{eq}$}：与烘房空气达到平衡、永远烘不掉的水分。干燥极限是 $C_{eq}$，不是 0。问题 3 的 0.15 是\textbf{工艺要求}，高于平衡值。
 \item \textbf{自由水/结合水}：自由水（孔隙中，易烘）vs 结合水（吸附/化学结合，难烘）。降速段后期烘的主要是结合水，所以慢。
-\item \textbf{水分比} $\mathrm{MR}=(C-C_{eq})/(C_0-C_{eq})$：文献常用无量纲量，画干燥曲线、验证模型时用。
+\item \textbf{水分比} $\mathrm{MR}=(C-C_{eq})/(C_0-C_{eq})$（$C_0$ 为初始水分浓度，本题 $C_0=2.55$）：文献常用无量纲量，画干燥曲线、验证模型时用。
 \end{itemize}
 
 \subsection{本题的模型如何自动体现三阶段}
@@ -204,16 +264,16 @@ $h=25$\,W/(m$^2\cdot$K) 对应低速热风/自然对流量级（典型 5--100）
 \subsection{阿伦尼乌斯公式（Arrhenius Equation）}
 温度对过程速率的指数放大：
 \begin{equation}
-k_{\mathrm{rate}}=A\,e^{-E_a/(R_g T)}
+k_{\mathrm{rate}}=A_{\mathrm{r}}\,e^{-E_a/(R_g T)}
 \end{equation}
-$E_a$ 为活化能（J/mol），$R_g=8.314$\,J/(mol$\cdot$K)，\textbf{$T$ 必须用开尔文}。本题 $D$ 里的 $e^{-3850/T}$：对比知 $E_a/R_g=3850\Rightarrow E_a\approx32.0$\,kJ/mol。食品/药材干燥实测活化能典型 12--45\,kJ/mol，题给公式在合理区间内。
+其中 $k_{\mathrm{rate}}$ 为速率常数（量纲随反应级数）、$A_{\mathrm{r}}$ 为指前因子（与温度近似无关；为避免与表面积 $A$ 混淆，本文记 $A_{\mathrm{r}}$）、$E_a$ 为活化能（J/mol）、$R_g=8.314$\,J/(mol$\cdot$K) 为摩尔气体常数；\textbf{$T$ 必须用开尔文}。本题 $D$ 里的 $e^{-3850/T}$：对比知 $E_a/R_g=3850\Rightarrow E_a\approx32.0$\,kJ/mol。食品/药材干燥实测活化能典型 12--45\,kJ/mol，题给公式在合理区间内。
 
 应用：$\dfrac{D(60^\circ\mathrm{C})}{D(30^\circ\mathrm{C})}=e^{3850/303-3850/333}=e^{1.145}\approx3.1$ 倍。温度对烘干速度影响很大。
 
 \subsection{汽化潜热（Latent Heat of Vaporization）}
 \begin{itemize}
 \item 水汽化潜热 $L_v\approx2.26\times10^6$\,J/kg（100\,$^\circ$C），$2.45\times10^6$\,J/kg（20\,$^\circ$C）。
-\item 表面蒸发会\textbf{带走热量}（蒸发冷却）：$q_{\mathrm{evap}}=L_v\,J_{\mathrm{evap}}$。
+\item 表面蒸发会\textbf{带走热量}（蒸发冷却）：$q_{\mathrm{evap}}=L_v\,J_{\mathrm{evap}}$（$J_{\mathrm{evap}}$ 为表面蒸发水通量，kg/(m$^2\cdot$s)）。
 \item \textbf{本题注意}：题给参数表里\textbf{没有} $L_v$，说明标准模型的热边界就是纯对流（第 3.3 节），不做蒸发冷却项。可在论文「模型扩展/讨论」里加这项并给出对比（会更有深度，但别把主结果押在上面）。
 \end{itemize}
 
@@ -232,7 +292,7 @@ $\rho=650+128C$、$c_p=1450+2736\cdot C/(C+1)$、$k=0.21+0.38\cdot C/(C+1)$ 之�
 
 \subsection{时间推进与稳定性}
 \begin{itemize}
-\item 显式 Euler：$\Delta t\le\Delta r^2/(2\alpha_{\max})$（圆柱中心更严）。本题 $\alpha\approx1.7\times10^{-7}$，$\Delta r=1$\,mm 时 $\Delta t\le3$\,s；$\Delta t=1$\,s 勉强可行但太贴边。
+\item 显式 Euler：$\Delta t\le\Delta r^2/(2\alpha_{\max})$（圆柱中心更严；$\Delta r$、$\Delta t$ 为空间、时间步长，$\alpha_{\max}$ 为 $\alpha$ 随物性变化时整个计算过程中的最大值）。本题 $\alpha\approx1.7\times10^{-7}$，$\Delta r=1$\,mm 时 $\Delta t\le3$\,s；$\Delta t=1$\,s 勉强可行但太贴边。
 \item \textbf{推荐 Crank--Nicolson}（无条件稳定、二阶）：每步解三对角方程组（Thomas 算法，21 格点瞬解）。
 \item 问题 2--4 需模拟 2--3 天（约 $2\times10^5$\,s）：$\Delta t$ 取 1--10\,s，隐式完全无压力。
 \end{itemize}
@@ -244,7 +304,7 @@ $\rho=650+128C$、$c_p=1450+2736\cdot C/(C+1)$、$k=0.21+0.38\cdot C/(C+1)$ 之�
 附件 1 的 $T_{\mathrm{air}}(t)$、$C_{\mathrm{air}}(t)$ 是离散数据：线性插值（或样条）后代入边界条件，切忌阶跃。
 
 \subsection{移动边界（问题 4）：Landau 变换}
-令 $\zeta=r/R(t)\in[0,1]$，把时变域 $[0,R(t)]$ 变成固定域 $[0,1]$：
+令 $\zeta=r/R(t)\in[0,1]$（记 $R'=\mathrm{d}R/\mathrm{d}t$ 为收缩速率），把时变域 $[0,R(t)]$ 变成固定域 $[0,1]$：
 \begin{align}
 &\text{水分：}\quad \frac{\partial C}{\partial t}-\frac{\zeta R'}{R}\frac{\partial C}{\partial\zeta}
 =\frac{1}{R^2\zeta}\frac{\partial}{\partial\zeta}\Big(\zeta\,D\,\frac{\partial C}{\partial\zeta}\Big)\\[4pt]
@@ -268,26 +328,16 @@ $\rho=650+128C$、$c_p=1450+2736\cdot C/(C+1)$、$k=0.21+0.38\cdot C/(C+1)$ 之�
 \item 用 Python：openpyxl 或 pandas，输出前 \texttt{round(\dots,4)}。
 \end{itemize}
 
-\section{模块 F：量纲与单位自查表}
+\section{模块 F：量纲与单位自查}
 
-\begin{center}
-\begin{tabular}{lll}
-\toprule
-量 & 符号 & 单位 \\
-\midrule
-温度 & $T$ & $^\circ$C（输出）/ K（代入 $e^{-3850/T}$） \\
-水分浓度 & $C$ & kg/kg（无量纲） \\
-密度 & $\rho$ & kg/m$^3$（题给） \\
-比热容 & $c_p$ & J/(kg$\cdot$K)（题给） \\
-热传导系数 & $k$ & W/(m$\cdot$K)（题给） \\
-对流换热系数 & $h$ & W/(m$^2\cdot$K)，$=25$ \\
-对流传质系数 & $h_m$ & m/s，$=8\times10^{-7}$ \\
-扩散系数 & $D$ & m$^2$/s（公式算） \\
-\bottomrule
-\end{tabular}
-\end{center}
+全部符号的严格定义（含义、单位、题给取值）见文首《符号表》，此处只列量纲自检规则：
 
-自查：$\rho c_p\,\partial T/\partial t$ 与 $k\nabla^2T$ 同为 W/m$^3$；$\partial C/\partial t$ 与 $D\nabla^2C$ 同为 s$^{-1}$；$-D\,\partial C/\partial r$ 与 $h_m(C-C_{\mathrm{air}})$ 同为 (kg/kg)$\cdot$m/s。\textbf{$r$ 全程用米}（$R=0.02$\,m），时间用秒。
+\begin{enumerate}[leftmargin=2.5em]
+\item \textbf{热方程两侧同为 W/m$^3$}：$\rho c_p\,\partial T/\partial t$（kg/m$^3\cdot$J/(kg$\cdot$K)$\cdot$K/s）与 $k\nabla^2T$ 量纲一致；
+\item \textbf{质方程两侧同为 s$^{-1}$}：$\partial C/\partial t$ 与 $D\nabla^2C$ 量纲一致；
+\item \textbf{表面边界两侧量纲一致}：$-D\,\partial C/\partial r$ 与 $h_m(C-C_{\mathrm{air}})$ 同为 (kg/kg)$\cdot$m/s；$-k\,\partial T/\partial r$ 与 $h(T-T_{\mathrm{air}})$ 同为 W/m$^2$；
+\item \textbf{$r$ 全程用米}（$R=0.02$\,m），时间用秒；温度代入 $e^{-3850/T}$ 时用 K。
+\end{enumerate}
 
 \section{本题模型组装（每问的方程清单）}
 
@@ -309,7 +359,7 @@ $T_{\mathrm{air}}(t)$、$C_{\mathrm{air}}(t)$ 来自附件 1（离散数据插�
 \begin{itemize}
 \item \textbf{关键洞察}：$D$ 只含 $C$、物性全是常数 $\Rightarrow$ 热方程与质方程\textbf{解耦}，两个独立抛物线问题。
 \item 预期形态：1800\,s 内温度从外向内渗透（$\sqrt{\alpha t}\approx1.7$\,cm），水分只在表面约 3\,mm 薄层变化（$\sqrt{Dt}\approx3$\,mm），中心 $C$ 几乎不动。
-\item \textbf{附件 1 实际数据}：前 1800\,s 烘房仅升至 $\approx29.7\,^\circ$C、$C_{\mathrm{air}}\approx0.021$ —— 预热初期驱动很弱，药材温度、水分变化都很小（可作为论文 sanity check：表 1 数值应非常接近初值）。
+\item \textbf{附件 1 实际数据（已核对）}：前 1800\,s 烘房由 28\,$^\circ$C 升至 41.513\,$^\circ$C、$C_{\mathrm{air}}$ 由 0.01963 升至 0.03307——驱动力随时间\textbf{逐渐增大}，不是常数；预热段结束时表 1 数值应落在 $[28,41.5]$\,$^\circ$C 区间、由表面向中心递减（中心约 33.6\,$^\circ$C、表面约 36.8\,$^\circ$C，见《串讲》表 1 预览）。
 \item 数学加分项：线性问题可用 Duhamel 原理$+$卷积处理时变烘房温度；常数边界下 $T$ 有 $J_0$ Bessel 级数解析解，$\beta_n$ 由 $\beta J_1(\beta)=\mathrm{Bi}\,J_0(\beta)$ 给出——用来验证数值解。
 \end{itemize}
 
@@ -331,8 +381,8 @@ D=2.4\times10^{-3}\,e^{-0.45/C}\,e^{-3850/T}\quad \leftarrow\ T\ \text{用开尔
 \subsection{问题 3：烘干时长（附录 3 公式，同问题 2 模型）}
 \begin{itemize}
 \item 判据：$\max_r C(r,t)\le0.15$\,kg/kg（最湿点在中心 $r=0$，监测中心即可）。
-\item $t^*$ 由模拟给出；为精确到「秒」可在达标时刻附近加密或插值。
-\item 预期量级（供标定直觉）：降速段占主导，时间 $\sim R^2/\bar{D}$ 量级。$\bar{D}\sim10^{-9}$--$10^{-8}$\,m$^2$/s、$R^2=4\times10^{-4}$ $\Rightarrow$ 数十小时量级。注意恒温段 \textbf{$C_{\mathrm{air}}\approx0.05\neq0$}，目标 0.15 高于 $C_{\mathrm{air}}$，可达到但尾段会减速；表 5 按每 6\,h 出表、附件 2 半径数据到 72\,h，暗示 $t^*$ 大概率在 10--70\,h 之间。\textbf{答案以模拟为准，不必强行凑「2--3 天」}。
+\item $t^*$（烘干时长，定义为最湿点水分浓度首次 $\le0.15$\,kg/kg 的时刻）由模拟给出；为精确到「秒」可在达标时刻附近加密或插值。
+\item 预期量级（供标定直觉）：降速段占主导，时间 $\sim R^2/\bar{D}$ 量级（$\bar D$ 为全过程平均扩散系数）。$\bar{D}\sim10^{-9}$--$10^{-8}$\,m$^2$/s、$R^2=4\times10^{-4}$ $\Rightarrow$ 数十小时量级。注意恒温段 \textbf{$C_{\mathrm{air}}\approx0.05\neq0$}，目标 0.15 高于 $C_{\mathrm{air}}$，可达到但尾段会减速；表 5 按每 6\,h 出表、附件 2 半径数据到 72\,h，暗示 $t^*$ 大概率在 10--70\,h 之间。\textbf{答案以模拟为准，不必强行凑「2--3 天」}。
 \item 输出：表 5（每 6\,h $\times$ 每 0.5\,cm，直到结束时刻），result3.xlsx（每 60\,s $\times$ 每 0.1\,cm）。
 \end{itemize}
 
@@ -356,7 +406,7 @@ D=4.2\times10^{-4}\,e^{-0.30/C}\,e^{-3850/T}
 
 \begin{enumerate}[leftmargin=2.5em]
 \item \textbf{网格收敛}：$\Delta r=1,\,0.5,\,0.25$\,mm，$\Delta t$ 同步减半，解变化 $<1\%$ $\Rightarrow$ 报告。
-\item \textbf{守恒检验}：总水量减少量 $=$ 表面累计通量 $\int h_m(C_s-C_{\mathrm{air}})\,dA\,dt$（数值算两边对比）。
+\item \textbf{守恒检验}：总水量减少量 $=$ 表面累计通量 $\int h_m(C_s-C_{\mathrm{air}})\,dA\,dt$（$C_s=C(R,t)$ 为表面浓度、$dA$ 为表面积微元；数值算两边对比）。
 \item \textbf{解析锚点}：常数烘房条件下，$T(r,t)$ 与 $J_0$-Bessel 级数解对比（问题 1 冻结 $D$ 同理对比 $C$）。
 \item \textbf{渐近行为}：$t\to\infty$ 时 $T\to T_{\mathrm{air}}$、$C\to C_{\mathrm{air}}$（边界为常数时）。
 \item \textbf{量级直觉}：$\sqrt{\alpha t}$、$\sqrt{Dt}$ 渗透深度与曲线形态对照（30\,min 内水分只动表面薄层）。

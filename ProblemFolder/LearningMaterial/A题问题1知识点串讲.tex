@@ -19,11 +19,70 @@
 \maketitle
 
 \begin{abstract}
-本文以问题 1 为主线，按「读题 $\to$ 几何简化 $\to$ 物理图像 $\to$ 三大定律 $\to$ 方程组装 $\to$ 无量纲判据 $\to$ 量级估计 $\to$ 数值求解 $\to$ 验证与提交」的顺序，把第一问用到的全部知识点串成一条链。每一节都从一个具体问题出发，引出解决问题所需的知识，逐步推到最终的数学模型与求解方案。文中数值均来自实际计算（守恒型有限差分 $+$ Crank--Nicolson，已与 Bessel 级数解析解核对），可直接对照论文结果做 sanity check。
+本文以问题 1 为主线，按「读题 $\to$ 几何简化 $\to$ 物理图像 $\to$ 三大定律 $\to$ 方程组装 $\to$ 无量纲判据 $\to$ 量级估计 $\to$ 数值求解 $\to$ 验证与提交」的顺序，把第一问用到的全部知识点串成一条链。每一节都从一个具体问题出发，引出解决问题所需的知识，逐步推到最终的数学模型与求解方案。文中数值均来自实际计算（守恒型有限差分 $+$ Crank--Nicolson，已与 Bessel 级数解析解核对），可直接对照论文结果做 sanity check。文中出现的所有符号的严格定义见文首符号表。
 \end{abstract}
 
 \tableofcontents
 \newpage
+
+%=====================================================================
+\section*{符号表：本文所有符号的严格定义}
+\addcontentsline{toc}{section}{符号表：本文所有符号的严格定义}
+
+本文中出现的每一个符号均在下表严格定义。单位以题面约定为准；温度在代入经验公式（如 $e^{-3850/T}$）时必须用开尔文 K，其余场合为 $^\circ$C；长度一律用 m。表中「取值」列给出问题 1 的实际取值或数据来源，未填者表示该符号为通用记号或由模型方程确定。本表为符号的权威定义，正文关键处亦给出语境解释，两者一致。
+
+\begin{center}
+\small
+\begin{tabular}{llll}
+\toprule
+符号 & 严格定义 & 单位 & 本题取值 / 来源 \\
+\midrule
+$r$ & 径向坐标：点到药材轴线的距离 & m & $0\le r\le R$ \\
+$t$ & 时间（自药材放入烘房起算） & s & $0\le t\le1800$ \\
+$T(r,t)$ & 温度场：时刻 $t$、半径 $r$ 处的温度 & $^\circ$C & 初值 $T(r,0)=28$ \\
+$C(r,t)$ & 水分浓度场（干基含水率，见知识点 6） & kg/kg（无量纲） & 初值 $C(r,0)=2.55$ \\
+$T_{\mathrm{air}}(t)$ & 烘房空气温度 & $^\circ$C & 附件 1 线性插值 \\
+$C_{\mathrm{air}}(t)$ & 烘房空气水分浓度（干基） & kg/kg & 附件 1 线性插值 \\
+$L$ & 药材长度 & m & $0.25$ \\
+$R$ & 药材半径 & m & $0.02$ \\
+$q$ & 热流密度（单位时间、单位面积流过的热量，向量） & W/m$^2$ & --- \\
+$k$ & 热传导系数 & W/(m$\cdot$K) & $0.36$ \\
+$\rho$ & 药材密度 & kg/m$^3$ & $820$ \\
+$c_p$ & 定压比热容（单位质量升温 1\,K 所需热量） & J/(kg$\cdot$K) & $2600$ \\
+$\alpha$ & 热扩散率，$\alpha=k/(\rho c_p)$ & m$^2$/s & $\approx1.7\times10^{-7}$ \\
+$h$ & 对流换热系数 & W/(m$^2\cdot$K) & $25$ \\
+$q_{\mathrm{conv}}$ & 表面对流热流密度（牛顿冷却定律中的通量） & W/m$^2$ & --- \\
+$T_s$ & 表面温度，$T_s=T(R,t)$ & $^\circ$C & 由边界条件决定 \\
+$m_{\text{水}}$ & 药材中水的质量 & kg & --- \\
+$m_{\text{绝干料}}$ & 绝干料（完全不含水部分）质量 & kg & --- \\
+$w$ & 湿基含水率，$w=m_{\text{水}}/(m_{\text{水}}+m_{\text{绝干料}})$ & kg/kg & --- \\
+$h_m$ & 对流传质系数 & m/s & $8\times10^{-7}$ \\
+$J$ & 水分通量（单位时间、单位面积流过的水分，向量） & (kg/kg)$\cdot$m/s & --- \\
+$D$ & 水分扩散系数，$D(C)=7\times10^{-9}e^{-0.89/C}$（式 \eqref{eq:D1}） & m$^2$/s & --- \\
+$\nabla$, $\nabla\cdot$, $\nabla^2$ & 梯度、散度、拉普拉斯算子 & 1/m, 1/m, 1/m$^2$ & 见《A题梯度与散度讲解》 \\
+$\mathrm{Bi}$ & 毕渥数，$\mathrm{Bi}=hL_c/k$ & 1（无量纲） & $\approx0.69$ \\
+$L_c$ & 特征长度，$L_c=V/A$ & m & $0.01$ \\
+$V$, $A$ & 药材体积、药材总表面积 & m$^3$, m$^2$ & --- \\
+$\mathrm{Fo}$ & 傅里叶数，$\mathrm{Fo}=\alpha t/R^2$ & 1 & $t=1800$\,s 时 $\approx0.76$ \\
+$\mathrm{Bi}_m$ & 传质毕渥数，$\mathrm{Bi}_m=h_mR/D$ & 1 & $\approx3.2$ \\
+$T_0$ & 初始均匀温度，$T_0=T(r,0)=28$ & $^\circ$C & 解析解用 \\
+$J_0$, $J_1$ & 零阶、一阶第一类 Bessel 函数 & 1 & 解析解用 \\
+$\beta_n$ & 特征方程 $\beta J_1(\beta)=\mathrm{Bi}\,J_0(\beta)$ 的第 $n$ 个正根 & 1 & 解析解用 \\
+$A_n$ & Bessel 级数第 $n$ 项系数 & 1 & 解析解用 \\
+$u(r,t)$ & 泛指 $T$ 或 $C$ 的场变量（离散格式通用写法） & 随对象 & --- \\
+$i$ & 空间节点编号，$i=0,1,\dots,N$（本题 $N=20$，共 21 个节点） & 1 & --- \\
+$r_i$ & 第 $i$ 个节点半径，$r_i=i\Delta r$ & m & --- \\
+$r_{i\pm1/2}$ & 节点 $i$ 与节点 $i\pm1$ 中点处的半径 & m & --- \\
+$\Delta r$ & 空间步长 & m & $0.001$ \\
+$\Delta t$ & 时间步长 & s & $1$ \\
+$u_i^n$ & 时刻 $t=n\Delta t$、半径 $r_i$ 处 $u$ 的近似值 & 随对象 & --- \\
+$D_i^n$ & 节点 $i$、时间层 $n$ 处的滞后扩散系数，$D_i^n=D(C_i^n)$ & m$^2$/s & --- \\
+$\mathcal{L}$ & 扩散项离散算子（式 \eqref{eq:modelT}/\eqref{eq:modelC} 右端离散化） & 1/s & --- \\
+$C_s$ & 表面浓度，$C_s=C(R,t)$ & kg/kg & --- \\
+$\mathrm{d}A$ & 表面微元面积 & m$^2$ & --- \\
+\bottomrule
+\end{tabular}
+\end{center}
 
 %=====================================================================
 \section{读题：问题 1 到底要我们做什么}
@@ -57,7 +116,7 @@
 
 \textbf{问}：药材是三维圆柱，直接建三维模型吗？
 
-\textbf{答}：不需要。圆柱长 25\,cm、半径 2\,cm，长径比 $L/R=12.5$；两端面的总面积只占药材总表面积的
+\textbf{答}：不需要。圆柱长 $L=0.25$\,m（25\,cm）、半径 $R=0.02$\,m（2\,cm），长径比 $L/R=12.5$；两端面的总面积只占药材总表面积的
 \[
 \frac{2\pi R^2}{2\pi RL}=\frac{R}{L}\approx 8\%,
 \]
@@ -107,7 +166,7 @@ $k$ 为热传导系数。本题 $k=0.36$\,W/(m$\cdot$K)——比金属（铜约 
 \begin{equation}
 \frac{\partial T}{\partial t}=\alpha\,\nabla^2 T,\qquad \alpha=\frac{k}{\rho c_p},
 \end{equation}
-$\alpha$ 称\textbf{热扩散率}，是「温度传播速度」的唯一指标。本题 $\alpha=0.36/(820\times2600)\approx1.7\times10^{-7}$\,m$^2$/s。
+$\alpha$ 称\textbf{热扩散率}，是「温度传播速度」的唯一指标。本题 $\alpha=k/(\rho c_p)=0.36/(820\times2600)\approx1.7\times10^{-7}$\,m$^2$/s（其中 $\rho=820$\,kg/m$^3$、$c_p=2600$\,J/(kg$\cdot$K) 为题给物性）。
 
 \subsection{知识点 5：牛顿冷却定律与第三类边界条件}
 
@@ -117,7 +176,7 @@ $\alpha$ 称\textbf{热扩散率}，是「温度传播速度」的唯一指标�
 -k\frac{\partial T}{\partial r}\bigg|_{r=R}=h\,\big(T(R,t)-T_{\mathrm{air}}(t)\big),
 \label{eq:bcT}
 \end{equation}
-$h=25$\,W/(m$^2\cdot$K) 为对流换热系数（牛顿冷却定律 $q_{\mathrm{conv}}=h(T_{\mathrm{air}}-T_s)$ 中的比例常数），对应低速热风的量级。注意 $T_{\mathrm{air}}(t)$ 是\textbf{随时间变化的已知函数}——这是问题 1 区别于教科书例题的地方。
+$h=25$\,W/(m$^2\cdot$K) 为对流换热系数（牛顿冷却定律 $q_{\mathrm{conv}}=h(T_{\mathrm{air}}-T_s)$ 中的比例常数，$T_s=T(R,t)$ 为表面温度），对应低速热风的量级。注意 $T_{\mathrm{air}}(t)$ 是\textbf{随时间变化的已知函数}——这是问题 1 区别于教科书例题的地方。
 
 \section{水分链：从干基含水率到扩散方程}
 
@@ -214,7 +273,7 @@ T(r,0)=28\,^\circ\text{C},\qquad C(r,0)=2.55\;\text{kg/kg},\qquad 0\le r\le R.
 
 \textbf{问}：能不能假设药材内部温度处处均匀（一个 ODE 就完事）？
 
-\textbf{答}：用\textbf{毕渥数}判断：$\mathrm{Bi}=$ 内部导热阻力 $/$ 表面对流阻力 $=hL_c/k$（特征长度 $L_c=V/A=R/2=0.01$\,m）。本题
+\textbf{答}：用\textbf{毕渥数}判断：$\mathrm{Bi}=$ 内部导热阻力 $/$ 表面对流阻力 $=hL_c/k$（特征长度 $L_c=V/A=R/2=0.01$\,m，其中 $V$、$A$ 分别为药材体积与总表面积）。本题
 \begin{equation}
 \mathrm{Bi}=\frac{25\times0.01}{0.36}\approx0.69\quad(\text{或按 }hR/k\text{ 计为 }1.39)\;\gg\;0.1,
 \end{equation}
@@ -247,7 +306,7 @@ T(r,0)=28\,^\circ\text{C},\qquad C(r,0)=2.55\;\text{kg/kg},\qquad 0\le r\le R.
 \item \textbf{水分渗透深度}：$\sqrt{Dt}\big|_{1800\,\text{s}}=\sqrt{4.9\times10^{-9}\times1800}\approx3.0$\,mm。水分在 30\,min 内只动表面约 3\,mm 的薄层，\textbf{中心水分纹丝不动}。
 \end{enumerate}
 
-结合附件 1（烘房 1800\,s 才升到 41.5\,$^\circ$C），可以预告：表 1 的数值应全部落在 $[28,41.5]$\,$^\circ$C 之间、由表面向中心递减且中心刚启动；表 2 中心为 2.5500 不动、表面明显下降。实际数值计算结果如下（守恒型有限差分 $+$ Crank--Nicolson，$\Delta r=0.1$\,cm、$\Delta t=1$\,s；温度场已与 Bessel 级数解析解核对至 4 位小数，见第 8.2 节）：
+结合附件 1（烘房 1800\,s 才升到 41.5\,$^\circ$C），可以预告：表 1 的数值应全部落在 $[28,41.5]$\,$^\circ$C 之间、由表面向中心递减且中心刚启动；表 2 中心为 2.5500 不动、表面明显下降。实际数值计算结果如下（守恒型有限差分 $+$ Crank--Nicolson，空间步长 $\Delta r=0.1$\,cm、时间步长 $\Delta t=1$\,s；温度场已与 Bessel 级数解析解核对至 4 位小数，见第 8.2 节）：
 
 \begin{center}
 \textbf{表 1 预览：30 分钟内药材的温度（$^\circ$C）}
@@ -297,11 +356,11 @@ T(r,0)=28\,^\circ\text{C},\qquad C(r,0)=2.55\;\text{kg/kg},\qquad 0\le r\le R.
 \begin{equation}
 T(r,t)=T_{\mathrm{air}}+(T_0-T_{\mathrm{air}})\sum_{n=1}^{\infty}A_n J_0\!\Big(\frac{\beta_n r}{R}\Big)e^{-\alpha\beta_n^2 t/R^2},
 \end{equation}
-其中 $\beta_n$ 是特征方程 $\beta J_1(\beta)=\mathrm{Bi}\,J_0(\beta)$ 的根，$A_n=\dfrac{2J_1(\beta_n)}{\beta_n\big(J_0^2(\beta_n)+J_1^2(\beta_n)\big)}$；时变边界还可用\textbf{Duhamel 原理}（叠加原理）处理——这是数学背景建模者的加分项。(2) 但问题 1 同时有\textbf{时变边界}（附件 1）和\textbf{非线性 $D(C)$}（式 \eqref{eq:D1}），解析式不闭合。因此实用解走数值路线，解析解降级为\textbf{验证锚点}。
+其中 $T_0=28\,^\circ$C 为初始均匀温度、$T_{\mathrm{air}}$ 在此式中取常数，$J_0$、$J_1$ 分别为零阶、一阶第一类 Bessel 函数；$\beta_n$ 是特征方程 $\beta J_1(\beta)=\mathrm{Bi}\,J_0(\beta)$ 的第 $n$ 个正根，$A_n=\dfrac{2J_1(\beta_n)}{\beta_n\big(J_0^2(\beta_n)+J_1^2(\beta_n)\big)}$；时变边界还可用\textbf{Duhamel 原理}（叠加原理）处理——这是数学背景建模者的加分项。(2) 但问题 1 同时有\textbf{时变边界}（附件 1）和\textbf{非线性 $D(C)$}（式 \eqref{eq:D1}），解析式不闭合。因此实用解走数值路线，解析解降级为\textbf{验证锚点}。
 
 \subsection{知识点 15：空间离散——圆柱的守恒型格式}
 
-圆柱扩散项要写成\textbf{通量守恒形式}再离散（先对控制体积分，再差商），不能直接对 $1/r$ 项做中心差分——后者在 $r=0$ 处爆炸。内部节点 $i$（$r_i=i\Delta r$）：
+圆柱扩散项要写成\textbf{通量守恒形式}再离散（先对控制体积分，再差商），不能直接对 $1/r$ 项做中心差分——后者在 $r=0$ 处爆炸。内部节点 $i$（$r_i=i\Delta r$；下文以 $u$ 泛指 $T$ 或 $C$，两个方程共用同一离散框架）：
 \begin{equation}
 \frac{1}{r}\frac{\partial}{\partial r}\bigg(r\frac{\partial u}{\partial r}\bigg)\bigg|_{r_i}\approx
 \frac{r_{i+1/2}(u_{i+1}-u_i)-r_{i-1/2}(u_i-u_{i-1})}{r_i\,\Delta r^2},\qquad r_{i\pm1/2}=\big(i\pm\tfrac12\big)\Delta r.
@@ -316,9 +375,9 @@ T(r,t)=T_{\mathrm{air}}+(T_0-T_{\mathrm{air}})\sum_{n=1}^{\infty}A_n J_0\!\Big(\
 
 \subsection{知识点 17：时间推进——显式的陷阱与隐式的解药}
 
-显式 Euler 在圆柱中心处有稳定性上限 $\Delta t\le\Delta r^2/(2\alpha)$；取 $\Delta r=1$\,mm 时 $\Delta t\le3$\,s，要输出 1\,s 间隔则贴边不稳。改用\textbf{Crank--Nicolson}：无条件稳定、时间二阶精度，代价是每步解一个三对角线性方程组——用\textbf{Thomas 追赶法}，21 个节点瞬解。离散时间步为
+显式 Euler 在圆柱中心处有稳定性上限 $\Delta t\le\Delta r^2/(2\alpha)$；取 $\Delta r=1$\,mm 时 $\Delta t\le3$\,s，要输出 1\,s 间隔则贴边不稳。改用\textbf{Crank--Nicolson}：无条件稳定、时间二阶精度，代价是每步解一个三对角线性方程组——用\textbf{Thomas 追赶法}，21 个节点瞬解。记 $u_i^n$ 为时刻 $t=n\Delta t$、半径 $r_i$ 处的近似解，离散时间步为
 \begin{equation}
-\frac{u^{n+1}-u^n}{\Delta t}=\frac12\big(\mathcal{L}u^{n+1}+\mathcal{L}u^n\big),
+\frac{u^{n+1}_i-u_i^n}{\Delta t}=\frac12\big(\mathcal{L}u^{n+1}+\mathcal{L}u^n\big)_i,
 \end{equation}
 $\mathcal{L}$ 为式 \eqref{eq:modelT}/\eqref{eq:modelC} 右端的离散算子（含边界贡献）。
 
@@ -326,9 +385,9 @@ $\mathcal{L}$ 为式 \eqref{eq:modelT}/\eqref{eq:modelC} 右端的离散算子�
 
 \subsection{知识点 18：非线性系数的处理——系数滞后迭代}
 
-$D(C)$ 用\textbf{上一时刻的浓度}计算（系数滞后），每步仍解线性三对角系统：
+$D(C)$ 用\textbf{上一时刻的浓度}计算（系数滞后），每步仍解线性三对角系统。记 $D_i^n$ 为节点 $i$、时间层 $n$ 处用滞后浓度算出的扩散系数：
 \begin{equation}
-D_i^n=D(C_i^n)\;\Longrightarrow\;C^{n+1}\text{ 由线性方程组求出}.
+D_i^n=D(C_i^n)\;\Longrightarrow\;C^{n+1}\text{ 由线性三对角方程组求出}.
 \end{equation}
 1800\,s 内表面 $C$ 从 2.55 降到约 1.50，$D$ 由 $4.9\times10^{-9}$ 缓降至约 $3.9\times10^{-9}$，是平滑函数，滞后误差可忽略；如需更高精度可在每步内做 1--2 次 Picard 迭代。
 
@@ -343,7 +402,7 @@ D_i^n=D(C_i^n)\;\Longrightarrow\;C^{n+1}\text{ 由线性方程组求出}.
 \begin{enumerate}[leftmargin=2.5em]
 \item \textbf{解析锚点}：烘房条件取常数（如 $T_{\mathrm{air}}\equiv41.513\,^\circ$C）、$D$ 冻结时，数值解与 Bessel 级数解对比。实测：$t=1800$\,s 处中心 37.8046\,$^\circ$C vs 解析 37.8050\,$^\circ$C，表面 39.4487 vs 39.4483——\textbf{4 位小数吻合}。
 \item \textbf{网格收敛}：$\Delta r$、$\Delta t$ 同步减半，解的变化小于 1\%。
-\item \textbf{质量守恒}：药材总水量减少量 $=$ 表面累计通量 $\iint h_m(C_s-C_{\mathrm{air}})\,\mathrm{d}A\,\mathrm{d}t$（数值验证两边相等）。
+\item \textbf{质量守恒}：药材总水量减少量 $=$ 表面累计通量 $\iint h_m(C_s-C_{\mathrm{air}})\,\mathrm{d}A\,\mathrm{d}t$（$C_s=C(R,t)$ 为表面浓度、$\mathrm{d}A$ 为表面积微元；数值验证两边相等）。
 \item \textbf{渐近行为}：边界取常数时，$t\to\infty$ 有 $T\to T_{\mathrm{air}}$、$C\to C_{\mathrm{air}}$。
 \item \textbf{量级直觉}：$\sqrt{\alpha t}\approx1.7$\,cm、$\sqrt{Dt}\approx3.0$\,mm 与表 1、表 2 形态一致（第 6 节已给出）。
 \end{enumerate}
