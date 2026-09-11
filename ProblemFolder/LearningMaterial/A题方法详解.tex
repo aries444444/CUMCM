@@ -1,0 +1,811 @@
+\documentclass[12pt,a4paper]{ctexart}
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{geometry}
+\usepackage{enumitem}
+\usepackage[hidelinks]{hyperref}
+\geometry{margin=2.4cm}
+\setlength{\parskip}{0.4em}
+\setlength{\parindent}{2em}
+\linespread{1.25}
+\renewcommand{\arraystretch}{1.2}
+\allowdisplaybreaks
+\setcounter{secnumdepth}{-1}
+\ctexset{
+  section = {format = {\heiti \zihao{3}}},
+  subsection = {format = {\heiti \zihao{4}}},
+  subsubsection = {format = {\heiti \zihao{-4}}},
+}
+
+\newcommand{\dd}{\,\mathrm{d}}
+\newcommand{\pdd}[2]{\dfrac{\partial #1}{\partial #2}}
+\newcommand{\handon}[1]{\par\smallskip\noindent{\heiti 【手推练习】}#1\par\smallskip}
+\newcommand{\why}[1]{\par\smallskip\noindent{\heiti 【为什么要这样做】}#1\par\smallskip}
+
+\begin{document}
+
+\begin{center}
+{\heiti\zihao{-2} A 题《药材的烘干问题》方法手推教程\par}
+\vspace{0.4em}
+{\heiti\zihao{4} ——从大一微积分基础，手推论文中的每一个公式\par}
+\end{center}
+
+\section*{写在前面：这份教程怎么用}
+
+\textbf{目标。}本教程与论文《A题论文.tex》逐节对应，目标只有一个：让你\textbf{合上本子也能独立手推}论文里的每一个方程、每一行离散公式、每一个验证数字。全部推导只用到大一高等数学（泰勒展开、偏导数、无穷级数）与最基础的线性代数（三对角矩阵消元），不涉及任何超出这个范围的知识；凡是用到贝塞尔函数、湿球温度这类"课内没学过"的内容，教程会给出准确定义和查表方法，你只需会用即可。
+
+\textbf{三遍读法。}第一遍：只读每章开头的直观理解与章末小结，建立整体印象；第二遍：拿出纸笔，跟着每一行公式\textbf{亲手抄写推导}，任何一步跳不过去就停下来弄懂；第三遍：合上教程，独立完成每章末尾的【手推练习】（答案与提示见附录 A），能独立完成全部 12 道练习，即达到目标。
+
+\textbf{与论文、代码的对应关系。}
+
+\begin{center}
+{\zihao{5}\begin{tabular}{lll}
+\toprule
+论文章节 & 内容 & 教程对应 \\
+\midrule
+2.4 & 四个问题的条件差异对照 & 第 12 章 \\
+5.1 & 问题 1 模型（附录 2） & 第 2、3 章 \\
+5.2 & 问题 2、3 模型（附录 3） & 第 2、3、10 章 \\
+5.3 & 问题 4 模型（收缩，附录 4） & 第 9 章 \\
+5.4--5.5 & 数值方法与网格选取 & 第 4--8 章 \\
+7 & 模型检验 & 第 11 章 \\
+6 & 求解结果 & 12.4 节 \\
+附录 & 追赶法、守恒恒等式 & 第 6、7 章 \\
+\bottomrule
+\end{tabular}}
+\end{center}
+
+\textbf{记号约定。}全部记号与论文第四节符号表完全一致：$r$ 径向坐标（m）、$R$ 药材半径（m，问题 4 中为 $R(t)$）、$t$ 时间（s）、$T$ 药材温度（$^\circ$C）、$C$ 水分浓度/干基含水率（kg/kg）、$k$ 导热系数（W/(m$\cdot$K)）、$\rho$ 密度（kg/m$^3$）、$c_p$ 比热容（J/(kg$\cdot$K)）、$D$ 水分扩散系数（m$^2$/s）、$h$ 对流换热系数（W/(m$^2\!\cdot$K)）、$h_m$ 对流传质系数（m/s）、$\Delta r$ 与 $\Delta t$ 空间与时间步长、$N$ 节点数。教程中所有数字均可由四个求解器（\texttt{q1\_solver.py}--\texttt{q4\_solver.py}）复现。
+
+\section{第一章 微积分工具箱：三个"母公式"}
+
+本章把后面要用到的全部数学浓缩为三件工具。你在大一已经学过它们，这里只做"工程化"处理：记法、用途、与本题的连接点。
+
+\subsection{1.1 偏导数与链式法则（第 9 章的弹药库）}
+
+对二元函数 $u(r,t)$，偏导数 $\partial u/\partial r$ 的定义是：固定 $t$，只让 $r$ 变化时的变化率。唯一的纪律是\textbf{记号写清楚"固定谁"}：$\partial u/\partial r|_t$ 表示 $t$ 固定，$\partial u/\partial t|_r$ 表示 $r$ 固定。省略下标的场合，约定对方都是固定的。
+
+两个独立变量的变化可以合成\textbf{全微分}
+\begin{equation}
+\dd u=\pdd{u}{r}\dd r+\pdd{u}{t}\dd t .
+\end{equation}
+现在做坐标变换：设 $r=r(\zeta,t)$（例如第 9 章取 $\zeta=r/R(t)$，即 $r=R(t)\zeta$），把 $u$ 看作 $(\zeta,t)$ 的函数。由全微分立即得到两条链式法则：
+\begin{equation}
+\pdd{u}{\zeta}\Big|_t=\pdd{u}{r}\cdot\pdd{r}{\zeta},\qquad
+\pdd{u}{t}\Big|_\zeta=\pdd{u}{r}\cdot\pdd{r}{t}\Big|_\zeta+\pdd{u}{t}\Big|_r .
+\end{equation}
+第二条的读法：固定 $\zeta$（随体）看变化率，等于"空间位置变化引起的部分"加上"原地随时间变化的部分"。
+
+\handon{取 $u(r,t)=r^2t$，$r=R(t)\zeta$（$R$ 是 $t$ 的函数）。用两条链式法则分别计算 $\partial u/\partial\zeta$ 与 $\partial u/\partial t|_\zeta$，再对 $u=R^2\zeta^2t$ 直接求偏导，验证两者一致。}
+
+\subsection{1.2 泰勒展开：数值方法唯一的母公式}
+
+一维泰勒展开（带拉格朗日余项）：
+\begin{equation}
+u(r\pm\Delta r)=u(r)\pm\Delta r\,u'(r)+\frac{\Delta r^2}{2}u''(r)\pm\frac{\Delta r^3}{6}u'''(r)+\frac{\Delta r^4}{24}u''''(r)+O(\Delta r^5),
+\end{equation}
+其中 $O(\Delta r^5)$ 表示"量级不超过常数乘 $\Delta r^5$ 的项"。数值方法中几乎每一个差分公式都是这两个展开式的加加减减：
+
+\textbf{（1）一阶中心差商（相减）。}
+\begin{equation}
+\frac{u(r+\Delta r)-u(r-\Delta r)}{2\Delta r}=u'(r)+\frac{\Delta r^2}{6}u'''(r)+O(\Delta r^4).
+\end{equation}
+左边与真值 $u'$ 相差 $\dfrac{\Delta r^2}{6}u'''$，称为\textbf{截断误差}，其量级为 $O(\Delta r^2)$，于是称该差商\textbf{二阶精度}。
+
+\textbf{（2）二阶中心差商（相加）。}
+\begin{equation}
+\frac{u(r+\Delta r)-2u(r)+u(r-\Delta r)}{\Delta r^2}=u''(r)+\frac{\Delta r^2}{12}u''''(r)+O(\Delta r^4),
+\end{equation}
+同样二阶精度。若只用单侧值，得到一阶精度的前向差商 $\bigl(u(r+\Delta r)-u(r)\bigr)/\Delta r=u'+O(\Delta r)$ 与后向差商。
+
+\textbf{（3）精度阶的实用含义。}若某格式截断误差为 $O(\Delta r^p)$（$p$ 阶精度），则网格加密一半（$\Delta r\to\Delta r/2$）后误差约缩小到 $1/2^p$。二阶格式加密一半，误差除以 $4$——这就是论文 7.2 节"收敛比值约 4"的由来（第 11 章给出严格推导）。
+
+\handon{把 $u(r+\Delta r)$ 与 $u(r-\Delta r)$ 两个展开式分别相减、相加，独立导出上面两个中心差商公式，确认截断误差的系数 $1/6$ 与 $1/12$。}
+
+\subsection{1.3 通量与守恒：一切模型的骨架}
+
+\textbf{通量}（flux）指单位时间通过单位面积的物理量：热流密度 $q$（W/m$^2$）表示每秒每平方米流过多少焦耳热量；水分通量 $J$（kg/(m$^2\!\cdot$s)）表示每秒每平方米流过多少千克水。\textbf{守恒}是一切传递模型的统一句式：
+
+\begin{equation}
+\text{箱内积累量}=\text{流入量}-\text{流出量} .
+\end{equation}
+
+对圆柱上的微元壳层 $[r,r+\Delta r]$（取单位长度），侧面积为 $2\pi r$（内表面）与 $2\pi(r+\Delta r)$（外表面），体积为 $2\pi r\Delta r$。侧面积随 $r$ 增大——这就是柱坐标方程里出现 $1/r$ 因子的全部原因：同一通量在内外两个表面上作用的"总面积"不同。
+
+\subsection{1.4 数量级估计与 $\sqrt{Dt}$}
+
+量纲分析是检查一切结论的第一道关。扩散系数 $D$ 的量纲是 m$^2$/s，则 $D$ 与时间 $t$ 能拼出的唯一长度是 $\sqrt{Dt}$，它代表"$t$ 时间内扩散影响到的深度"。问题 1 中 $D\approx4\times10^{-9}$ m$^2$/s、$t=1800$ s，得
+\begin{equation}
+\sqrt{Dt}=\sqrt{4\times10^{-9}\times1800}\approx2.6\ \mathrm{mm},
+\end{equation}
+即预热段水分只影响表面 2--3 mm——与论文表 2"中心含水率 1800 s 内基本不变"互相印证。同理，热扩散率 $\alpha=k/(\rho c_p)$ 对应的特征时间 $R^2/\alpha$ 衡量"热量传遍整个截面需要多久"：问题 1 中 $\alpha=0.36/(820\times2600)\approx1.7\times10^{-7}$ m$^2$/s，$R^2/\alpha\approx2400$ s（约 40 分钟），远小于烘干全程（57 h），这就是论文 6.2 节"数小时即等温"结论的数量级基础。
+
+\subsection{1.5 三对角矩阵长什么样}
+
+若未知量排成一列 $u_0,u_1,\dots,u_{N-1}$，且每个方程只牵涉 $u_{i-1},u_i,u_{i+1}$ 三个相邻未知数，则系数矩阵只在主对角线及其两侧两条斜线上有非零元，称为\textbf{三对角矩阵}。扩散问题的空间离散天然产生三对角矩阵（每个点只与左右邻居交换通量），它是后面第 6、7 章的主角。
+
+\section{第二章 控制方程的手推：从守恒律到偏微分方程}
+
+\subsection{2.1 两个本构定律：傅里叶定律与菲克定律}
+
+\textbf{傅里叶导热定律}：热流密度与温度梯度成正比，方向相反，
+\begin{equation}
+q=-k\pdd{T}{r}.
+\end{equation}
+负号表示热量沿温度\textbf{降低}的方向流动（温度越高的地方越往外散热）。\textbf{菲克扩散定律}结构完全相同：
+\begin{equation}
+J=-D\pdd{C}{r}.
+\end{equation}
+两条定律都是实验规律（本构关系），其中的系数 $k$、$D$ 由实验测定。本题的关键点在于：题目给的 $D(C,T)$、$k(C)$、$\rho(C)$、$c_p(C)$ 就是把这两个定律里的系数换成实验拟合函数——\textbf{方程结构不变，只是系数变复杂}。记住这一点，后面处理非线性就不会慌。
+
+\subsection{2.2 手推柱坐标热传导方程}
+
+考虑半径 $r$ 处厚度 $\dd r$ 的薄壳层（取单位长度，体积 $\dd V=2\pi r\dd r$）。用守恒句式：
+
+\textbf{第 1 步：积累。}壳层内能变化率 = $\rho c_p\pdd{T}{t}\cdot 2\pi r\dd r$。
+
+\textbf{第 2 步：流入与流出。}约定 $q$ 向外为正。从内表面（半径 $r$）流入壳层的热 = $q(r)\cdot 2\pi r$（内区向外流出的热，恰好就是流入壳层的热）；从外表面（半径 $r+\dd r$）流出壳层的热 = $q(r+\dd r)\cdot 2\pi(r+\dd r)$。
+
+\textbf{第 3 步：写守恒式并展开。}
+\begin{equation}
+\rho c_p\pdd{T}{t}\cdot 2\pi r\dd r
+=q(r)\cdot 2\pi r-q(r+\dd r)\cdot 2\pi(r+\dd r)
+=-2\pi\frac{\partial(rq)}{\partial r}\dd r .
+\end{equation}
+两边同除 $2\pi r\dd r$，得
+\begin{equation}
+\rho c_p\pdd{T}{t}=-\frac{1}{r}\frac{\partial(rq)}{\partial r}
+=\frac{1}{r}\pdd{}{r}\Bigl(r\,k\pdd{T}{r}\Bigr).
+\end{equation}
+最后一步代入了傅里叶定律 $q=-k\,\partial T/\partial r$（负负得正）。当 $k$ 为常数时化为
+\begin{equation}
+\pdd{T}{t}=\alpha\Bigl(\frac{\partial^2T}{\partial r^2}+\frac{1}{r}\pdd{T}{r}\Bigr),\qquad
+\alpha=\frac{k}{\rho c_p}\ (\text{热扩散率，m$^2$/s}).
+\end{equation}
+
+\why{$1/r$ 从哪来？来自"侧面积随半径增大"：同样大小的热流，在更大的圆周上摊薄了。若药材是平板（直角坐标），面积处处相同，$1/r$ 项消失。}
+
+\subsection{2.3 手推水分扩散方程（与 2.2 节完全同构）}
+
+把"内能"换成"水分质量"、$q$ 换成 $J$、$k$ 换成 $D$，质量守恒给出
+\begin{equation}
+\pdd{C}{t}=\frac{1}{r}\pdd{}{r}\Bigl(r\,D(C,T)\pdd{C}{r}\Bigr).
+\end{equation}
+注意水分方程左边\textbf{没有} $\rho c_p$：因为 $C$ 本身是"单位干物质含多少水"，积累项就是 $\partial C/\partial t$，不再乘密度比热。这是热方程与质方程唯一的实质性差别，其余结构完全平行。
+
+\subsection{2.4 统一写法与"耦合"的由来}
+
+两方程可统一记为
+\begin{equation}
+\pdd{u}{t}=\frac{1}{r}\pdd{}{r}\Bigl(r\,\Gamma(u)\pdd{u}{r}\Bigr),\quad
+u=T\ \text{或}\ C,\ \ \Gamma=k/(\rho c_p)\ \text{或}\ D .
+\end{equation}
+论文称之为\textbf{双向弱耦合}：温度场通过 $D(C,T)$ 里的 Arrhenius 因子影响水分场；水分场通过 $k(C)$、$\rho(C)c_p(C)$ 影响温度场。两个场通过\textbf{物性系数}互相影响，而两个边界条件本身不直接交叉（没有 Soret/Dufour 交叉效应）。"耦合"在此不神秘：就是"解第一个方程需要第二个方程的解，反之亦然"，第 8 章给出具体解法。
+
+\handon{对直角坐标平板（厚度方向 $x$），独立手推热传导方程，得到 $\rho c_p\,\partial T/\partial t=\partial(k\,\partial T/\partial x)/\partial x$；体会侧面积不变时 $1/r$ 如何消失。}
+
+\section{第三章 定解条件：边界与初值}
+
+一个偏微分方程只有配上边界条件与初始条件才是完整、可解的数学问题（适定问题）。
+
+\subsection{3.1 三类边界条件}
+
+\textbf{第一类（Dirichlet）}：边界上函数值已知，$u(R,t)=$ 给定。\textbf{第二类（Neumann）}：边界上通量已知（绝热即通量为 0）。\textbf{第三类（Robin）}：边界通量与"边界值$-$环境值"成正比——本题表面即取此类。
+
+\subsection{3.2 手推 Robin 边界条件的来历}
+
+在表面取一层厚度 $\varepsilon$ 的薄层。能量守恒：
+\begin{equation}
+\rho c_p\pdd{T}{t}\cdot(2\pi R\,\varepsilon)=
+\underbrace{\Bigl[-k\pdd{T}{r}\Big|_{R}\cdot 2\pi R\Bigr]}_{\text{内部传导进来的热}}
+-\underbrace{\bigl[h\bigl(T_R-T_a\bigr)\cdot 2\pi R\bigr]}_{\text{对流带走的热}} .
+\end{equation}
+对流项用了\textbf{牛顿冷却公式}：对流换热的热流密度与温差成正比，比例系数为对流换热系数 $h$。令 $\varepsilon\to0$：左侧储热项趋于零（薄层不储热），传导项与对流项必须精确相等：
+\begin{equation}
+-k\pdd{T}{r}\Big|_{R}=h\bigl(T(R,t)-T_a(t)\bigr),
+\qquad
+-D\pdd{C}{r}\Big|_{R}=h_m\bigl(C(R,t)-C_a(t)\bigr).
+\end{equation}
+质侧完全同构，$h_m$ 为对流传质系数。\textbf{读法}：表面是无限薄层，自己不能储热（储水），进出的热（水）必须相等。边界条件本身不解出表面温度——表面温度由边界条件与内部方程联立决定，这正是 Robin 条件与第一类条件的区别。
+
+\subsection{3.3 $r=0$ 的对称条件与洛必达法则}
+
+轴线上温度、水分必须光滑（有尖点则物理不通），故 $\partial T/\partial r(0,t)=\partial C/\partial r(0,t)=0$。但方程里的 $(1/r)\partial(r\,\partial u/\partial r)/\partial r$ 在 $r=0$ 是 $0/0$ 型，用洛必达法则：
+\begin{equation}
+\lim_{r\to0}\frac{1}{r}\pdd{}{r}\Bigl(r\pdd{u}{r}\Bigr)
+=\lim_{r\to0}\Bigl(\frac{\partial^2u}{\partial r^2}+\frac{1}{r}\pdd{u}{r}\Bigr)
+=2\frac{\partial^2u}{\partial r^2}\Big|_{r=0},
+\end{equation}
+（对分子分母分别对 $r$ 求导；再对第二项再用一次洛必达）。这就是论文 5.1 节"$r=0$ 处化为 $2\alpha\,\partial^2T/\partial r^2$"的来历。
+
+\subsection{3.4 完整写出问题 1 的数学问题}
+
+以问题 1（附录 2）为例，把"一个偏微分方程 $+$ 两个边界条件 $+$ 一个初始条件"写成一个完整的数学题：
+\begin{gather}
+\rho c_p\pdd{T}{t}=\frac{k}{r}\pdd{}{r}\Bigl(r\pdd{T}{r}\Bigr),\qquad
+\pdd{C}{t}=\frac{1}{r}\pdd{}{r}\Bigl(r\,D(C)\pdd{C}{r}\Bigr), \quad 0<r<R,\ t>0,\\
+\pdd{T}{r}(0,t)=\pdd{C}{r}(0,t)=0,\qquad
+-k\pdd{T}{r}\Big|_{R}=h(T_R-T_a(t)),\qquad
+-D\pdd{C}{r}\Big|_{R}=h_m(C_R-C_a(t)),\\
+T(r,0)=28\ ^\circ\mathrm{C},\qquad C(r,0)=2.55\ \mathrm{kg/kg},
+\end{gather}
+其中 $\rho=820$、$c_p=2600$、$k=0.36$、$h=25$、$h_m=8\times10^{-7}$（附录 2），$D(C)=7\times10^{-9}\mathrm{e}^{-0.89/C}$，$T_a(t),C_a(t)$ 由附件 1 线性插值。问题 2、3 把物性换成附录 3 的经验式（$\rho,c_p,k$ 随 $C$ 变、$D$ 随 $C,T$ 变），烘房条件换成两段拼接（附件 1 插值 + 恒温段 50.165 $^\circ$C / 0.04986 kg/kg）；问题 4 把 $r$ 换成随体坐标 $\zeta$（第 9 章）并让 $R=R(t)$。\textbf{四问的差别只在这三处：物性、烘房条件、是否收缩}——论文 2.4 节的对照表就是逐项核对这三处差异。
+
+\section{第四章 数值方法的总体思想}
+
+\subsection{4.1 从连续到离散}
+
+计算机只能处理有限个数。取节点 $r_i=i\Delta r$（$i=0,1,\dots,N-1$），令表面节点恰在真实表面 $r_{N-1}=R$，即 $R=(N-1)\Delta r$。问题 1 主网格 $\Delta r=0.125$ mm、$N=161$，于是每个时刻有 161 个温度 + 161 个水分浓度共 322 个未知数，方程（离散后的）也有 322 个。这就是"把偏微分方程变成有限维问题"的全部含义。
+
+\subsection{4.2 时间推进：一步一步走}
+
+模型是初值问题：已知 $t_n$ 时刻全部节点值，求 $t_{n+1}=t_n+\Delta t$ 时刻的值。如此循环 $n=0,1,2,\dots$，直到目标时刻。问题 3 全程 $t^*=205082$ s，$\Delta t=2.5$ s，共走约 82000 步。
+
+\subsection{4.3 显式与隐式}
+
+先对空间用 1.2 节的二阶中心差商（一维均匀情形），方程 $\partial u/\partial t=\alpha\,\partial^2u/\partial x^2$ 变成
+\begin{equation}
+\frac{u_i^{n+1}-u_i^n}{\Delta t}
+=\alpha\frac{u_{i+1}-2u_i+u_{i-1}}{\Delta x^2}\Big|^{\,n}\ \text{或}\ ^{\,n+1}.
+\end{equation}
+右边取旧时刻 $n$ 的值，则 $u_i^{n+1}$ 可直接移项算出，叫\textbf{显式}格式（便宜，但步长受死，见下节）；右边取新时刻 $n+1$ 的值，则每个方程都含三个新未知数，必须\textbf{联立解方程组}，叫\textbf{隐式}格式（每步贵一点，但步长几乎不受限）。
+
+\subsection{4.4 稳定性手推：为什么必须选隐式（本章最硬核的一节，务必亲手算）}
+
+\textbf{第 1 步：显式格式的放大因子。}把误差（或解本身）写成傅里叶模态 $u_i^n=\xi^n\mathrm{e}^{\mathrm{i}\theta i}$（$\mathrm{e}^{\mathrm{i}\theta}=\cos\theta+\mathrm{i}\sin\theta$，$\theta$ 为任意波数），代入显式格式：
+\begin{align}
+\xi^{n+1}\mathrm{e}^{\mathrm{i}\theta i}
+&=\xi^n\mathrm{e}^{\mathrm{i}\theta i}
++r\,\xi^n\bigl(\mathrm{e}^{\mathrm{i}\theta(i+1)}-2\mathrm{e}^{\mathrm{i}\theta i}+\mathrm{e}^{\mathrm{i}\theta(i-1)}\bigr),
+\quad r=\frac{\alpha\Delta t}{\Delta x^2},\\
+\xi&=1+r(\mathrm{e}^{\mathrm{i}\theta}-2+\mathrm{e}^{-\mathrm{i}\theta})
+=1-2r(1-\cos\theta)=1-4r\sin^2\frac{\theta}{2}.
+\end{align}
+$n$ 步后误差乘以 $\xi^n$，故数值格式稳定的充要条件是\textbf{对一切 $\theta$ 都有 $|\xi|\le1$}。$\xi$ 的最大可能越界发生在 $\sin^2(\theta/2)=1$，即 $\xi=1-4r$；要求 $1-4r\ge-1$，得
+\begin{equation}
+\boxed{\ \Delta t\le\frac{\Delta x^2}{2\alpha}\ }
+\quad(\text{显式格式的稳定性条件}).
+\end{equation}
+
+\textbf{第 2 步：隐式格式的放大因子。}同一模态代入隐式格式：$\xi=1+r\xi(\mathrm{e}^{\mathrm{i}\theta}-2+\mathrm{e}^{-\mathrm{i}\theta})$，移项得
+\begin{equation}
+\xi=\frac{1}{1+4r\sin^2(\theta/2)}\le1
+\end{equation}
+对\textbf{任意} $r>0$ 恒成立——隐式格式\textbf{无条件稳定}。
+
+\textbf{第 3 步：代入本题数字。}问题 1：$\alpha=k/(\rho c_p)=0.36/(820\times2600)\approx1.69\times10^{-7}$ m$^2$/s，$\Delta r=1.25\times10^{-4}$ m，显式允许 $\Delta t\le(1.25\times10^{-4})^2/(2\times1.69\times10^{-7})\approx0.046$ s；而实际取 $\Delta t=0.125$ s（超出约 2.7 倍），显式格式必然数值发散（误差指数爆炸），隐式格式则安然无恙。问题 3：附录 3 初值下 $\alpha\approx1.45\times10^{-7}$、$\Delta r=2.5\times10^{-4}$ m，显式上限约 0.22 s，实际取 2.5 s（超出约 11 倍）。算一笔账：问题 3 全程若用显式需 $205082/0.22\approx9.3\times10^5$ 步，隐式只需 $205082/2.5\approx8.2\times10^4$ 步。\textbf{这就是论文选隐式（Crank--Nicolson）的原因。}
+
+\why{两方程步长取较严者。问题 1 的水分方程 $D\approx5\times10^{-9}$ m$^2$/s 对应显式上限约 1.6 s，比热方程的 0.046 s 松得多；决定步长的永远是"限制更紧"的那个方程（这里是热方程）。}
+
+\subsection{4.5 误差的三驾马车}
+
+数值解的总误差有三个来源，设计时按"迭代误差 $\ll$ 截断误差 $\ll$ 容差"分工：\textbf{截断误差}由格式决定（本章与第 5、6 章的主题）；\textbf{舍入误差}由计算机双精度决定（约 $10^{-16}$ 量级，论文中守恒闭合到 $10^{-18}$ 正说明舍入误差控制得当）；\textbf{迭代误差}由非线性求解的迭代轮数决定（第 8 章）。
+
+\subsection{4.6 "二阶精度"的实用含义}
+
+若某格式的空间截断误差为 $O(\Delta r^2)$，则精确解 $u$ 与网格解 $u_h$ 满足 $u_h=u+C\Delta r^2+O(\Delta r^4)$。网格加密一半：误差约除以 4。据此可以\textbf{不靠精确解估计误差}：$\bigl(u_h-u_{h/2}\bigr)/(u_{2h}-u_h)\approx1/4$（比值接近 4 即验证二阶精度），且 $u_{h/2}$ 的误差约等于 $(u_h-u_{h/2})/3$。论文 7.2 节全部收敛数字都用这两个公式解读（第 11 章给出推导）。
+
+\section{第五章 Crank--Nicolson 格式的手推}
+
+\subsection{5.1 半离散：先把空间"化掉"}
+
+把空间导数全部用差商替换（具体离散方式见第 6 章），偏微分方程变成一组常微分方程
+\begin{equation}
+\frac{\dd u}{\dd t}=Lu,
+\end{equation}
+其中 $L$ 是空间算子（矩阵），$u$ 是全部节点值组成的向量。之后只需研究"如何推进时间"，与空间离散的具体形式无关。这条"先离散空间、再离散时间"的路线称为\textbf{方法线}（method of lines）。
+
+\subsection{5.2 三种时间格式}
+
+\begin{itemize}[leftmargin=2em]
+\item \textbf{前向欧拉}：$u^{n+1}=u^n+\Delta t\,Lu^n$（显式，局部截断误差 $O(\Delta t^2)$，有条件稳定）；
+\item \textbf{后向欧拉}：$u^{n+1}=u^n+\Delta t\,Lu^{n+1}$（隐式，无条件稳定，局部 $O(\Delta t^2)$）；
+\item \textbf{Crank--Nicolson（CN）}：两者的算术平均，
+\begin{equation}
+u^{n+1}-u^n=\frac{\Delta t}{2}\bigl(Lu^{n}+Lu^{n+1}\bigr).
+\end{equation}
+\end{itemize}
+
+\subsection{5.3 CN = 梯形法则}
+
+对 $\dd u/\dd t=Lu$ 在 $[t_n,t_{n+1}]$ 上积分：$u^{n+1}-u^n=\int_{t_n}^{t_{n+1}}Lu\,\dd t$。用梯形公式近似积分（端点值平均乘区间长），恰好就是 CN。梯形公式的误差为 $O(\Delta t^3)$，故 CN 的\textbf{局部截断误差三阶}，累计 $O(1/\Delta t)$ 步后\textbf{全局误差二阶}。
+
+\subsection{5.4 手推 CN 的局部截断误差（在 $t_{n+1/2}$ 处展开）}
+
+记 $u$ 及其各阶导数为 $t_{n+1/2}$ 处的值，用泰勒展开（$u'=Lu$ 由方程连接）：
+\begin{align}
+u^{n+1}&=u+\frac{\Delta t}{2}u'+\frac{\Delta t^2}{8}u''+\frac{\Delta t^3}{48}u'''+O(\Delta t^4),\notag\\
+u^{n}&=u-\frac{\Delta t}{2}u'+\frac{\Delta t^2}{8}u''-\frac{\Delta t^3}{48}u'''+O(\Delta t^4),\notag\\
+\Rightarrow\quad u^{n+1}-u^n&=\Delta t\,u'+\frac{\Delta t^3}{24}u'''+O(\Delta t^5),\notag\\
+u'^{\,n+1}+u'^{\,n}&=2u'+\frac{\Delta t^2}{4}u'''+O(\Delta t^4),\notag\\
+\Rightarrow\quad \frac{\Delta t}{2}\bigl(u'^{\,n+1}+u'^{\,n}\bigr)&=\Delta t\,u'+\frac{\Delta t^3}{8}u'''+O(\Delta t^5).\notag
+\end{align}
+两式相减，得局部截断误差
+\begin{equation}
+\Bigl[u^{n+1}-u^{n}\Bigr]-\frac{\Delta t}{2}\Bigl[u'^{\,n+1}+u'^{\,n}\Bigr]
+=-\frac{\Delta t^3}{12}u'''+O(\Delta t^5),
+\end{equation}
+确为三阶（全局二阶）。\textbf{关键结构}：$u''$ 项与 $u'''$ 的奇偶抵消正是"平均"带来的红利——前向/后向欧拉的残差是 $\pm(\Delta t^2/2)u''$（低一阶），CN 通过取平均把这一项消掉了。
+
+\subsection{5.5 CN 的稳定性}
+
+同一模态分析：$\xi=\dfrac{1-2r\sin^2(\theta/2)}{1+2r\sin^2(\theta/2)}$，分子绝对值 $\le$ 分母，故 $|\xi|\le1$ 对任意 $r$ 成立——\textbf{无条件稳定}。附带提醒：$r$ 很大时 $\xi\to-1$（临界阻尼），对非光滑初值可能出现不衰减的数值振荡，所以步长也不是越大越好，还要满足精度要求。
+
+\subsection{5.6 为什么选 CN}
+
+时间二阶 + 空间二阶，两项误差配比（$O(\Delta t^2+\Delta r^2)$）；无条件稳定，步长只受精度约束；每步只需求解\textbf{一次}三对角线性方程组。在"精度、稳定性、每步成本"三者之间，CN 是本题的最优平衡点（更深的理论：Dahlquist 定理说明二阶 A-稳定线性多步法中梯形类格式精度最优，此处不展开）。
+
+\handon{用同样的展开手法，证明前向欧拉与后向欧拉的局部截断误差分别为 $+(\Delta t^2/2)u''$ 与 $-(\Delta t^2/2)u''$（全局一阶），并说明为什么取平均后 $u''$ 项恰好抵消。}
+
+\section{第六章 有限体积法的手推}
+
+\subsection{6.1 为什么不用"逐点中心差商"}
+
+在节点上直接替换导数（有限差分法）对本题有三个麻烦：$r=0$ 处 $(1/r)$ 奇异，需要额外处理；系数 $k(C)$、$D(C,T)$ 随位置剧烈变化时，"先差商再乘系数"与"先乘系数再差商"不守恒；最重要的是，逐点差分\textbf{不自动保证守恒}——而质量守恒是干燥问题的生命线（失水总量必须等于表面蒸发总量）。\textbf{有限体积法}把方程在每个控制体上积分、把导数换成界面通量，让"流入流出对消"从离散的第一步就成立。
+
+\subsection{6.2 网格与控制体体积的手推}
+
+每个节点 $i$ 拥有一个控制体（control volume, CV），相邻控制体以两个节点的中点 $r_{i\pm1/2}$ 为界面。控制体体积 $v_i=\int_{\mathrm{CV}_i}r\,\dd r$（积分权重 $r$ 来自柱坐标面积元 $r\,\dd r\,\dd\theta$，共同因子 $\dd\theta$ 略去）：
+\begin{align}
+v_i&=\frac{r_{i+1/2}^2-r_{i-1/2}^2}{2}
+=\frac{\bigl[(i+\tfrac12)^2-(i-\tfrac12)^2\bigr]\Delta r^2}{2}=i\,\Delta r^2
+\quad(1\le i\le N-2),\notag\\
+v_0&=\frac{r_{1/2}^2}{2}=\frac{\Delta r^2}{8}
+\quad(\text{圆心控制体 }[0,r_{1/2}]),\notag\\
+v_{N-1}&=\frac{R^2-r_{N-3/2}^2}{2}
+=\frac{\bigl[(N-1)^2-(N-\tfrac32)^2\bigr]\Delta r^2}{2}
+\quad(\text{表面控制体 }[r_{N-3/2},R]).\notag
+\end{align}
+
+\subsection{6.3 界面通量与离散方程}
+
+界面 $i{+}1/2$ 上的通量 = 扩散系数 $\times$ 界面周长 $\times$ 法向梯度，其中梯度用中心差商、系数取两侧算术平均：
+\begin{equation}
+F_{i+1/2}=r_{i+1/2}\,K_{i+1/2}\,\frac{u_{i+1}-u_i}{\Delta r},\qquad
+K_{i+1/2}=\frac{K_i+K_{i+1}}{2}.
+\end{equation}
+控制体 $i$ 的守恒式（积累 = 流入 − 流出）除以 $v_i$ 得
+\begin{equation}
+(Lu)_i=\Bigl[r_{i+1/2}K_{i+1/2}\frac{u_{i+1}-u_i}{\Delta r}
+-r_{i-1/2}K_{i-1/2}\frac{u_i-u_{i-1}}{\Delta r}\Bigr]\Big/v_i,
+\end{equation}
+（$u$ 代表 $T$ 或 $C$；对热方程 $K=k$ 且左侧另有 $\rho c_p$ 因子，对质方程 $K=D$）。这就是论文式 (10)。
+
+\subsection{6.4 圆心行}
+
+圆心控制体只有外界面 $r_{1/2}$，流入为零（轴线不是真实边界），配合 3.3 节的洛必达离散：
+\begin{equation}
+(Lu)_0=\frac{-F_{1/2}}{v_0}
+=\frac{-r_{1/2}K_{1/2}(u_1-u_0)/\Delta r}{\Delta r^2/8}
+=4K_{1/2}\frac{u_1-u_0}{\Delta r^2}.
+\end{equation}
+分母 $\Delta r^2/8$ 与分子 $r_{1/2}=\Delta r/2$ 配合后恰好给出洛必达因子 2 的离散形式（量纲检查：$K\times\Delta u/\Delta r^2$，与扩散算子一致）。
+
+\subsection{6.5 表面行：Robin 条件直接作用于真实表面}
+
+表面控制体的外界面就是真实表面。由 Robin 条件 $-K_s\,\partial u/\partial r|_R=\beta K_s(u_R-u_a)$（热方程 $\beta=h/k_s$，质方程 $\beta=h_m/D_s$），表面向外传递的\textbf{总通量}（乘周长 $2\pi R$ 后略去公因子 $2\pi$）为 $R\cdot\beta K_s(u_s-u_a)$，即论文式 (11)：
+\begin{equation}
+(Lu)_{N-1}=\Bigl[r_{N-3/2}K_{N-3/2}\frac{u_{N-2}-u_{N-1}}{\Delta r}
+-R\,\beta\,K_s\,(u_{N-1}-u_a)\Bigr]\Big/v_{N-1}.
+\end{equation}
+
+\why{表面节点必须放在真实表面（$r_{N-1}=R$），表面值就是真实表面值。若把网格错开（表面值插值到 $R$），Robin 通量与内部通量的"逐层对消"就被破坏，守恒检验（7.3 节）无法闭合到机器精度。论文验证通过，正是这个细节的正确性的证据。}
+
+\subsection{6.6 时间离散：得到三对角方程组}
+
+对每个控制体写 CN 格式：
+\begin{equation}
+v_i\frac{u_i^{n+1}-u_i^n}{\Delta t}
+=\frac12\Bigl(v_i(Lu^{n+1})_i+v_i(Lu^n)_i\Bigr),
+\end{equation}
+把所有含 $u^{n+1}$ 的项移到左边、含 $u^n$ 与边界的项移到右边，得到一个 $N\times N$ 三对角线性方程组，第 7 章的追赶法求解。
+
+\subsection{6.7 守恒恒等式的手推（论文式 (12) 的来历）}
+
+把 CN 方程对\textbf{全体控制体求和}。先看空间部分 $\sum_i v_i(Lu)_i$：界面 $i{+}1/2$ 的通量 $F_{i+1/2}$ 在控制体 $i$ 的行里以 $+F_{i+1/2}$ 出现（流入），在控制体 $i{+}1$ 的行里以 $-F_{i+1/2}$ 出现（流出），\textbf{逐对抵消}（伸缩和）。从 $i=0$ 到 $i=N-1$ 全部消去后，只剩表面行留下的外界面项：
+\begin{equation}
+\sum_{i=0}^{N-1}v_i(Lu)_i=-R\,\beta\,K_s\,(u_{N-1}-u_a).
+\end{equation}
+代回 CN 并乘 $\Delta t$，对水分方程（$\beta K_s=h_m$）得逐时间层的严格恒等式
+\begin{equation}
+\sum_{i=0}^{N-1}v_i\bigl(C_i^{n+1}-C_i^n\bigr)
+=-\frac{\Delta t}{2}R\Bigl[h_m\bigl(C_R^{n+1}-C_a^{n+1}\bigr)
++h_m\bigl(C_R^n-C_a^n\bigr)\Bigr].
+\end{equation}
+左边是"药材里水分的总变化量"，右边是"表面传给空气的总水量"，二者必须相等——这就是离散质量守恒。论文 7.3 节把两边各自独立计算：问题 1 闭合到 $1.5\times10^{-18}$、问题 3 闭合到 $1.7\times10^{-17}$。\textbf{为什么能闭到机器精度？}因为两边本来就是同一批浮点数的两种求和顺序，舍入误差只可能出现在最后一位。
+
+\handon{取 $N=5$（$R=4\Delta r$）、均匀系数 $K$，把 5 个控制体的 CN 方程全部写出来（圆心行、3 个内部行、表面行），整理成三对角矩阵 $A$ 与右端项 $b$ 的形式，并逐项验证 6.7 节的伸缩和对消。}
+
+\section{第七章 追赶法（Thomas 算法）}
+
+\subsection{7.1 问题}
+
+每推进一个时间步，要解三对角方程组 $A\,x=b$，其中 $a_i x_{i-1}+b_i x_i+c_i x_{i+1}=d_i$（$i=0,\dots,N-1$，端点项缺省）。
+
+\subsection{7.2 手推消元}
+
+\textbf{前代（自上而下消去下对角线 $a_i$）。}第 $i$ 行减去 $\bigl(a_i/b'_{i-1}\bigr)$ 乘第 $i-1$ 行（$b'_{i-1}$ 是第 $i-1$ 行当前的主对角元）：
+\begin{equation}
+b'_i=b_i-a_i c'_{i-1},\qquad d'_i=d_i-a_i d'_{i-1},\qquad
+c'_i=\frac{c_i}{b'_i},\quad d'_i\leftarrow\frac{d'_i}{b'_i},
+\end{equation}
+其中 $c'_0=c_0/b_0$，$d'_0=d_0/b_0$ 为起步。\textbf{回代（自下而上）：}
+\begin{equation}
+x_{N-1}=d'_{N-1},\qquad x_i=d'_i-c'_i\,x_{i+1}\quad(i=N-2,\dots,0).
+\end{equation}
+
+\handon{用追赶法求解
+$
+\begin{pmatrix}2&1&0&0\\1&3&1&0\\0&1&3&1\\0&0&1&2\end{pmatrix}
+\begin{pmatrix}x_0\\x_1\\x_2\\x_3\end{pmatrix}
+=\begin{pmatrix}3\\5\\5\\3\end{pmatrix}
+$
+并验证解为 $(1,1,1,1)^{\mathrm{T}}$。}
+
+\subsection{7.3 复杂度：为什么是 $O(N)$}
+
+高斯消元解一般 $N$ 阶方程组需要约 $N^3/3$ 次乘加（$N=161$ 时约 $1.4\times10^6$ 次）；追赶法利用三对角结构，每步只消一个元素，前代加回代共约 $8N$ 次乘加（$N=161$ 时约 1300 次），快三个数量级。问题 3 要解约 82000 个时间步，这个差距直接决定程序能不能在几分钟内跑完。
+
+\subsection{7.4 可解性}
+
+CN 格式的系数矩阵是严格对角占优的（主对角元的绝对值大于同列其余元素绝对值之和），追赶法过程中的主元 $b'_i$ 永不为零，算法不失效。这是隐式格式的又一优点：稳定性与可解性由同一个结构保证。
+
+\section{第八章 非线性与耦合：Picard 迭代}
+
+\subsection{8.1 问题在哪}
+
+第 6 章把 $K$ 当作已知数；但附录 3、4 里 $k(C)$、$\rho(C)c_p(C)$、$D(C,T)$ 都依赖未知量本身。方程组仍是三对角的，但\textbf{系数里藏着未知数}——线性方程组的系数本身未知，这就是非线性。
+
+\subsection{8.2 不动点迭代与牛顿迭代}
+
+求解 $F(x)=0$ 的两个经典方案。\textbf{牛顿迭代}：$x_{k+1}=x_k-F(x_k)/F'(x_k)$，几何上是"沿切线找与 $x$ 轴的交点"，每步都要算导数 $F'$。\textbf{不动点（Picard）迭代}：把方程改写为 $x=G(x)$，迭代 $x_{k+1}=G(x_k)$，几何上是"沿函数图 $y=G(x)$ 与直线 $y=x$ 来回反射"，每步不用算导数，收敛较慢（线性）但对初值要求宽松。本题的用法是把系数"冻结"在上一步的值上，解出新的场量后更新系数再解，如此循环。
+
+\subsection{8.3 为什么本题选 Picard 而不选牛顿}
+
+牛顿法需要雅可比矩阵，即 $\partial D/\partial C=0.45\,D/C^2$（对 $D=2.4\times10^{-3}\mathrm{e}^{-0.45/C}\mathrm{e}^{-3850/T}$ 求导而来）。当 $C$ 降到判据 0.15 kg/kg 附近时，$0.45/C^2\approx20$，即 $D$ 对 $C$ 的敏感度放大 20 倍，雅可比矩阵病态，牛顿迭代易发散；且经验拟合公式的导数本身只是数据的近似。Picard 每轮仍是一次三对角求解，成本与线性情形相同，稳健得多。
+
+\subsection{8.4 交错（错位）耦合：论文 5.4(3) 的流程}
+
+时间步 $[t_n,t_{n+1}]$ 内两轮迭代：
+\begin{enumerate}[label=(\roman*),leftmargin=3em]
+\item 用当前水分场 $C^n$ 计算 $k(C)$、$\rho c_p$，解温度场得 $T^{n+1}$；
+\item 用 $C^n$ 与新温度 $T^{n+1}$ 计算 $D(C,T)$，解水分场得 $C^{n+1}$；
+\item 重复 (i)(ii) 一轮（共两轮），用修正后的 $D$ 更新水分场。
+\end{enumerate}
+
+\why{两轮就够？一个时间步内 $C$ 的变化只有 $\Delta C\approx(\partial C/\partial t)\Delta t\sim10^{-5}$ kg/kg（干燥中期 $\partial C/\partial t\sim10^{-6}$ kg/(kg$\cdot$s)、$\Delta t=2.5$ s），系数相对变化不足 0.01\%。第一轮用旧系数解出的场量已有 $O(\Delta t)$ 精度，第二轮用新场量更新系数后，系数误差降到 $O(\Delta t^2)$——与时间格式本身的截断误差同级，再迭代就是浪费。论文 7.2 节时间收敛检验（误差随 $\Delta t$ 二次下降）间接证明了这个论断。}
+
+\handon{对 $F(x)=x^3-x-1$（根 $\approx1.3247$），从 $x_0=1.5$ 出发：(1) 用牛顿迭代两步；(2) 用 Picard 形式 $x=(x+1)^{1/3}$ 迭代两步。比较两种方法的收敛速度，体会"牛顿快但要导数、Picard 慢但简单"。}
+
+\section{第九章 问题 4：收缩与随体坐标（全篇最精彩的一章）}
+
+\subsection{9.1 物理：失水导致骨架收缩}
+
+水分从细胞间质流失后，固相骨架收缩。附件 2 给出半径时变数据：$t=0$ 时 $R=2.0$ cm，$t=1800$ s 时 $R=1.873$ cm（半小时收缩 6.4\%），$t=72000$ s（20 h）时 $R=1.210$ cm，$t=241200$ s（67 h）起恒定于 $1.198$ cm（全程收缩 40.1\%）。注意：67 h 之前半径仍在缓慢收缩，取"72000 s 即达 1.198 cm"是常见错误。
+
+\subsection{9.2 为什么要换坐标}
+
+边界 $R(t)$ 在移动。若仍用固定 $r$ 网格，每一步都要重新划网格、节点位置随时在变，实现与验证都麻烦。换成随体坐标
+\begin{equation}
+\zeta=\frac{r}{R(t)}\in[0,1],
+\end{equation}
+网格永远固定在 $[0,1]$ 上，边界永远在 $\zeta=1$。
+
+\subsection{9.3 手推路径 A：随体导数（推荐，三步完成）}
+
+\textbf{第 1 步：看一个骨架物质点。}固定 $\zeta$ 即固定在某块干物质上；它的空间位置 $r(t)=R(t)\zeta$ 随时间变化，运动速度
+\begin{equation}
+v_r=\frac{\dd r}{\dd t}\Big|_\zeta=\zeta\,\dot R(t).
+\end{equation}
+
+\textbf{第 2 步：$C$ 定义在干基上，随骨架走。}$C$ 是"每 kg 干物质含多少 kg 水"。干物质随骨架一起运动，因此固定 $\zeta$ 处 $C$ 的变化率就是\textbf{相对骨架的纯扩散}（没有相对运动，就没有对流）：
+\begin{equation}
+\pdd{C}{t}\Big|_\zeta
+=\frac{1}{r}\pdd{}{r}\Bigl(r\,D\pdd{C}{r}\Bigr)
+\quad(\text{右侧是扩散算子}).
+\end{equation}
+
+\textbf{第 3 步：把右侧的 $r$ 换成 $\zeta$。}由链式法则 $\partial C/\partial r=(1/R)\,\partial C/\partial\zeta$，且 $r=R\zeta$：
+\begin{align}
+\frac{1}{r}\pdd{}{r}\Bigl(r\,D\pdd{C}{r}\Bigr)
+&=\frac{1}{R\zeta}\cdot\frac{1}{R}\,\pdd{}{\zeta}
+\Bigl(R\zeta\cdot D\cdot\frac{1}{R}\pdd{C}{\zeta}\Bigr)\notag\\
+&=\frac{1}{R^2(t)\,\zeta}\pdd{}{\zeta}\Bigl(\zeta\,D\pdd{C}{\zeta}\Bigr).
+\end{align}
+于是
+\begin{equation}
+\boxed{\ \pdd{C}{t}\Big|_\zeta
+=\frac{1}{R^2(t)\,\zeta}\pdd{}{\zeta}\Bigl(\zeta\,D\pdd{C}{\zeta}\Bigr)\ }
+\end{equation}
+\textbf{无对流项！}热方程同构（$D\to k$，左侧乘 $\rho c_p$）。这是论文式 (7)、(8)。
+
+\subsection{9.4 手推路径 B：欧拉对消（检验用，理解"对流去哪了"）}
+
+在固定空间坐标（欧拉观点）里，随骨架流动的 $C$ 满足\textbf{对流-扩散方程}
+\begin{equation}
+\pdd{C}{t}\Big|_r+v_r\pdd{C}{r}=\frac{1}{r}\pdd{}{r}\Bigl(rD\pdd{C}{r}\Bigr),
+\qquad v_r=\zeta\dot R.
+\end{equation}
+链式法则给出 $\partial C/\partial t|_r=\partial C/\partial t|_\zeta-\zeta(\dot R/R)\,\partial C/\partial\zeta$（因为 $\partial\zeta/\partial t|_r=-r\dot R/R^2=-\zeta\dot R/R$）；而对流项
+\begin{equation}
+v_r\pdd{C}{r}=\zeta\dot R\cdot\frac{1}{R}\pdd{C}{\zeta}
+=\zeta\frac{\dot R}{R}\pdd{C}{\zeta},
+\end{equation}
+与链式法则里的 $-\zeta(\dot R/R)\,\partial C/\partial\zeta$ \textbf{恰好抵消}。物理读法：对流带着 $C$ 跟着骨架走，而随体坐标"坐在骨架上"观察，当然看不到相对运动——对流被坐标变换本身吸收了，剩下的只有扩散。两个路径殊途同归，路径 A 快、路径 B 能检验。
+
+\subsection{9.5 $1/R^2$ 的物理含义}
+
+收缩使"到表面的物理距离" $R(t)(1-\zeta)$ 缩短，同样的 $\zeta$ 梯度对应更大的物理梯度，扩散随之加快。全程 $R$ 由 2.0 cm 减至 1.198 cm，系数 $1/R^2$ 增大 $(2/1.198)^2\approx2.8$ 倍——这就是论文 6.4 节"收缩使算子系数增大 2.8 倍"的来历。
+
+\subsection{9.6 $R(t)$ 的构造：Pchip 保形插值}
+
+附件 2 只有 145 个离散点（间隔 1800 s），求解需要任意时刻的 $R(t)$。用\textbf{保形分段三次 Hermite 插值}（Pchip）：每两个数据点之间用三次多项式连接，节点导数由相邻差商加权确定（Fritsch--Carlson 算法），保证插值曲线\textbf{不过冲}（不会出现比数据更凸的假峰）且\textbf{保单调}。三次样条虽然更光滑，但可能过冲（在半径单调下降的数据上震荡出局部反弹），故不取。$t>259200$ s（72 h）后取 $R\equiv1.198$ cm、$\dot R\equiv0$。
+
+\subsection{9.7 $\zeta$ 网格的离散（与 $r$ 网格逐项对照）}
+
+取 $\zeta_i=i\Delta\zeta$（$i=0,\dots,N-1$，$\zeta_{N-1}=1$），问题 4 用 $N=41$、$\Delta\zeta=1/40$。与第 6 章的唯一区别是算子整体乘 $1/R^2(t)$：
+\begin{itemize}[leftmargin=2em]
+\item 控制体体积：$v_i=\int\zeta\,\dd\zeta$，圆心 $v_0=\Delta\zeta^2/8$，内部 $v_i=i\Delta\zeta^2$，表面 $v_{N-1}=\bigl[1-((N-1.5)\Delta\zeta)^2\bigr]/2$；
+\item 界面通量：$\zeta_{i+1/2}K_{i+1/2}(u_{i+1}-u_i)/\Delta\zeta$，整体除以 $R^2(t)$；
+\item 表面通量：$R(t)$ 时变，Robin 条件 (9) 变为 $-(K_s/R)\,\partial u/\partial\zeta|_1=\beta K_s(u_s-u_a)$，表面总通量 $R\cdot\beta K_s(u_s-u_a)$（$\beta=h/k_s$ 或 $h_m/D_s$），$R$ 取半步中点 $R(t_{n+1/2})$。
+\end{itemize}
+\textbf{表面行界面系数的手推（量纲检查实例）}：表面行里来自内部界面的通量为
+\begin{equation}
+F_{N-3/2}=\zeta_{N-3/2}K_m\frac{u_{N-2}-u_s}{\Delta\zeta},
+\qquad \zeta_{N-3/2}=(N-1.5)\Delta\zeta,
+\end{equation}
+代入后 $\Delta\zeta$ \textbf{恰好约去}：$F=(N-1.5)K_m(u_{N-2}-u_s)$。除以 $v_{N-1}R^2$ 后得矩阵系数 $K_m(N-1.5)/(v_{N-1}R^2)$。实际调试中曾在此\textbf{多除了一个 $\Delta\zeta$}，使表面与内部的耦合被人为放大 $1/\Delta\zeta=40$ 倍、表面浓度被内部"钉死"，烘干时长从正确的 50.7 h 错误地变成约 294 h。这个事故的教训正是本教程的方法论：\textbf{每个离散系数都亲手推一遍，并用"通量 $\times$ 面积"的量纲检查把关}。
+
+\subsection{9.8 表 6 的 ``---'' 与"药材表面"列}
+
+收缩后 1.5 cm、2 cm 两列在 6 h 起已位于药材之外（$R(6\,\mathrm{h})<1.5$ cm），模板规定记为 ``---''；"药材表面"列取 $\zeta=1$ 节点的值，即真实表面处的浓度。
+
+\handon{独立完成路径 A 的全部三步（含 $\partial/\partial r=(1/R)\partial/\partial\zeta$ 的链式替换），再用路径 B 验证；最后手推 9.7 节表面行界面系数中 $\Delta\zeta$ 的约去。}
+
+\section{第十章 物理化学：经验公式与"有效参数"观点}
+
+\subsection{10.1 干基含水率}
+
+$C=$ 水分质量 $/$ 干物质质量（kg/kg 干基）。选干基的好处：分母（干物质质量）在干燥与收缩中恒定，$C$ 随骨架一起走，随体坐标下的方程才干净（第 9 章）。
+
+\subsection{10.2 Arrhenius 公式与表观活化能的手推}
+
+温度对速率常数的经典经验律：$k=A\,\mathrm{e}^{-E_a/(R_g T)}$（$R_g=8.3145$ J/(mol$\cdot$K) 为摩尔气体常数，$T$ 为绝对温度 K）。对题给 $D=2.4\times10^{-3}\mathrm{e}^{-0.45/C}\mathrm{e}^{-3850/T}$ 取对数：
+\begin{equation}
+\ln D=\ln(2.4\times10^{-3})-\frac{0.45}{C}-\frac{3850}{T}.
+\end{equation}
+比较 Arrhenius 形式，指数上 $-3850/T=-E_a/(R_g T)$，故
+\begin{equation}
+E_a=3850\,R_g=3850\times8.3145\approx32.0\ \mathrm{kJ/mol}.
+\end{equation}
+文献实测中药材热风干燥的活化能在 30--40 kJ/mol（丹参 40.0、鲜地黄 34.94、白术 37.47），题给 32.0 落在合理区间——论文 7.5 节即以此作参数物理合理性检验。
+
+\subsection{10.3 $\mathrm{e}^{-0.45/C}$：越干越难扩散}
+
+$C$ 减小时 $\mathrm{e}^{-0.45/C}$ 急剧下降：$C$ 从 2.55 降到 0.15 时该因子从 $\mathrm{e}^{-0.176}\approx0.84$ 降到 $\mathrm{e}^{-3}\approx0.05$。物理图像：先被赶走的是自由水（易动），剩下的是与细胞基质结合的结合水（难迁移）。典型数值（亲手按计算器）：$C=2.55$、$T=301.15$ K（28 $^\circ$C）时 $D\approx5.7\times10^{-9}$ m$^2$/s；$T=323.15$ K（50 $^\circ$C）时 $D\approx1.3\times10^{-8}$ m$^2$/s。这正是"等温干燥"阶段（第 12 章）水分仍缓慢迁移的原因。
+
+\subsection{10.4 湿球温度与相对湿度}
+
+空气状态 $(T_a=50.165\ ^\circ\mathrm{C},\,C_a=0.04986)$：50 $^\circ$C 下空气饱和含湿量约 0.0868 kg/kg，故相对湿度 $\mathrm{RH}=0.04986/0.0868\approx57\%$。\textbf{湿球温度} $T_{wb}$ 是"表面完全靠自身蒸发吸热来平衡对流供热"时的极限温度，由焓湿图读得 $T_{wb}\approx40\ ^\circ$C。含义：即使把汽化吸热算到极致，表面温度也不会低于约 40 $^\circ$C。
+
+\subsection{10.5 潜热影响的数量级手推}
+
+单位面积上：蒸发带走的热流密度 $q_{\mathrm{evap}}=\rho_d\,\Delta H_v\,h_m\,\Delta C$（$\rho_d$ 为干物质密度、$\Delta H_v$ 为汽化潜热、$h_m\Delta C$ 为蒸发水分通量）；对流供热的显热流密度 $q_{\mathrm{sens}}=h\,\Delta T$。代入典型值 $\rho_d\approx650$ kg/m$^3$、$\Delta H_v(50\ ^\circ\mathrm{C})\approx2.38\times10^6$ J/kg、$h_m=8\times10^{-7}$ m/s、$h=25$ W/(m$^2\!\cdot$K)、干燥中期 $\Delta C\approx1$ kg/kg、$\Delta T\approx10$ K：
+\begin{equation}
+\frac{q_{\mathrm{evap}}}{q_{\mathrm{sens}}}
+=\frac{650\times2.38\times10^6\times8\times10^{-7}\times1}{25\times10}
+\approx5\ \ (\Delta C\approx1.2\ \text{时约为}\ 6),
+\end{equation}
+即蒸发吸热与对流显热\textbf{同量级}（论文取比值约 6）——潜热不可忽略地存在，这正是下一节"它被算在哪"的问题。
+
+\subsection{10.6 敏感性手推：若显式计入潜热会怎样}
+
+若显式加入潜热汇项，表面温度将向湿球温度靠拢：50 $^\circ$C $\to$ 40 $^\circ$C。Arrhenius 因子的比值：
+\begin{equation}
+\frac{D(40\,^\circ\mathrm{C})}{D(50\,^\circ\mathrm{C})}
+=\mathrm{e}^{3850\left(\frac{1}{323.15}-\frac{1}{313.15}\right)}
+=\mathrm{e}^{-0.380}\approx0.68,
+\end{equation}
+即扩散系数下降约 32\%，干燥时长约增加 30\%（$t^*$ 约 56.97 h $\to$ 74 h 量级）。这个敏感性不改变"2--3 天"的结论次序，但不可忽略。
+
+\subsection{10.7 有效参数观点（论文假设 H5 的完整逻辑链）}
+
+题给的 $D(C,T)$、$h_m$ 等是由\textbf{真实干燥实验数据拟合}得到的有效参数，拟合过程已经把蒸发、解吸等微观机制的净效应吸收进参数值里。证据就是活化能：题给 $E_a=32.0$ kJ/mol 显著高于纯液态水自扩散的活化能（18--20 kJ/mol），差值（约 12--14 kJ/mol）正是解吸与汽化的综合能垒——若经验式只描述"纯扩散"，$E_a$ 应该落在 18--20 附近。因此，\textbf{在题给经验式之上再显式叠加潜热汇项（如 Luikov 型 $\rho_d\Delta H_v\,\partial C/\partial t$）会把汽化效应重复计账}：人为压低表面温度、高估烘干时长。论文的正确做法是：按题设采用有效模型、不显式引入潜热汇项，并把它的影响以敏感性区间（时长约 $\pm30\%$）的形式在结论中声明。这是"尊重题给参数"与"物理诚实"之间的平衡。
+
+\handon{用计算器独立算出 10.2 节的 $E_a$ 与 10.6 节的因子 0.68（指数运算即可）；再按 10.5 节的式子重算一遍比值（$\Delta C$ 分别取 1 与 1.2）。}
+
+\section{第十一章 验证的逻辑：怎样证明"算得对"}
+
+数值解没有"证明"，只有\textbf{累积证据}。论文的四重检验各堵住一类漏洞：
+
+\subsection{11.1 解析解对照（Bessel 级数）——分离变量全手推}
+
+\textbf{第 1 步：设解。}问题 1 热方程在常数边界 $T_a=41.513\ ^\circ$C（附件 1 中 1800 s 时刻值）、常数物性下有解析解。令 $\tilde T=T-T_a$，设
+\begin{equation}
+\tilde T(r,t)=\Theta(t)\,\Phi(r),
+\end{equation}
+代入 $\partial\tilde T/\partial t=\alpha\bigl(\Phi''\Theta+\Phi'\Theta/r\bigr)$ 并分离变量：
+\begin{equation}
+\frac{\Theta'(t)}{\alpha\,\Theta(t)}
+=\frac{\Phi''(r)+\Phi'(r)/r}{\Phi(r)}=-\lambda
+\quad(\lambda\ \text{为分离常数}).
+\end{equation}
+左边只含 $t$、右边只含 $r$，两边必须同等于一个常数。
+
+\textbf{第 2 步：两个常微分方程。}时间方向 $\Theta'(t)=-\alpha\lambda\Theta(t)\Rightarrow\Theta=\mathrm{e}^{-\alpha\lambda t}$（取负号，否则时间增长时解发散，物理不允许）。空间方向令 $x=\sqrt{\lambda}\,r$，链式法则化为
+\begin{equation}
+x^2\Phi''+x\Phi'+(x^2-0^2)\Phi=0,
+\end{equation}
+这是\textbf{零阶贝塞尔方程}。它有两条线性无关的解 $J_0(x)$（第一类零阶贝塞尔函数，在 $x=0$ 有限）与 $Y_0(x)$（第二类，在 $x=0$ 发散）；圆心处温度有限，故舍去 $Y_0$。通解为
+\begin{equation}
+T(r,t)=T_a+\sum_{n=1}^{\infty}A_n\,\mathrm{e}^{-\alpha\beta_n^2t/R^2}J_0\Bigl(\frac{\beta_n r}{R}\Bigr).
+\end{equation}
+（贝塞尔函数有现成级数定义与查表/库函数，见附录 C。）
+
+\textbf{第 3 步：边界条件决定特征值。}把 $T$ 代入 Robin 条件 $-k\,\partial T/\partial r|_R=h\,T(R,t)$，用导数公式 $J_0'(x)=-J_1(x)$：
+\begin{equation}
+-\beta_n J_0'(\beta_n)=\mathrm{Bi}\,J_0(\beta_n)
+\ \Rightarrow\ \boxed{\ \beta_nJ_1(\beta_n)=\mathrm{Bi}\,J_0(\beta_n)\ }
+\quad\Bigl(\mathrm{Bi}=\frac{hR}{k}=\frac{25\times0.02}{0.36}\approx1.389\Bigr).
+\end{equation}
+这个方程（\textbf{特征方程}）的根 $\beta_n$ 有无穷多个（数值求根得 $\beta_1\approx1.42$，$\beta_2\approx4.17$，$\dots$）。
+
+\textbf{第 4 步：初始条件决定系数。}利用贝塞尔函数的加权正交性
+\begin{equation}
+\int_0^R J_0\Bigl(\frac{\beta_m r}{R}\Bigr)J_0\Bigl(\frac{\beta_n r}{R}\Bigr)r\,\dd r=0\quad(m\neq n),
+\end{equation}
+配合积分恒等式 $\int_0^R J_0(\beta_n r/R)\,r\,\dd r=R^2J_1(\beta_n)/\beta_n$ 与 $\int_0^R J_0^2(\beta_n r/R)\,r\,\dd r=(R^2/2)\bigl(J_0^2(\beta_n)+J_1^2(\beta_n)\bigr)$，由初值 $\tilde T(r,0)=T_0-T_a$ 得
+\begin{equation}
+A_n=(T_0-T_a)\cdot\frac{2J_1(\beta_n)}{\beta_n\bigl(J_0^2(\beta_n)+J_1^2(\beta_n)\bigr)}.
+\end{equation}
+
+\textbf{第 5 步：对照。}取前 40 项，$t=1800$ s 时中心 $T=37.8050\ ^\circ$C、表面 $T=39.4483\ ^\circ$C——与主网格数值解\textbf{四位小数完全一致}。这个对照同时检验了离散格式、圆心处理、Robin 表面行（含表面控制体体积与通量系数 $R h$）全部正确。
+
+\handon{完成第 1、2 步的分离变量代入（含 $x=\sqrt{\lambda}r$ 的链式换元），并验证 $J_0'=-J_1$ 代入边界条件得到特征方程。}
+
+\subsection{11.2 收敛性检验：比值 4 的手推}
+
+设空间截断误差 $E_h=u_h-u=C\Delta r^2+O(\Delta r^4)$（二阶格式），则
+\begin{equation}
+\frac{u_{2\Delta r}-u_{\Delta r}}{u_{\Delta r}-u_{\Delta r/2}}
+\approx\frac{C(4\Delta r^2-\Delta r^2)}{C(\Delta r^2-\Delta r^2/4)}
+=\frac{3}{3/4}=4.
+\end{equation}
+论文实测：问题 1 表 1 最大差依次 $3.68\times10^{-4}\to9.20\times10^{-5}$（比值 4.0），表 2 依次 $6.14\times10^{-3}\to1.42\times10^{-3}$（比值 4.3）；问题 2 表 4 依次 $7.36\times10^{-4}\to1.83\times10^{-4}$（比值 4.0）；问题 4 $\zeta$ 网格 $N=21\to41$ 最大差 $5.33\times10^{-4}$。比值接近 4 即验证二阶精度。由此还能估计误差：$u_{0.125\mathrm{mm}}$ 的表 2 误差约 $1.42\times10^{-3}/3\approx4.7\times10^{-4}<5\times10^{-4}$，四位小数可信。时间方向同理（比值为 4 时时间二阶）：问题 2 表 3/表 4 时间加密差 $2.02\times10^{-5}/6.59\times10^{-6}$，问题 3 差 $5.58\times10^{-6}$，问题 4 差 $1.10\times10^{-5}$，均比空间误差小 1--2 个量级，不影响四位小数。
+
+\subsection{11.3 离散质量守恒检验}
+
+把 6.7 节恒等式两边\textbf{各自独立计算}：左边 $\sum v_i\Delta C_i$ 用终初值之差，右边 $-R\int h_m(C_R-C_a)\dd t$ 用表面通量逐时间层累加（梯形积分）。问题 1 闭合到 $1.5\times10^{-18}$、问题 3 闭合到 $1.7\times10^{-17}$——机器精度。这说明：守恒不是"近似成立"，而是离散格式的\textbf{代数恒等式}。问题 4 闭合到 $4.2\times10^{-7}$，残差来自动边界下 $R$ 取半步中点与梯形积分的 $O(\Delta t^2)$ 配对误差，相对总失水量仅 $8\times10^{-4}$。
+
+\subsection{11.4 渐近行为检验}
+
+常数边界下长时间求解：中心温度在 $t=10^5$ s 即达 50.1650 $^\circ$C，与 $T_a$ 四位一致；表面水分浓度由 0.0616（$10^5$ s）缓慢趋近 0.04986（$3\times10^5$ s 时 0.0512）。这个"指数拖尾"是\textbf{物理结论}而非缺陷：$C\to C_a$ 时驱动力 $C_R-C_a$ 与系数 $D$ 同时趋零（$\mathrm{e}^{-0.45/C}$ 在 $C=0.05$ 时仅 $\mathrm{e}^{-9}\approx1.2\times10^{-4}$），平衡只能无限逼近。
+
+\subsection{11.5 文献互证}
+
+$E_a=32.0$ kJ/mol 在文献区间 30--40 kJ/mol 内；$D$ 数值 $10^{-10}\sim10^{-8}$ m$^2$/s 与实测同量级；$t^*=56.97$ h、50.69 h 均落在题述"2--3 天"内。三个独立的外部证据共同支持模型参数与结构的合理性。
+
+\section{第十二章 全景对照：四问条件、代码与结果}
+
+\subsection{12.1 四问条件对照表}
+
+\begin{center}
+{\zihao{5}\begin{tabular}{lcccc}
+\toprule
+条件 & 问题 1 & 问题 2 & 问题 3 & 问题 4 \\
+\midrule
+物性经验式 & 附录 2 & 附录 3 & 附录 3 & 附录 4 \\
+$D$ 是否随 $T$ 变 & 否（仅随 $C$） & 是 & 是 & 是 \\
+$\rho,c_p,k$ 是否随 $C$ 变 & 否（常数） & 是 & 是 & 是 \\
+烘房条件 & 附件 1 & 附件 1 & 附件 1$+$恒温段 & 附件 1$+$恒温段 \\
+几何收缩（附件 2） & 否 & 否 & 否 & 是（$R(t)$） \\
+求解时长 & 1800 s & 前 3 h & 至 $C\le0.15$ & 至 $C\le0.15$ \\
+输出 & 表 1/2 & 表 3/4 & 表 5、$t^*$ & 表 6、$t^*$ \\
+\bottomrule
+\end{tabular}}
+\end{center}
+
+四个问题的差别集中在三处：物性经验式、烘房条件、是否收缩。每问求解前逐项核对这张表，就不会"搞错搞漏"。
+
+\subsection{12.2 网格与步长的算账}
+
+\begin{itemize}[leftmargin=2em]
+\item \textbf{问题 1}：表面水分边界层厚度 $\delta\sim D/h_m\approx5$ mm（$D\approx4\times10^{-9}$、$h_m=8\times10^{-7}$），必须在这 5 mm 内布足够节点。实测 0.25 mm 网格表 2 误差约 $1.4\times10^{-3}$（超出四位小数容差），0.125 mm 网格误差约 $4.7\times10^{-4}$（够）$\Rightarrow$ $\Delta r=0.125$ mm、$N=161$、$\Delta t=0.125$ s。
+\item \textbf{问题 2}：$\Delta r=0.25$ mm、$\Delta t=0.25$ s（前 3 h 输出密集，时间误差需小）。
+\item \textbf{问题 3}：$\Delta r=0.25$ mm、$\Delta t=2.5$ s（时间误差 $5.6\times10^{-6}$，比空间误差小两个量级，2.5 s 足够）。
+\item \textbf{问题 4}：$\Delta\zeta=1/40$（$N=41$）、$\Delta t=5$ s（时间误差 $1.1\times10^{-5}$，同样足够）。
+\end{itemize}
+
+\subsection{12.3 求解器代码导览（每个文件同一骨架）}
+
+四个文件（\texttt{q1\_solver.py}--\texttt{q4\_solver.py}）结构相同，按"参数与物性 $\to$ 网格与控制体 $\to$ 线性求解 $\to$ 时间推进 $\to$ 验证 $\to$ 输出"六段组织：
+\begin{itemize}[leftmargin=2em]
+\item \texttt{thomas(a,b,c,rhs)}：第 7 章追赶法；
+\item \texttt{crank\_step(...)}：组装第 6 章的 CN 三对角系统并求解一个时间步；
+\item \texttt{step(T,C,...)}：第 8 章的交替 Picard 两轮迭代；
+\item 主循环：推进到目标时刻，按模板抽样写 \texttt{result1--4.xlsx}（四位小数）；
+\item 验证段：守恒检验、网格/时间收敛、渐近检验。
+\end{itemize}
+差异点：\texttt{q1\_solver.py} 无耦合、含 \texttt{T\_exact}（第 11.1 节 Bessel 解析解）与 \texttt{check\_conserve}；\texttt{q2\_solver.py} 的 \texttt{run3h}、\texttt{q3\_solver.py} 的 \texttt{run\_drying}（返回 $t^*$ 与表 5）是参数化入口，供网格/时间收敛验证复用；\texttt{q4\_solver.py} 用 $\zeta$ 网格（$DZ=1/40$、$NZ=41$、$DT=5$ s），物性换成附录 4 并代入 $R(t)$。建议阅读顺序：q1（最简单）$\to$ q2/q3（加耦合）$\to$ q4（加动边界）。
+
+\subsection{12.4 结果怎么读（每张表一句话）}
+
+\begin{itemize}[leftmargin=2em]
+\item \textbf{表 1/2（预热段）}：温度自外向内传播，1800 s 时表面 36.79 $^\circ$C、中心 33.58 $^\circ$C，还在追赶环境（41.51 $^\circ$C）；水分只动表面 5 mm（表面 $C$ 2.55$\to$1.51，中心纹丝不动）——扩散深度 $\sqrt{Dt}\approx2.6$ mm 的数量级预言。
+\item \textbf{表 3/4（前 3 h）}：约 2 h 起温度全场均匀并逼近烘房温度（3 h 时中心 49.85 $^\circ$C）——$R^2/\alpha\approx2400$ s 的数量级预言；此后为等温干燥。水分在附录 3 的 $D$（约 $10^{-8}$）下显著下降（表面 1.0081、中心 1.7662）。
+\item \textbf{表 5（全程）}：两段干燥形态——前 12 h 表面传质主导、失水快（表面 0.1640），之后降速（$D$ 随 $C$ 按 $\mathrm{e}^{-0.45/C}$ 衰减、扩散路径变长）；最高含水率始终在中心，判据 $\max C\le0.15$ 由中心决定，$t^*=205082$ s $=56.9674$ h。
+\item \textbf{表 6（含收缩）}：收缩加速干燥（$D/R^2$ 增大 2.8 倍、路径缩短）与附录 4 更小的 $D$（减慢）两相抵消后净加速，$t^*=182495$ s $=50.6931$ h，缩短约 11\%。前 3.5 h 收缩最快（$R$: 2.0$\to$1.5 cm），与"失水集中在前期"互为印证。
+\end{itemize}
+
+\section{附录 A 手推练习清单（提示）}
+
+\begin{enumerate}[leftmargin=2em]
+\item 直角坐标平板热传导方程推导。（提示：仿 2.2 节，面积取常数。）
+\item 泰勒展开导出两个中心差商及截断误差系数 $1/6$、$1/12$。（提示：1.2 节。）
+\item 显式格式稳定性：导出 $\xi=1-4r\sin^2(\theta/2)$ 并证明 $r\le1/2$。（提示：4.4 节。）
+\item 隐式格式：导出 $\xi=1/\bigl(1+4r\sin^2(\theta/2)\bigr)$。（提示：4.4 节第 2 步。）
+\item CN 局部截断误差 $-\Delta t^3u'''/12$。（提示：5.4 节，展开到三阶。）
+\item 三个控制体体积 $v_0,v_i,v_{N-1}$。（提示：6.2 节，平方差公式。）
+\item $N=5$ 的 CN 三对角系统组装。（提示：6.6 节；圆心行、表面行单独处理。）
+\item 追赶法公式推导并用 7.2 节的 $4\times4$ 例子验证。（提示：7.2 节。）
+\item $\zeta$ 变换路径 A 与路径 B。（提示：9.3、9.4 节，注意链式法则的负号。）
+\item $E_a=32.0$ kJ/mol 与敏感性因子 0.68。（提示：10.2、10.6 节。）
+\item Bessel 特征方程 $\beta J_1(\beta)=\mathrm{Bi}\,J_0(\beta)$ 与系数 $A_n$。（提示：11.1 节，$J_0'=-J_1$。）
+\item 收敛比值 4 的推导与误差估计 $E_{h/2}\approx(u_h-u_{h/2})/3$。（提示：11.2 节。）
+\end{enumerate}
+
+\section{附录 B 术语小词典}
+
+\begin{center}
+{\zihao{5}\begin{tabular}{lll}
+\toprule
+术语 & 含义 & 英文 \\
+\midrule
+偏微分方程 & 含多元函数偏导数的方程 & PDE \\
+初边值问题 & 方程 $+$ 边界条件 $+$ 初始条件 & IBVP \\
+通量 & 单位时间通过单位面积的物理量 & flux \\
+本构关系 & 通量与驱动力之间的经验定律 & constitutive law \\
+傅里叶定律 & 热流密度 $q=-k\,\partial T/\partial r$ & Fourier's law \\
+菲克定律 & 扩散通量 $J=-D\,\partial C/\partial r$ & Fick's law \\
+第三类边界条件 & 边界通量与边界值$-$环境值成正比 & Robin BC \\
+对流换热系数 & 牛顿冷却公式中的比例系数 $h$ & heat transfer coefficient \\
+对流传质系数 & 质侧比例系数 $h_m$（m/s） & mass transfer coefficient \\
+干基含水率 & 水分质量/干物质质量 & dry-basis moisture \\
+平衡含水率 & 与烘房空气长期平衡的含水率 & equilibrium moisture \\
+热扩散率 & $\alpha=k/(\rho c_p)$（m$^2$/s） & thermal diffusivity \\
+毕渥数 & $\mathrm{Bi}=hR/k$，内外热阻之比 & Biot number \\
+显式/隐式格式 & 新时刻值可否直接算出 & explicit / implicit \\
+截断误差 & 差分格式对微分方程的局部偏离 & truncation error \\
+稳定性 & 误差不随步数增长的性质 & stability \\
+收敛性 & 步长趋零时数值解趋精确解 & convergence \\
+守恒性 & 离散格式精确保持守恒律 & conservation \\
+有限体积法 & 在控制体上积分守恒律的离散方法 & FVM \\
+控制体 & 每个节点对应的积分小区间 & control volume \\
+追赶法 & 三对角方程组 $O(N)$ 求解算法 & Thomas algorithm \\
+Picard 迭代 & 冻结系数迭代求解非线性问题 & Picard iteration \\
+交错耦合 & 两场轮流更新的耦合解法 & staggered scheme \\
+随体坐标 & 固定在材料上的坐标（本题 $\zeta$） & Lagrangian coordinate \\
+Pchip 插值 & 保形分段三次 Hermite 插值 & Pchip \\
+Arrhenius 公式 & 速率常数 $=A\mathrm{e}^{-E_a/(R_gT)}$ & Arrhenius equation \\
+表观活化能 & 经验拟合出的能垒参数 $E_a$ & apparent activation energy \\
+湿球温度 & 蒸发冷却的极限表面温度 & wet-bulb temperature \\
+相对湿度 & 含湿量与同温饱和含湿量之比 & relative humidity \\
+恒速/降速干燥段 & 表面传质主导 / 内部扩散主导段 & constant / falling rate period \\
+有效参数 & 已吸收微观机制净效应的拟合参数 & effective parameter \\
+Luikov 模型 & 显式含相变汇项的热质耦合模型 & Luikov model \\
+\bottomrule
+\end{tabular}}
+\end{center}
+
+\section{附录 C 进一步学习路线}
+
+\textbf{补齐基础（当前学期即可完成）}：同济《高等数学》多元函数微分学与无穷级数两章（泰勒、链式法则、级数收敛）；《线性代数》高斯消元与矩阵运算。贝塞尔函数只需认识级数定义 $J_0(x)=\sum_{k=0}^\infty(-1)^k(x/2)^{2k}/(k!)^2$ 与导数关系 $J_0'=-J_1$，会查表/调库即可。
+
+\textbf{专业课（理解模型）}：杨世铭、陶文铨《传热学》第 1--4 章（导热方程、三类边界条件、对流换热）；克朗克《扩散的数学》（Crank, \emph{The Mathematics of Diffusion}，中译本同名）第 1--5 章（菲克定律、分离变量解、移动边界）。
+
+\textbf{数值方法（理解求解器）}：陶文铨《数值传热学》第 2--4 章（离散化、TDMA、稳定性与收敛性，与本题方法完全对口）；之后可读 LeVeque, \emph{Finite Volume Methods for Hyperbolic Problems} 的前两章（守恒观点的现代表述）。
+
+\textbf{动手复现}：用 numpy 把第 6.6 节的 $N=5$ 例子实现一遍（不到 50 行），再打开 \texttt{q1\_solver.py} 对照阅读；最后尝试改动 $\Delta r$、$\Delta t$，观察表 2 四位小数的变化规律（应满足比值约 4 的收敛律）。
+
+\end{document}
