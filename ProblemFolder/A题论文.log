@@ -1,4 +1,4 @@
-This is XeTeX, Version 3.141592653-2.6-0.999997 (MiKTeX 25.4) (preloaded format=xelatex 2026.5.4)  12 SEP 2026 14:55
+This is XeTeX, Version 3.141592653-2.6-0.999997 (MiKTeX 25.4) (preloaded format=xelatex 2026.5.4)  12 SEP 2026 16:37
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -928,7 +928,7 @@ LaTeX Font Info:    Font shape `TU/SimSun(0)/m/sl' in size <12> not available
 (Font)              Font shape `TU/SimSun(0)/m/it' tried instead on input line 
 78.
  [2] [3] [4] [5]
-Overfull \hbox (2.97327pt too wide) detected at line 191
+Overfull \hbox (2.97327pt too wide) detected at line 195
 [][][]\OML/cmm/m/it/12 T[]\OT1/cmr/m/n/12 (\OML/cmm/m/it/12 t\OT1/cmr/m/n/12 ) 
 = []  \OML/cmm/m/it/12 C[]\OT1/cmr/m/n/12 (\OML/cmm/m/it/12 t\OT1/cmr/m/n/12 ) 
 = []
@@ -940,13 +940,13 @@ LaTeX2e <2025-11-01>
 L3 programming layer <2022/07/14>
  ***********
 Package rerunfilecheck Info: File `A题论文.out' has not changed.
-(rerunfilecheck)             Checksum: AC0C0E1FCAA8878DF3B2706878A46B7C;5120.
+(rerunfilecheck)             Checksum: 45AFAC2F712E58FA1018C5CE3F2B224E;5165.
  ) 
 Here is how much of TeX's memory you used:
- 16682 strings out of 402987
- 369184 string characters out of 5452872
- 800302 words of memory out of 5000000
- 45180 multiletter control sequences out of 15000+600000
+ 16670 strings out of 402987
+ 368444 string characters out of 5452872
+ 800247 words of memory out of 5000000
+ 45168 multiletter control sequences out of 15000+600000
  639080 words of font info for 120 fonts, out of 8000000 for 9000
  1348 hyphenation exceptions out of 8191
  93i,12n,111p,1032b,512s stack positions out of 10000i,1000n,20000p,200000b,200000s
