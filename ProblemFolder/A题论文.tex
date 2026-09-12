@@ -63,11 +63,11 @@
 \medskip
 \noindent{\heiti 关键词}：热风干燥；热质耦合传递；圆柱轴对称扩散；Crank--Nicolson 格式；移动边界；有效水分扩散系数
 
-\newpage
+\clearpage
 \begin{figure}[p]
   \centering
-  \includegraphics[width=0.98\textwidth]{fig1_overview.png}
-  \caption{四个问题的模型架构与关键结果概览：对应问题 1--4 的求解情形与主结论。}
+  \includegraphics[width=0.95\textwidth]{fig13_overview.png}
+  \caption{模型架构图}
 \end{figure}
 \clearpage
 
@@ -159,7 +159,14 @@ $\Delta H_v$ & 水的汽化潜热（J/kg） & $\mathrm{RH}$ & 空气相对湿度
 
 \section{五、模型的建立与求解}
 
+\begin{figure}[p]
+  \centering
+  \includegraphics[width=0.9\textwidth]{fig2_heatmap.png}
+  \caption{问题 4 收缩模型下的含水率时空分布：由式 \eqref{eq:zeta}、\eqref{eq:mass4}、\eqref{eq:heat4} 与 $R(t)$ 变动引起的干燥特征。}
+\end{figure}
+
 \subsection{5.1 问题 1：预热平衡阶段的模型}
+
 
 预热平衡阶段药材尚处低温（初温 28 $^\circ$C），物性可按附录 2 取常数：$\rho=820$ kg/m$^3$，$c_p=2600$ J/(kg$\cdot$K)，$k=0.36$ W/(m$\cdot$K)，$h=25$ W/(m$^2\!\cdot$K)，$h_m=8\times10^{-7}$ m/s；水分扩散系数采用经验式
 \begin{equation}
@@ -196,6 +203,12 @@ D(C,T)=2.4\times10^{-3}\,\mathrm{e}^{-0.45/C}\,\mathrm{e}^{-3850/T}\quad(\mathrm
 
 烘房条件 $T_a(t)$、$C_a(t)$ 按 2.3 节由附件 1 线性插值给出，两场耦合机制见 2.2 节，求解结果按表 3、表 4 输出。
 
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.95\textwidth]{fig05_q2.png}
+  \caption{问题 2 前 3 h 的温度演化：不同径向位置的温度随时间变化，体现双向耦合模型下热场达到近似均匀的过程。}
+\end{figure}
+
 \subsection{5.3 问题 3：全程烘干模型与时长判据}
 
 问题 3 沿用式 \eqref{eq:heat23}--\eqref{eq:mass23} 的同一方程组与初边值（物性及 $h$、$h_m$ 同 5.2 节），但需求解整个烘干过程，时间范围远超附件 1 的 14400 s，故烘房条件按两阶段拼接：
@@ -231,6 +244,8 @@ $\zeta$ 固定于固相骨架上的物质点。由于干基含水率 $C$ 定义�
 \rho(C)c_p(C)\pdd{T}{t}\Big|_{\zeta}=\frac{1}{R^2(t)\,\zeta}\pdd{}{\zeta}\Bigl(\zeta\,k(C)\pdd{T}{\zeta}\Bigr),
 \label{eq:heat4}
 \end{equation}
+
+
 物性由附录 4 给出：$\rho=760+90C$，$c_p=1850+2150\,C/(C+1)$，$k=0.12+0.20\,C/(C+1)$，
 \begin{equation}
 D(C,T)=4.2\times10^{-4}\,\mathrm{e}^{-0.30/C}\,\mathrm{e}^{-3850/T}\quad(\mathrm{m^2/s}).
@@ -247,6 +262,13 @@ D(C,T)=4.2\times10^{-4}\,\mathrm{e}^{-0.30/C}\,\mathrm{e}^{-3850/T}\quad(\mathrm
 \textbf{(2) 收缩对烘干的影响机制。}由式 \eqref{eq:mass4} 可见收缩通过两个途径加速干燥：其一，$R(t)$ 减小使算子系数 $D/R^2$ 增大（全程 $R$ 由 2 cm 减至 1.198 cm，$R^{-2}$ 增大 2.8 倍）；其二，水分浓度场随骨架向内收缩，等效扩散路径缩短。附录 4 的 $D$ 前因子与指数均小于附录 3，收缩效应与物性差异的综合影响在 6.4 节对比。
 
 \subsection{5.5 数值方法}
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.9\textwidth]{fig3_validation.png}
+  \caption{模型验证与灵敏度分析：对应式 \eqref{eq:cn}、\eqref{eq:conserv} 及仿真结果的收敛性、守恒性与参数敏感性检验。}
+\end{figure}
+
 
 四个问题共用一套守恒型离散框架，下面以问题 1 的径向空间离散（问题 4 的 $\zeta$ 坐标离散同理）说明。
 
@@ -284,6 +306,7 @@ D(C,T)=4.2\times10^{-4}\,\mathrm{e}^{-0.30/C}\,\mathrm{e}^{-3850/T}\quad(\mathrm
 \label{eq:conserv}
 \end{equation}
 即域内水分增量恒等于表面传递量，该恒等式被用于 7.3 节的守恒检验，闭合至 $10^{-18}$ 量级。问题 4 的 $\zeta$ 坐标离散同理：控制体体积取 $\int\zeta\dd\zeta$，界面通量系数为 $\zeta_{i\pm1/2}D_m/\Delta\zeta$，表面通量为 $h_mR(C_R-C_a)$。
+
 
 \textbf{(5) 截断误差与二阶精度。}设解充分光滑（步长足够小时成立，数值证据见 7.2 节），各离散项的截断误差由泰勒展开逐项给出。
 
@@ -375,6 +398,12 @@ D(C,T)=4.2\times10^{-4}\,\mathrm{e}^{-0.30/C}\,\mathrm{e}^{-3850/T}\quad(\mathrm
 
 水分场的变化集中于近表面约 5 mm 的边界层内（传质边界层尺度 $\delta\sim D/h_m\approx5$ mm），表面水分浓度由 2.55 kg/kg 降至 1.51 kg/kg，而中心在 1800 s 内基本不变（2.5500 kg/kg）。这一「外层先失水、内部未及响应」的形态正是预热平衡阶段的特征——水分扩散系数仅约 $(4\sim5)\times10^{-9}$ m$^2$/s，水分扩散深度 $\sqrt{Dt}\approx2.6$ mm，远小于半径，故内部含水率尚未显著下降。
 
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.95\textwidth]{fig04_q1.png}
+  \caption{问题 1 预热平衡阶段的温度与水分演化：中心与表面沿时间变化以及边界层特征。}
+\end{figure}
+
 \subsection{6.2 问题 2：前 3 小时（表 3、表 4）}
 
 按附录 3 经验式与附件 1 边界求解，结果如表 3、表 4 所示。
@@ -421,6 +450,12 @@ D(C,T)=4.2\times10^{-4}\,\mathrm{e}^{-0.30/C}\,\mathrm{e}^{-3850/T}\quad(\mathrm
 
 水分场方面，3 h 时表面降至 1.0081 kg/kg、中心降至 1.7662 kg/kg，径向含水率梯度达 0.76 kg/kg，干燥前沿已明显向内部推进。对比问题 1：附录 3 的 $D$ 比附录 2 的 $D$ 大约 2--3 倍（干燥前期典型含水率下；低含水率端差距更大），且随升温进一步增大，故 3 h 内的失水幅度显著大于预热段。
 
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.98\textwidth]{fig05_q2.png}
+  \caption{问题 2 前 3 h 的温度演化：不同径向位置的温度随时间变化，反映了热扩散迅速达到近似均匀。}
+\end{figure}
+
 \subsection{6.3 问题 3：烘干时长与全程水分场（表 5）}
 
 以 $\max_r C(r,t)\le0.15$ kg/kg 为判据求解至全程，得
@@ -453,6 +488,12 @@ t^*=205515\ \mathrm{s}=\mathbf{57.0875\ h}\ \ (\text{约 2.38 天；空间离散
 \end{center}
 
 结果分析：干燥过程呈明显的两阶段形态。前 12 h 含水率快速下降（表面由 2.55 降至 0.164 kg/kg），此为表面传质主导的快速干燥段（干燥速率由表面向环境的对流传质通量控制）；此后干燥速率显著放缓，进入降速干燥段——水分由内部向表面扩散的路径越来越长，且 $D$ 随 $C$ 下降按 $\mathrm{e}^{-0.45/C}$ 急剧衰减，表面含水率 54 h 时仅 0.0528 kg/kg，已逼近烘房水分浓度 0.04986 kg/kg（即趋近平衡含水率）。烘干判据由中心点决定（中心始终是含水率最高处），最终 $t^*=57.09$ h。
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.95\textwidth]{fig08_q3.png}
+  \caption{问题 3 中心与表面含水率随时间变化以及烘干判据 $C=0.15$ kg/kg 的首次命中时刻。}
+\end{figure}
 
 \subsection{6.4 问题 4：含收缩的烘干时长（表 6）}
 
@@ -490,8 +531,8 @@ t^*=182780\ \mathrm{s}=\mathbf{50.7722\ h}\ \ (\text{约 2.12 天}).
 
 \begin{figure}[htbp]
   \centering
-  \includegraphics[width=0.9\textwidth]{fig2_heatmap.png}
-  \caption{问题 4 的收缩模型对应图：由式 \eqref{eq:zeta}、\eqref{eq:mass4}、\eqref{eq:heat4} 及 $R(t)$ 变动导致的含水率时空分布。该图体现收缩缩短扩散路径、加速干燥的机制。}
+  \includegraphics[width=0.95\textwidth]{fig09_问题4_含收缩含水率演化.png}
+  \caption{问题 4 含收缩情况下的中心与表面含水率演化：收缩显著缩短扩散路径并提前达到烘干判据。}
 \end{figure}
 
 \section{七、模型的检验}
@@ -505,11 +546,7 @@ T(r,t)=T_a+(T_0-T_a)\sum_{n=1}^{\infty}A_n\,\mathrm{e}^{-\alpha\beta_n^2 t/R^2}J
 \end{equation}
 其中 $\beta_n$ 为特征方程 $\beta J_1(\beta)=\mathrm{Bi}\,J_0(\beta)$ 的正根（$\mathrm{Bi}=hR/k=1.389$），系数 $A_n=\dfrac{2J_1(\beta_n)}{\beta_n\bigl(J_0^2(\beta_n)+J_1^2(\beta_n)\bigr)}$。取前 40 项级数与相同常数边界下的数值解（空间步长 0.03125 mm）在 $t=1800$ s 对照：中心 数值 37.8050 $^\circ$C、解析 37.8050 $^\circ$C；表面 数值 39.4483 $^\circ$C、解析 39.4483 $^\circ$C，四位小数完全一致（误差不超过 $5\times10^{-5}\ ^\circ$C）。这同时验证了离散格式与 Robin 表面处理（含表面控制体体积、通量系数 $Rh$）的正确性。
 
-\begin{figure}[htbp]
-  \centering
-  \includegraphics[width=0.9\textwidth]{fig3_validation.png}
-  \caption{模型验证与灵敏度分析：对应式 \eqref{eq:cn}、\eqref{eq:conserv} 及仿真结果的收敛性、守恒性与参数敏感性检验}
-\end{figure}
+
 
 
 \subsection{7.2 收敛性检验}
@@ -579,6 +616,12 @@ $h_m-50\%$ & $+7.56$（$+13.3\%$） & $+3.34$（$+6.6\%$） \\
 \bottomrule
 \end{tabular}}
 \end{center}
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.95\textwidth]{fig12_sensetive.png}
+  \caption{参数灵敏度分析：烘房温度与传质系数变化对问题 3、4 烘干时长的影响。}
+\end{figure}
 
 分析：（1）$t^*$ 对烘房温度最敏感，$T_a\pm2\ ^\circ$C 对应约 $\mp6\%$——温度经 Arrhenius 因子直接放大扩散系数，恒温段温度控制是工艺优化的核心参数；（2）$h_m$ 减半在问题 3 中使 $t^*$ 增加 13.3\%，而问题 4 仅 6.6\%——附录 4 的 $D$ 更小，问题 4 的干燥更受内部扩散控制、表面传质系数的权重下降，与 6.4 节消融分析（物性差异 $+126\%$、收缩 $-60.6\%$）的机制一致；（3）$C_a$ 与 $h$ 的影响不足 1\%，烘房湿度波动与对流换热强度的不确定性对结论影响甚微；（4）最不利组合（$T_a-2\ ^\circ$C 且 $h_m-50\%$）下 $t^*$ 增幅不超过约 20\%，仍在题述「2--3 天」范围内，模型结论稳健。
 
