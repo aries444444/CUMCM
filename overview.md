@@ -30,3 +30,11 @@
 
 - 论文 `A题论文.tex` 目前无插图，可直接 `\includegraphics` 引用 figures_pub 下的 PDF（矢量）。
 - smart-charts 已知待办（Q3/Q4 两张 HTML 标题用旧 t\*）仍待更新。
+
+---
+
+## 追加：模型总体架构图（fig13）
+
+- 新装 skill `scientific-illustration-guide`（wentorai/research-plugins，图形摘要/架构图规范，已审计：纯 Markdown 指南，无脚本）。
+- 产出 `fig13_模型总体架构图.png/.pdf`（Nature 扁平风格、低饱和配色、矢量导出）：五层结构——数据与参数输入 → 热-质双向耦合 PDE 模型（含动边界模块）→ 数值求解框架（FVM + CN/Thomas + Picard）→ 问题 1–4 分支输出 → 模型检验（右侧虚线反馈闭环）。
+- 生成脚本：`ProblemFolder/figures_pub/make_architecture.py`。
