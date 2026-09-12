@@ -244,7 +244,7 @@ D(C,T)=4.2\times10^{-4}\,\mathrm{e}^{-0.30/C}\,\mathrm{e}^{-3850/T}\quad(\mathrm
 
 \subsubsection{5.4.1 空间离散节点与控制体。}取节点 $r_i=i\Delta r$（$i=0,1,\dots,N-1$），则表面节点恰位于真实表面：$r_{N-1}=R$。每个节点 i 对应控制体体积 $v_i=\int_{CV_i} r\,\mathrm{d}r$：内部节点取 $[r_{i-1/2},r_{i+1/2}]$，圆心节点取 $[0,r_{1/2}]$，表面节点取 $[r_{N-3/2},R]$。方程 \eqref{eq:heat1}--\eqref{eq:mass1} 在控制体上积分（对 $r\dd r$），通量在界面 $i\pm1/2$ 用算术平均的扩散系数（如 $D_{i-1/2}=\frac12(D_{i-1}+D_i)$）离散，得到
 \begin{equation}
-v_i\frac{u_i^{n+1}-u_i^n}{\Delta t}=\frac12\bigl(L u^{n+1}+Lu^n\bigr)_i+\frac12\bigl(s^{n+1}+s^n\bigr)_i,
+\frac{u_i^{n+1}-u_i^n}{\Delta t}=\frac12\bigl(L u^{n+1}+Lu^n\bigr)_i+\frac12\bigl(s^{n+1}+s^n\bigr)_i,
 \label{eq:cn}
 \end{equation}
 其中 $u$ 代表 $T$ 或 $C$，$(Lu)_i$ 为界面通量差
@@ -257,7 +257,7 @@ v_i\frac{u_i^{n+1}-u_i^n}{\Delta t}=\frac12\bigl(L u^{n+1}+Lu^n\bigr)_i+\frac12\
 (Lu)_{N-1}=\Bigl[r_{N-3/2}K_{N-3/2}\frac{u_{N-2}-u_{N-1}}{\Delta r}-R\,\beta\,K_s\,(u_{N-1}-u_a)\Bigr]/v_{N-1},
 \label{eq:Lsurf}
 \end{equation}
-其中热方程 $\beta=h/k_s$，质方程 $\beta=h_m/D_s$。式 \eqref{eq:Lsurf} 中表面节点值即真实表面值，通量取 $R\,h\,(T_R-T_a)$ 与 $R\,h_m(C_R-C_a)$，与内部界面通量逐时间层严格对消，保证离散守恒。
+其中热方程 $\beta=h/k_s$，质方程 $\beta=h_m/D_s$。式 \eqref{eq:Lsurf} 中表面节点值即真实表面值，通量取 $R\,h\,(T_R-T_a)$ 与 $R\,h_m(C_R-C_a)$，与内部界面通量逐时间层严格对消，保证离散守恒。（各离散项截断误差的泰勒展开分析见附录。）
 
 \subsubsection{ 5.4.2 时间推进与线性代数。}式 \eqref{eq:cn} 为 Crank--Nicolson 格式\cite{crank}（无条件稳定、时间二阶），每步化为三对角方程组，用追赶法（Thomas 算法）求解，复杂度 $O(N)$。空间通量项 $L$ 由式 \eqref{eq:L}、\eqref{eq:Lsurf} 给出，时间层上源项（边界贡献）取 $n$、$n+1$ 两层的算术平均。
 
@@ -543,13 +543,37 @@ q_{\mathrm{evap}}=\rho_d\,\Delta H_v\,h_m\,(C_R-C_a),\qquad q_{\mathrm{sens}}=h\
 
 \section{附录：数值格式细节}
 
-\textbf{1. 追赶法。}三对角方程组 $a_i x_{i-1}+b_i x_i+c_i x_{i+1}=d_i$ 的 Thomas 算法：前代 $c'_0=c_0/b_0,\ d'_0=d_0/b_0$；$m=b_i-a_i c'_{i-1}$，$c'_i=c_i/m$，$d'_i=(d_i-a_i d'_{i-1})/m$；回代 $x_{N-1}=d'_{N-1}$，$x_i=d'_i-c'_i x_{i+1}$。
+\textbf{1. 截断误差的泰勒展开分析。}设解充分光滑（步长足够小时成立，数值证据见 7.2 节），各离散项的截断误差为：
 
-\textbf{2. 守恒恒等式的推导。}式 \eqref{eq:cn} 两边同乘 $v_i$ 并对 $i$ 求和：界面通量项按 $(Lu)_i$ 的定义逐对抵消（节点 $i$ 的右界面与节点 $i+1$ 的左界面通量系数同为 $r_{i+1/2}K_{i+1/2}/\Delta r$、符号相反），仅表面行留下外界面贡献 $-R\beta K_s(u_{N-1}-u_a)$，即得式 \eqref{eq:conserv}。问题 4 的 $\zeta$ 坐标同理（控制体体积 $\int\zeta\dd\zeta$，界面通量系数 $\zeta_{i\pm1/2}D_m/\Delta\zeta$，表面通量 $h_m R(C_R-C_a)$）。
+\textbf{(1) 空间通量项。}界面差分在 $r_{i+1/2}$ 处按泰勒展开
+\begin{equation}
+\frac{u_{i+1}-u_i}{\Delta r}
+=u'\Big|_{i+1/2}+\frac{\Delta r^2}{24}u'''+O(\Delta r^4),
+\end{equation}
+故界面通量 $r_{i+1/2}K_{i+1/2}(u_{i+1}-u_i)/\Delta r$ 的误差为 $O(\Delta r^2)$。相邻界面通量相减，主部为 $\Delta r\,(rKu')'$，误差项 $O(\Delta r^3)$；除以控制体体积 $v_i=r_i\Delta r$（内部节点）后，$(Lu)_i$ 的截断误差为 $O(\Delta r^2)$。圆心行由对称性 $u_1=u_0+\frac{\Delta r^2}{2}u''_0+O(\Delta r^4)$，得 $4K_{1/2}(u_1-u_0)/\Delta r^2=2Ku''_0+O(\Delta r^2)$，恰为 $(K/r)\partial_r(r\,\partial_r u)\big|_{r=0}=2Ku''$ 的二阶逼近。表面行的外界面 Robin 通量 $R\beta K_s(u_{N-1}-u_a)$ 直接采用表面节点真值，无数值微分误差，内界面仍为中心差分，故表面行同为二阶。
 
-\textbf{3. 附件数据插值。}附件 1（241 点，0--14400 s）作分段线性插值；附件 2（145 点，0--259200 s，自 241200 s 即 67 h 起恒为 1.198 cm）作 Pchip 保形插值并求解析导数，$t>259200$ s 时 $R(t)\equiv1.198$ cm、$\dot R\equiv0$。
+\textbf{(2) 界面扩散系数的算术平均。}对光滑的 $D(r)$（由 $D(C(r),T(r))$ 与解的光滑性传递）：
+\begin{equation}
+\frac{D_i+D_{i+1}}{2}=D\Big|_{i+1/2}+\frac{\Delta r^2}{8}D''+O(\Delta r^4),
+\end{equation}
+该系数偏差对界面通量的贡献为 $O(\Delta r^2)$ 且随 $r$ 光滑变化，相邻界面相减时同样缩并，$(Lu)_i$ 的总截断误差仍为 $O(\Delta r^2)$。
 
-\textbf{4. 输出文件。}result1/2.xlsx 按模板含「温度」「水分浓度」两个工作表，A 列为时间（s），第 1 行为到药材中心的距离（cm）；result3/4.xlsx 单表存水分浓度。所有数值保留四位小数。
+\textbf{(3) 时间项（Crank--Nicolson）。}在 $t_{n+1/2}$ 处展开：
+\begin{equation}
+\frac{u^{n+1}-u^n}{\Delta t}=\pdd{u}{t}\Big|_{n+1/2}+O(\Delta t^2),\qquad
+\frac12\bigl(Lu^{n+1}+Lu^n\bigr)=Lu\Big|_{n+1/2}+O(\Delta t^2),
+\end{equation}
+故单步截断误差为 $O(\Delta t^2+\Delta r^2)$，格式空间、时间均二阶。问题 4 的 $\zeta$ 坐标形式经变量代换，误差结构相同（算子系数多乘 $1/R^2(t)$）；动边界下 $R$ 取半步中点值额外引入 $O(\Delta t^2)$ 配对误差（见 7.3 节）。
+
+综上，格式的整体截断误差为 $O(\Delta r^2+\Delta t^2)$，与 7.2 节步长减半收敛比 4.0--4.3 互相印证；0.125 mm 步长下残余误差约 $5\times10^{-4}$，满足四位小数输出要求。
+
+\textbf{2. 追赶法。}三对角方程组 $a_i x_{i-1}+b_i x_i+c_i x_{i+1}=d_i$ 的 Thomas 算法：前代 $c'_0=c_0/b_0,\ d'_0=d_0/b_0$；$m=b_i-a_i c'_{i-1}$，$c'_i=c_i/m$，$d'_i=(d_i-a_i d'_{i-1})/m$；回代 $x_{N-1}=d'_{N-1}$，$x_i=d'_i-c'_i x_{i+1}$。
+
+\textbf{3. 守恒恒等式的推导。}式 \eqref{eq:cn} 两边同乘 $v_i$ 并对 $i$ 求和：界面通量项按 $(Lu)_i$ 的定义逐对抵消（节点 $i$ 的右界面与节点 $i+1$ 的左界面通量系数同为 $r_{i+1/2}K_{i+1/2}/\Delta r$、符号相反），仅表面行留下外界面贡献 $-R\beta K_s(u_{N-1}-u_a)$，即得式 \eqref{eq:conserv}。问题 4 的 $\zeta$ 坐标同理（控制体体积 $\int\zeta\dd\zeta$，界面通量系数 $\zeta_{i\pm1/2}D_m/\Delta\zeta$，表面通量 $h_m R(C_R-C_a)$）。
+
+\textbf{4. 附件数据插值。}附件 1（241 点，0--14400 s）作分段线性插值；附件 2（145 点，0--259200 s，自 241200 s 即 67 h 起恒为 1.198 cm）作 Pchip 保形插值并求解析导数，$t>259200$ s 时 $R(t)\equiv1.198$ cm、$\dot R\equiv0$。
+
+\textbf{5. 输出文件。}result1/2.xlsx 按模板含「温度」「水分浓度」两个工作表，A 列为时间（s），第 1 行为到药材中心的距离（cm）；result3/4.xlsx 单表存水分浓度。所有数值保留四位小数。
 
 \end{document}
 
