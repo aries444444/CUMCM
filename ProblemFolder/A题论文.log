@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.28 (MiKTeX 25.12) (preloaded format=pdflatex 2026.9.12)  12 SEP 2026 16:55
+This is pdfTeX, Version 3.141592653-2.6-1.40.28 (MiKTeX 25.12) (preloaded format=pdflatex 2026.9.12)  12 SEP 2026 17:05
 entering extended mode
  restricted \write18 enabled.
  file:line:error style messages enabled.
@@ -723,6 +723,7 @@ Package epstopdf-base Info: Redefining graphics rule for `.eps' on input line 48
 File: epstopdf-sys.cfg 2021/03/18 v2.0 Configuration of epstopdf for MiKTeX
 ))
 Package hyperref Info: Link coloring OFF on input line 40.
+ (A题论文.out) (A题论文.out)
 \@outlinefile=\write3
 \openout3 = `A题论文.out'.
 
@@ -748,261 +749,49 @@ File: ctex-zhmap-windows.tex 2026/07/22 v2.6.4 Windows font map loader for pdfTe
 
 ]
 Package CJKpunct Info: use punctuation spaces for family 'zhhei' with punctstyle (quanjiao) on input line 67.
-
-
-LaTeX Warning: Citation `simal' on page 2 undefined on input line 85.
-
-
-LaTeX Warning: Citation `abbasi' on page 2 undefined on input line 85.
-
-
-LaTeX Warning: Citation `kim' on page 2 undefined on input line 85.
-
-
-LaTeX Warning: Citation `incropera' on page 2 undefined on input line 87.
-
-
-LaTeX Warning: Citation `yang' on page 2 undefined on input line 87.
-
-[2]
-<fig1_overview.png, id=192, 1041.8925pt x 715.2321pt>
+ [2]
+<fig1_overview.png, id=335, 1041.8925pt x 715.2321pt>
 File: fig1_overview.png Graphic file (type png)
 <use fig1_overview.png>
 Package pdftex.def Info: fig1_overview.png  used on input line 120.
 (pdftex.def)             Requested size: 373.3035pt x 256.26105pt.
-
-
-LaTeX Warning: Citation `whitaker' on page 3 undefined on input line 126.
-
-
-LaTeX Warning: Citation `mujumdar' on page 3 undefined on input line 126.
-
-[3]
-
-LaTeX Warning: Citation `mujumdar' on page 4 undefined on input line 129.
-
-
-LaTeX Warning: Citation `defraeye' on page 4 undefined on input line 129.
-
-[4 <./fig1_overview.png>] [5]
-
-LaTeX Warning: Reference `eq:heat1' on page 6 undefined on input line 175.
-
-
-LaTeX Warning: Reference `eq:mass1' on page 6 undefined on input line 175.
-
-
-LaTeX Warning: Reference `eq:bcT1' on page 6 undefined on input line 193.
-
-
-LaTeX Warning: Reference `eq:bcC1' on page 6 undefined on input line 193.
-
-
-LaTeX Warning: Reference `eq:ic1' on page 6 undefined on input line 193.
-
-
-LaTeX Warning: Reference `eq:heat23' on page 6 undefined on input line 199.
-
-
-LaTeX Warning: Reference `eq:mass23' on page 6 undefined on input line 199.
-
-
+ [3] [4 <./fig1_overview.png>] [5]
 Overfull \hbox (1.99573pt too wide) detected at line 213
 [][][]\OML/cmm/m/it/12 T[]\OT1/cmr/m/n/12 (\OML/cmm/m/it/12 t\OT1/cmr/m/n/12 ) = []  \OML/cmm/m/it/12 C[]\OT1/cmr/m/n/12 (\OML/cmm/m/it/12 t\OT1/cmr/m/n/12 ) = []
  []
 
-[6]
-
-LaTeX Warning: Reference `eq:mass4' on page 7 undefined on input line 245.
-
-
-LaTeX Warning: Reference `eq:heat1' on page 7 undefined on input line 251.
-
-
-LaTeX Warning: Reference `eq:mass1' on page 7 undefined on input line 251.
-
-[7]
-
-LaTeX Warning: Reference `eq:bcT1' on page 8 undefined on input line 261.
-
-
-LaTeX Warning: Reference `eq:bcC1' on page 8 undefined on input line 261.
-
-
-LaTeX Warning: Reference `eq:Lsurf' on page 8 undefined on input line 266.
-
-
-LaTeX Warning: Reference `eq:cn' on page 8 undefined on input line 268.
-
-
-LaTeX Warning: Citation `crank' on page 8 undefined on input line 268.
-
-
-LaTeX Warning: Reference `eq:L' on page 8 undefined on input line 268.
-
-
-LaTeX Warning: Reference `eq:Lsurf' on page 8 undefined on input line 268.
-
-
-LaTeX Warning: Reference `eq:cn' on page 8 undefined on input line 278.
-
-
-LaTeX Warning: Reference `eq:L' on page 8 undefined on input line 278.
-
-
-LaTeX Warning: Reference `eq:Lsurf' on page 8 undefined on input line 278.
-
-[8] [9] [10] [11] [12]
-<fig2_heatmap.png, id=330, 815.6874pt x 399.4122pt>
+[6] [7] [8] [9] [10] [11] [12]
+<fig2_heatmap.png, id=484, 815.6874pt x 399.4122pt>
 File: fig2_heatmap.png Graphic file (type png)
 <use fig2_heatmap.png>
 Package pdftex.def Info: fig2_heatmap.png  used on input line 451.
 (pdftex.def)             Requested size: 409.71692pt x 200.62589pt.
-
-
-LaTeX Warning: Reference `eq:zeta' on page 13 undefined on input line 452.
-
-
-LaTeX Warning: Reference `eq:mass4' on page 13 undefined on input line 452.
-
-
-LaTeX Warning: Reference `eq:heat4' on page 13 undefined on input line 452.
-
-
-LaTeX Warning: Reference `eq:zeta' on page 13 undefined on input line 452.
-
-
-LaTeX Warning: Reference `eq:mass4' on page 13 undefined on input line 452.
-
-
-LaTeX Warning: Reference `eq:heat4' on page 13 undefined on input line 452.
-
-
-LaTeX Warning: Reference `eq:heat1' on page 13 undefined on input line 459.
-
-
-LaTeX Warning: Citation `carslaw' on page 13 undefined on input line 459.
-
-[13 <./fig2_heatmap.png>]
-<fig3_validation.png, id=340, 968.1771pt x 375.0813pt>
+ [13 <./fig2_heatmap.png>]
+<fig3_validation.png, id=502, 968.1771pt x 375.0813pt>
 File: fig3_validation.png Graphic file (type png)
 <use fig3_validation.png>
 Package pdftex.def Info: fig3_validation.png  used on input line 468.
 (pdftex.def)             Requested size: 409.71692pt x 158.72923pt.
-
-
-LaTeX Warning: Reference `eq:cn' on page 14 undefined on input line 469.
-
-
-LaTeX Warning: Reference `eq:conserv' on page 14 undefined on input line 469.
-
-
-LaTeX Warning: Reference `eq:cn' on page 14 undefined on input line 469.
-
-
-LaTeX Warning: Reference `eq:conserv' on page 14 undefined on input line 469.
-
-File: fig3_validation.png Graphic file (type png)
-<use fig3_validation.png>
-Package pdftex.def Info: fig3_validation.png  used on input line 474.
-(pdftex.def)             Requested size: 409.71692pt x 158.72923pt.
-
-LaTeX Warning: Reference `eq:cn' on page 14 undefined on input line 475.
-
-
-LaTeX Warning: Reference `eq:conserv' on page 14 undefined on input line 475.
-
-
-LaTeX Warning: Reference `eq:cn' on page 14 undefined on input line 475.
-
-
-LaTeX Warning: Reference `eq:conserv' on page 14 undefined on input line 475.
-
-[14 <./fig3_validation.png>]
-
-LaTeX Warning: Reference `eq:conserv' on page 15 undefined on input line 486.
-
-
-LaTeX Warning: Reference `eq:D3' on page 15 undefined on input line 490.
-
-
-LaTeX Warning: Reference `eq:D4' on page 15 undefined on input line 490.
-
-[15]
-
-LaTeX Warning: Citation `danshen' on page 16 undefined on input line 498.
-
-
-LaTeX Warning: Citation `dihuang' on page 16 undefined on input line 498.
-
-
-LaTeX Warning: Citation `baizhu' on page 16 undefined on input line 498.
-
-
-LaTeX Warning: Citation `wang' on page 16 undefined on input line 498.
-
-
-LaTeX Warning: Citation `pang' on page 16 undefined on input line 498.
-
-[16] [17]
-
-LaTeX Warning: Citation `whitaker' on page 18 undefined on input line 558.
-
-
-LaTeX Warning: Citation `garcia' on page 18 undefined on input line 558.
-
-
-LaTeX Warning: Citation `mohan' on page 18 undefined on input line 559.
-
-
-LaTeX Warning: Citation `incropera' on page 18 undefined on input line 560.
-
-
-LaTeX Warning: Citation `defraeye' on page 18 undefined on input line 560.
-
-
-LaTeX Warning: Citation `ren' on page 18 undefined on input line 565.
-
-[18] [19] [20]
-
-LaTeX Warning: Reference `eq:cn' on page 21 undefined on input line 621.
-
-
-LaTeX Warning: Reference `eq:conserv' on page 21 undefined on input line 621.
-
-[21] (A题论文.aux)
+ [14 <./fig3_validation.png>] [15] [16] [17] [18] [19] [20] [21] (A题论文.aux)
  ***********
 LaTeX2e <2025-11-01>
 L3 programming layer <2026/07/13>
  ***********
-
-
-LaTeX Warning: There were undefined references.
-
-
-LaTeX Warning: Label(s) may have changed. Rerun to get cross-references right.
-
-
-Package rerunfilecheck Warning: File `A题论文.out' has changed.
-(rerunfilecheck)                Rerun to get outlines right
-(rerunfilecheck)                or use package `bookmark'.
-
-Package rerunfilecheck Info: Checksums for `A题论文.out':
-(rerunfilecheck)             Before: <no file>
-(rerunfilecheck)             After:  45AFAC2F712E58FA1018C5CE3F2B224E;5165.
+Package rerunfilecheck Info: File `A题论文.out' has not changed.
+(rerunfilecheck)             Checksum: 45AFAC2F712E58FA1018C5CE3F2B224E;5165.
  ) 
 Here is how much of TeX's memory you used:
- 17285 strings out of 467871
- 300717 string characters out of 5417414
- 695182 words of memory out of 5000000
- 45324 multiletter control sequences out of 15000+600000
+ 17324 strings out of 467871
+ 301764 string characters out of 5417414
+ 697156 words of memory out of 5000000
+ 45360 multiletter control sequences out of 15000+600000
  732447 words of font info for 426 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
  78i,12n,92p,1587b,634s stack positions out of 10000i,1000n,20000p,200000b,200000s
 <C:/Windows/Fonts/simsun.ttc><C:/Windows/Fonts/simsun.ttc><C:/Windows/Fonts/simsun.ttc><C:/Windows/Fonts/simhei.ttf><C:/Windows/Fonts/simsun.ttc><C:/Windows/Fonts/simsun.ttc><C:/Windows/Fonts/simhei.ttf><C:/Windows/Fonts/simhei.ttf><C:/Windows/Fonts/simsun.ttc><C:/Windows/Fonts/simsun.ttc><C:/Windows/Fonts/simhei.ttf><C:/Windows/Fonts/simhei.ttf><C:/Windows/Fonts/simhei.ttf><C:/Windows/Fonts/simsun.ttc><C:/Windows/Fonts/simhei.ttf><C:/Windows/Fonts/simhei.ttf><C:/Windows/Fonts/simhei.ttf><C:/Windows/Fonts/simhei.ttf><C:/Windows/Fonts/simhei.ttf><C:/Windows/Fonts/simhei.ttf><C:/Windows/Fonts/simhei.ttf><C:/Windows/Fonts/simhei.ttf><C:/Windows/Fonts/simhei.ttf><C:/Windows/Fonts/simhei.ttf><C:/Windows/Fonts/simhei.ttf><C:/Windows/Fonts/simhei.ttf><C:/Windows/Fonts/simhei.ttf><C:/Windows/Fonts/simhei.ttf><C:/Windows/Fonts/simhei.ttf><C:/Windows/Fonts/simsun.ttc><C:/Windows/Fonts/simhei.ttf><C:/Windows/Fonts/simhei.ttf><C:/Windows/Fonts/simhei.ttf><C:/Windows/Fonts/simhei.ttf><C:/Windows/Fonts/simsun.ttc><C:/Windows/Fonts/simsun.ttc><C:/Windows/Fonts/simsun.ttc><C:/Windows/Fonts/simhei.ttf><C:/Windows/Fonts/simhei.ttf><C:/Windows/Fonts/simhei.ttf><C:/Windows/Fonts/simhei.ttf><C:/Windows/Fonts/simhei.ttf><C:/Windows/Fonts/simhei.ttf><C:/Windows/Fonts/simhei.ttf><C:/Windows/Fonts/simhei.ttf><C:/Windows/Fonts/simsun.ttc><C:/Windows/Fonts/simsun.ttc><C:/Windows/Fonts/simhei.ttf><C:/Windows/Fonts/simhei.ttf><C:/Windows/Fonts/simhei.ttf><C:/Windows/Fonts/simhei.ttf><C:/Windows/Fonts/simsun.ttc><C:/Windows/Fonts/simsun.ttc><C:/Windows/Fonts/simsun.ttc><C:/Windows/Fonts/simsun.ttc><C:/Windows/Fonts/simsun.ttc><C:/Windows/Fonts/simsun.ttc><C:/Windows/Fonts/simhei.ttf><C:/Windows/Fonts/simhei.ttf><C:/Windows/Fonts/simhei.ttf><C:/Windows/Fonts/simhei.ttf><C:/Windows/Fonts/simsun.ttc><C:/Windows/Fonts/simsun.ttc><C:/Windows/Fonts/simsun.ttc><C:/Windows/Fonts/simsun.ttc><C:/Windows/Fonts/simsun.ttc><C:/Windows/Fonts/simsun.ttc><C:/Windows/Fonts/simsun.ttc><C:/Windows/Fonts/simsun.ttc><C:/Windows/Fonts/simsun.ttc><C:/Windows/Fonts/simsun.ttc><C:/Windows/Fonts/simsun.ttc><C:/Windows/Fonts/simsun.ttc><C:/Windows/Fonts/simsun.ttc><C:/Windows/Fonts/simsun.ttc><C:/Windows/Fonts/simsun.ttc><C:/Windows/Fonts/simsun.ttc><C:/Windows/Fonts/simsun.ttc><C:/Windows/Fonts/simsun.ttc><C:/Windows/Fonts/simsun.ttc><C:/Windows/Fonts/simsun.ttc><C:/Windows/Fonts/simsun.ttc><C:/Windows/Fonts/simsun.ttc><C:/Windows/Fonts/simsun.ttc><C:/Windows/Fonts/simsun.ttc><C:/Windows/Fonts/simsun.ttc><C:/Windows/Fonts/simsun.ttc><C:/Windows/Fonts/simhei.ttf><C:/Windows/Fonts/simsun.ttc><C:/Windows/Fonts/simsun.ttc><C:/Windows/Fonts/simsun.ttc><C:/Windows/Fonts/simsun.ttc><C:/Windows/Fonts/simsun.ttc><C:/Windows/Fonts/simsun.ttc><C:/Windows/Fonts/simsun.ttc><C:/Windows/Fonts/simsun.ttc><C:/Windows/Fonts/simsun.ttc><C:/Windows/Fonts/simsun.ttc><C:/Windows/Fonts/simsun.ttc><C:/Windows/Fonts/simsun.ttc><C:/Windows/Fonts/simsun.ttc><C:/Windows/Fonts/simsun.ttc><C:/Windows/Fonts/simsun.ttc><C:/Windows/Fonts/simsun.ttc><C:/Windows/Fonts/simsun.ttc><C:/Windows/Fonts/simsun.ttc><C:/Windows/Fonts/simsun.ttc><C:/Windows/Fonts/simsun.ttc><C:/Windows/Fonts/simsun.ttc><C:/Windows/Fonts/simsun.ttc><C:/Windows/Fonts/simsun.ttc><C:/Windows/Fonts/simsun.ttc><C:/Windows/Fonts/simsun.ttc><C:/Windows/Fonts/simsun.ttc><C:/Windows/Fonts/simsun.ttc><C:/Windows/Fonts/simsun.ttc><C:/Windows/Fonts/simsun.ttc><C:/Windows/Fonts/simsun.ttc><C:/Windows/Fonts/simsun.ttc><C:/Windows/Fonts/simsun.ttc><C:/Windows/Fonts/simhei.ttf><C:/Windows/Fonts/simhei.ttf><C:/Windows/Fonts/simhei.ttf><C:/Windows/Fonts/simhei.ttf><C:/Windows/Fonts/simhei.ttf><C:/Windows/Fonts/simhei.ttf><C:/Windows/Fonts/simhei.ttf><C:/Windows/Fonts/simhei.ttf><C:/Windows/Fonts/simhei.ttf><C:/Windows/Fonts/simhei.ttf><C:/Windows/Fonts/simhei.ttf><C:/Windows/Fonts/simhei.ttf><C:/Windows/Fonts/simhei.ttf><C:/Windows/Fonts/simhei.ttf><C:/Windows/Fonts/simhei.ttf><C:/Windows/Fonts/simhei.ttf><C:/Windows/Fonts/simhei.ttf><C:/Windows/Fonts/simhei.ttf><C:/Windows/Fonts/simhei.ttf><C:/Windows/Fonts/simhei.ttf><C:/Users/Admin/AppData/Local/Programs/MiKTeX25/fonts/type1/public/amsfonts/cm/cmbx12.pfb><C:/Users/Admin/AppData/Local/Programs/MiKTeX25/fonts/type1/public/amsfonts/cm/cmex10.pfb><C:/Users/Admin/AppData/Local/Programs/MiKTeX25/fonts/type1/public/amsfonts/cm/cmmi10.pfb><C:/Users/Admin/AppData/Local/Programs/MiKTeX25/fonts/type1/public/amsfonts/cm/cmmi12.pfb><C:/Users/Admin/AppData/Local/Programs/MiKTeX25/fonts/type1/public/amsfonts/cm/cmmi6.pfb><C:/Users/Admin/AppData/Local/Programs/MiKTeX25/fonts/type1/public/amsfonts/cm/cmmi7.pfb><C:/Users/Admin/AppData/Local/Programs/MiKTeX25/fonts/type1/public/amsfonts/cm/cmmi8.pfb><C:/Users/Admin/AppData/Local/Programs/MiKTeX25/fonts/type1/public/amsfonts/cm/cmr10.pfb><C:/Users/Admin/AppData/Local/Programs/MiKTeX25/fonts/type1/public/amsfonts/cm/cmr12.pfb><C:/Users/Admin/AppData/Local/Programs/MiKTeX25/fonts/type1/public/amsfonts/cm/cmr17.pfb><C:/Users/Admin/AppData/Local/Programs/MiKTeX25/fonts/type1/public/amsfonts/cm/cmr6.pfb><C:/Users/Admin/AppData/Local/Programs/MiKTeX25/fonts/type1/public/amsfonts/cm/cmr7.pfb><C:/Users/Admin/AppData/Local/Programs/MiKTeX25/fonts/type1/public/amsfonts/cm/cmr8.pfb><C:/Users/Admin/AppData/Local/Programs/MiKTeX25/fonts/type1/public/amsfonts/cm/cmsy10.pfb><C:/Users/Admin/AppData/Local/Programs/MiKTeX25/fonts/type1/public/amsfonts/cm/cmsy7.pfb><C:/Users/Admin/AppData/Local/Programs/MiKTeX25/fonts/type1/public/amsfonts/cm/cmsy8.pfb><C:/Users/Admin/AppData/Local/Programs/MiKTeX25/fonts/type1/public/amsfonts/symbols/msam10.pfb>
-Output written on A题论文.pdf (21 pages, 2216800 bytes).
+Output written on A题论文.pdf (21 pages, 2236778 bytes).
 PDF statistics:
- 956 PDF objects out of 1000 (max. 8388607)
- 127 named destinations out of 1000 (max. 500000)
- 328 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 1114 PDF objects out of 1200 (max. 8388607)
+ 126 named destinations out of 1000 (max. 500000)
+ 600 words of extra memory for PDF output out of 10000 (max. 10000000)
 
