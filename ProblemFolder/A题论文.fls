@@ -589,6 +589,10 @@ INPUT C:\Users\Admin\AppData\Local\Programs\MiKTeX25\fonts\tfm\zhmetrics\unihei\
 INPUT C:\Users\Admin\AppData\Local\Programs\MiKTeX25\fonts\tfm\zhmetrics\unihei\unihei63.tfm
 INPUT C:\Users\Admin\AppData\Local\Programs\MiKTeX25\fonts\tfm\zhmetrics\unihei\unihei63.tfm
 INPUT C:\Users\Admin\AppData\Local\Programs\MiKTeX25\fonts\tfm\zhmetrics\unisong\unisongsl63.tfm
+INPUT C:\Users\Admin\AppData\Local\Programs\MiKTeX25\fonts\tfm\zhmetrics\unihei\unihei75.tfm
+INPUT C:\Users\Admin\AppData\Local\Programs\MiKTeX25\fonts\tfm\zhmetrics\unihei\unihei8b.tfm
+INPUT C:\Users\Admin\AppData\Local\Programs\MiKTeX25\fonts\tfm\zhmetrics\unihei\unihei66.tfm
+INPUT C:\Users\Admin\AppData\Local\Programs\MiKTeX25\fonts\tfm\zhmetrics\unisong\unisong64.tfm
 INPUT C:\Users\Admin\AppData\Local\Programs\MiKTeX25\fonts\tfm\zhmetrics\unihei\unihei80.tfm
 INPUT C:\Users\Admin\AppData\Local\Programs\MiKTeX25\fonts\tfm\zhmetrics\unihei\unihei65.tfm
 INPUT C:\Users\Admin\AppData\Local\Programs\MiKTeX25\fonts\tfm\zhmetrics\unihei\unihei73.tfm
@@ -608,6 +612,7 @@ INPUT C:\Users\Admin\AppData\Local\Programs\MiKTeX25\fonts\tfm\zhmetrics\unisong
 INPUT A题论文.aux
 INPUT .\A题论文.out
 INPUT .\A题论文.out
+INPUT C:\Windows\Fonts\simsun.ttc
 INPUT C:\Windows\Fonts\simsun.ttc
 INPUT C:\Windows\Fonts\simsun.ttc
 INPUT C:\Windows\Fonts\simsun.ttc

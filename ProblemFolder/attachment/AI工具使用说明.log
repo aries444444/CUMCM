@@ -1,4 +1,4 @@
-This is XeTeX, Version 3.141592653-2.6-0.999997 (MiKTeX 25.12) (preloaded format=xelatex 2026.7.28)  12 SEP 2026 10:51
+This is XeTeX, Version 3.141592653-2.6-0.999997 (MiKTeX 25.12) (preloaded format=xelatex 2026.7.28)  12 SEP 2026 12:04
 entering extended mode
  restricted \write18 enabled.
  file:line:error style messages enabled.
@@ -722,53 +722,27 @@ LaTeX Font Info:    Overwriting math alphabet `\mathtt' in version `bold'
 * \@reversemarginfalse
 * (1in=72.27pt=25.4mm, 1cm=28.453pt)
 
-
-Package fontspec Info: 
-(fontspec)             Could not resolve font "KaiTi/BI" (it probably doesn't
-(fontspec)             exist).
-
-
-Package fontspec Info: 
-(fontspec)             Could not resolve font "KaiTi/B" (it probably doesn't
-(fontspec)             exist).
-
-
-Package fontspec Info: 
-(fontspec)             Could not resolve font "KaiTi/I" (it probably doesn't
-(fontspec)             exist).
-
-
-Package fontspec Info: 
-(fontspec)             Font family 'KaiTi(0)' created for font 'KaiTi' with
-(fontspec)             options [Script={CJK}].
-(fontspec)              
-(fontspec)              This font family consists of the following NFSS
-(fontspec)             series/shapes:
-(fontspec)              
-(fontspec)             - 'normal' (m/n) with NFSS spec.:
-(fontspec)             <->"KaiTi/OT:script=hani;language=dflt;"
-
 LaTeX Font Info:    External font `cmex10' loaded for size
-(Font)              <12> on input line 39.
+(Font)              <12> on input line 37.
 LaTeX Font Info:    External font `cmex10' loaded for size
-(Font)              <8> on input line 39.
+(Font)              <8> on input line 37.
 LaTeX Font Info:    External font `cmex10' loaded for size
-(Font)              <6> on input line 39.
+(Font)              <6> on input line 37.
 [1
 
-] [2] [3] [4] (AI工具使用说明.aux)
+] [2] (AI工具使用说明.aux)
  ***********
 LaTeX2e <2025-11-01>
 L3 programming layer <2026/07/13>
  ***********
  ) 
 Here is how much of TeX's memory you used:
- 8320 strings out of 402987
- 241591 string characters out of 5448110
- 678639 words of memory out of 5000000
- 36951 multiletter control sequences out of 15000+600000
- 631765 words of font info for 77 fonts, out of 8000000 for 9000
+ 8048 strings out of 402987
+ 225884 string characters out of 5448110
+ 675639 words of memory out of 5000000
+ 36687 multiletter control sequences out of 15000+600000
+ 631717 words of font info for 71 fonts, out of 8000000 for 9000
  1348 hyphenation exceptions out of 8191
- 93i,9n,111p,439b,333s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 93i,9n,111p,439b,284s stack positions out of 10000i,1000n,20000p,200000b,200000s
 
-Output written on AI工具使用说明.pdf (4 pages).
+Output written on AI工具使用说明.pdf (2 pages).
