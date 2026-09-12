@@ -1,0 +1,95 @@
+% !TEX program = xelatex
+\documentclass[12pt,a4paper]{ctexart}
+\usepackage{geometry}
+\geometry{margin=2.4cm}
+\usepackage{booktabs}
+\usepackage{enumitem}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\hypersetup{colorlinks=true,linkcolor=blue,urlcolor=blue}
+\usepackage{titlesec}
+\titlespacing*{\section}{0pt}{1.2em}{0.6em}
+
+\newcommand{\src}[1]{\par\noindent{\small\color{blue!60!black}〔依据〕#1}\par}
+
+\begin{document}
+
+\begin{center}
+{\LARGE\heiti 用户格式与内容要求汇总（硬约束）}\\[0.5em]
+{\small CUMCM 2026 A 题项目\quad 整理日期：2026-09-12\quad 依据：用户历次提示词原话}
+\end{center}
+
+\noindent 本文档汇总用户在本项目各会话中明确提出的格式与内容要求，作为后续所有写作、修改、编译与交付的\textbf{硬约束}：与其冲突的做法一律禁止。每条均附用户原话作为依据；若与用户\textbf{当时最新指示}冲突，以最新指示为准。
+
+\section{一、文档载体与交付}
+
+\begin{enumerate}[label=\textbf{C\arabic*}.]
+\item 交付文档一律写成 \texttt{.tex} 并用 xelatex 编译成 PDF，不写 Markdown 文档（md 仅可作过程草稿）。
+\src{“我只有大一基础……我需要你拟一个tex文档来完成这件事”；“……写一个报告……报告写成tex”}
+\item 文档源码与 PDF 放入 \texttt{ProblemFolder/LearningMaterial/}，并纳入 \texttt{build\_pdfs.py} 编译清单；沿用仓库 ctexart 前言与 booktabs 风格。
+\item 论文稿位于 \texttt{ProblemFolder/A题论文.tex}；评审类报告放入 \texttt{ProblemFolder/report/} 文件夹。
+\src{“生成一个报告　有一个report folder　里面还有一个报告　你看着改一下”}
+\item 配图暂不处理，不生成、不修改插图。
+\src{“配图你暂时不用考虑”}
+\end{enumerate}
+
+\section{二、论文行文与用词}
+
+\begin{enumerate}[label=\textbf{W\arabic*}.]
+\item 全文\textbf{不用“网格”一词}，改用“空间离散/空间步长/离散节点/坐标离散”等更专业的表述；对柱状结构，输出位置只写“到药材中心的距离”。
+\src{“文中为什么说是网格　对于这样的柱状结构只用写明扩散点距离中心的距离就行”；“不要网格　就离散方法就行　或者你换一个更加专业的说辞”}
+\item 行文要像人类写作：删去不必要的括注（如摘要中“针对问题 1（预热平衡阶段）”这类阶段名括注）；承载信息的括号（数值、单位、引文、条件）保留。
+\src{“另外把不必要的括号删掉　比如摘要中问题１后面写的（预热平衡阶段）不像人类写的”}
+\item 严谨、使用专业术语；所有符号必须严格定义；引用公式必须说明，需要详细的 paraphrase（用自己的话展开说明）。
+\src{“要求严谨 用专业术语 所有符号均需要被定义 公式引用必须说明 需要详细的paraphrase”}
+\end{enumerate}
+
+\section{三、建模与数据}
+
+\begin{enumerate}[label=\textbf{M\arabic*}.]
+\item 模型输入只用题给参数（附录经验式、附件数据）；外部文献实测数据只用于验证对照，禁止替换题给参数或进入模型与结果。
+\src{2026-09-11 用户明确原则（已存档）：“本题是建模与计算任务，模型输入只用题给附录经验式与附件数据；外部文献中的实测数据只用于验证对照”}
+\item 外部新资料的处理方式：先单独写成评估报告给用户过目（“汇总一下我看看”），\textbf{不要直接修改}论文或模型。
+\src{“external里面有新的资料 你看一下有没有我们的文章能用的上的 写一个报告 不要直接修改 汇总一下我看看 报告写成tex”}
+\item 精度必须保证：4 位小数结果须由收敛性验证支撑（空间/时间加密收敛比、Richardson 外推误差 $<10^{-4}$）；空间步长与题目数据分辨率匹配（题给信息以 0.1 cm 为最小单位），不大到失准、也不无谓过小。
+\src{“精确度需要保证”；“你采取的距离步长是不是有点小了　题目中给信息都是0.1cm为最小单位”}
+\item 数据与结果须做合理性核查（取值区间、量级、物理解释）。
+\src{“数据在合理取值区间吗”}
+\end{enumerate}
+
+\section{四、审稿与修改流程}
+
+\begin{enumerate}[label=\textbf{P\arabic*}.]
+\item 审稿身份与任务：以\textbf{国赛评委}的身份/水平阅读题目、论文及其附属文件，验证论文的结论和数据，给出建议。
+\src{“以国赛评委的身份审ａ题论文稿　给出改进建议”；“你是一名数据分析专家和偏微分领域专家　阅读ａ题　验证论文结论和数据　给出建议”}
+\item 修改与评审前先\textbf{查找官方要求}：国赛论文格式规范与评阅要求（摘要、关键词、正文限制、支撑材料命名等）。
+\src{审稿请求的补充要求：“记得查找相关的要求”}
+\item 修改优先级：\textbf{方法/计算类问题优先}，有则改之、无则加勉；图与格式类问题\textbf{当前阶段不动}（待用户放开）。
+\src{“你查一下两份报告中提出的问题　优先优化方法计算中可能存在的问题　有则改之无则加勉　其他图和格式问题先不动”}
+\item 每次修改后对照题目原文、附属文件与 result*.xlsx 复核结论与数据，论文数值与 xlsx 逐格一致；并用 xelatex 重编译确认无错误。
+\src{“阅读ａ题　然后阅读ａ题论文及其附属文件　帮我验证论文的结论和答案　提出建议”（用户多次反复强调）}
+\item git 合并后必须复查版本：文件内容、结果数据、编译产物均未回退。
+\src{“再查一下　我怕合并了之后版本搞错了”}
+\end{enumerate}
+
+\section{五、学习材料专项（LearningMaterial）}
+
+\begin{enumerate}[label=\textbf{L\arabic*}.]
+\item 面向大一、大二数学基础（已知 ODE/PDE 定义、泰勒展开、牛顿迭代），串讲须能自学看懂，尽快弄懂方法及原因。
+\src{“我只有大一基础和大二的一点点基础的数学知识 但是我要尽快的弄懂你所使用的方法以及原因”}
+\item 知识点串讲结合问题展开，逐步引出解法。
+\src{“总结所有的第一问的所用知识点 结合问题来串讲 慢慢引出来解决方法”}
+\item 分学科整理学习资料（分类自定，科学、够易懂）；列可能用到的教材和文献。
+\src{“分学科学习一下……分类方法你自己定 科学 够易懂就行”；“所有可能用到的教材和文献 看有没有可以参考的”}
+\end{enumerate}
+
+\section{六、执行快照（截至 2026-09-12）}
+
+\begin{itemize}
+\item “网格”已全文替换为“空间离散/步长”等表述（论文 13 处，2026-09-12）；
+\item 外部资料评估报告已单独成文，未改动模型与参数；
+\item 两份评审报告的方法/计算类问题已修复 9 项并复测，图/格式类暂缓；
+\item 摘要阶段名括注等不必要括号的清理已完成（2026-09-12，共 6 处，论文已重编译）。
+\end{itemize}
+
+\end{document}

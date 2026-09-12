@@ -9,7 +9,8 @@ dest = here                                         # PDFs go next to the source
 jobs = [('guide', 'A题物理化学补习指南.tex', 'A题物理化学补习指南.pdf'),
         ('lit', 'A题文献清单.tex', 'A题文献清单.pdf'),
         ('q1lecture', 'A题问题1知识点串讲.tex', 'A题问题1知识点串讲.pdf'),
-        ('graddiv', 'A题梯度与散度讲解.tex', 'A题梯度与散度讲解.pdf')]
+        ('graddiv', 'A题梯度与散度讲解.tex', 'A题梯度与散度讲解.pdf'),
+        ('constraints', 'A题格式与内容硬约束.tex', 'A题格式与内容硬约束.pdf')]
 
 for tag, name, final_name in jobs:
     src = os.path.join(here, name)
