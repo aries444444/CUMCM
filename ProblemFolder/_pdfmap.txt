@@ -1,0 +1,18 @@
+p1: first=1 | last=关键词：热风干燥；热质耦合传递；圆柱轴对称扩散；Crank–
+p2: first=一、问题重述 | last=下按菲克定律向表面扩散，在表面以对流方式传递到烘房空气。表面
+p3: first=二、问题分析 | last=表5、t∗
+p4: first=三、模型假设 | last=仅沿径向变化，与题给一维数据自洽）；干基含水率定义于固相骨架
+p5: first=四、符号说明 | last=
+p6: first=五、模型的建立与求解 | last=,
+p7: first=五、模型的建立与求解 | last=取R h (TR −Ta) 与R hm(CR −Ca)，与内
+p8: first=五、模型的建立与求解 | last=∆ζ = 1/40（N = 41，∆t = 5 s）。步长选
+p9: first=六、求解结果 | last=Dt ≈2.6
+p10: first=六、求解结果 | last=t∗= 205082.5 s = 56.9674 h (约2
+p11: first=六、求解结果 | last=表6
+p12: first=七、模型的检验 | last=析39.4483 ◦C，四位小数完全一致（误差不超过5 × 
+p13: first=七、模型的检验 | last=呈指数拖尾）。问题1 模型（Ta = 41.513 ◦C）同
+p14: first=七、模型的检验 | last=干燥时长约增加1/0.72 −1 ≈39%（t∗由56.97
+p15: first=八、模型的评价与推广 | last=本文模型可直接推广为中药材干燥工艺的仿真工具：给定烘房温湿曲
+p16: first=参考文献 | last=modelling[J]. International Jo
+p17: first=附录：数值格式细节 | last=该系数偏差对界面通量的贡献为O(∆r2) 且随r 光滑变化，
+p18: first=附录：数值格式细节 | last=间（s），第1 行为到药材中心的距离（cm）；result3

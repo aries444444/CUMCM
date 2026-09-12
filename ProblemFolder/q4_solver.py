@@ -11,6 +11,7 @@
 import sys, os
 import numpy as np
 import openpyxl
+from scipy.linalg import solve_banded
 from scipy.interpolate import PchipInterpolator
 
 try:
@@ -51,13 +52,13 @@ _Rpd = _Rp.derivative()
 RpofT = lambda t: float(_Rpd(t)) if t <= T2END else 0.0
 
 def thomas(a, b, c, rhs):
-    n = len(rhs); cp = np.zeros(n); dp = np.zeros(n)
-    cp[0] = c[0] / b[0]; dp[0] = rhs[0] / b[0]
-    for i in range(1, n):
-        m = b[i] - a[i] * cp[i - 1]; cp[i] = c[i] / m; dp[i] = (rhs[i] - a[i] * dp[i - 1]) / m
-    x = np.zeros(n); x[-1] = dp[-1]
-    for i in range(n - 2, -1, -1): x[i] = dp[i] - cp[i] * x[i + 1]
-    return x
+    """三对角求解:与追赶法数学等价,调用 LAPACK 带状求解(提速,结果不变)。"""
+    n = len(rhs)
+    ab = np.zeros((3, n))
+    ab[0, 1:] = c[:-1]
+    ab[1, :] = b
+    ab[2, :-1] = a[1:]
+    return solve_banded((1, 1), ab, rhs)
 
 def crank_step(u, K, Cp, R, beta, bc_prev, bc_next, dt):
     """zeta 系 Crank--Nicolson 一步（物料随体坐标，无对流项；扩散系数含 1/R^2）。
@@ -112,110 +113,111 @@ def water_int(C, R):
     v[NZ - 1] = (1.0 - ((NZ - 1.5) * DZ) ** 2) / 2.0
     return R * R * (C * v).sum()
 
-# ================= 问题4：dt=5 s，直到 max C <= 0.15 =================
-DT = 5.0
-T, C = np.full(NZ, T0), np.full(NZ, C0)
-dist = np.array([0.0, 0.005, 0.01, 0.015, 0.02])     # 表6 固定距离列（m）
-xlsx_d = np.arange(0.0, 0.02001, 0.001)             # result4 0:0.1:2 cm（m）
-tab6, rows4 = [], []
-Whist, Cshist, Rhist, Rphist = [], [], [], []
-tstar, nstar = None, None
-nmax = int(300 * 3600 / DT)
-for n in range(1, nmax + 1):
-    tn = n * DT
-    T, C = step(T, C, tn - DT, tn, DT)
-    R = RofT(tn); Rp = RpofT(tn)
-    W = water_int(C, R)
-    Whist.append(W); Cshist.append(C[-1]); Rhist.append(R); Rphist.append(Rp)
-    if n % 4320 == 0:                       # 每 6 h 记表6 一行
-        row = []
-        for dj in dist:
-            row.append(float(np.interp(dj / R, zeta, C)) if dj <= R else np.nan)
-        row.append(C[-1])                   # 表面列
-        tab6.append(row)
-    if n % 12 == 0:                         # 每 60 s 记 result4 一行
-        row = []
-        for dj in xlsx_d:
-            row.append(float(np.interp(dj / R, zeta, C)) if dj <= R else None)
-        row.append(C[-1])
-        rows4.append((tn, row))
-    if C.max() <= CTARGET:
-        tstar, nstar = tn, n
-        break
-if tstar is None:
-    raise RuntimeError('300 h 内未达烘干判据')
-R = RofT(tstar)
-row = [float(np.interp(dj / R, zeta, C)) if dj <= R else np.nan for dj in dist] + [C[-1]]
-tab6.append(row)
-if nstar % 12:
-    row = [float(np.interp(dj / R, zeta, C)) if dj <= R else None for dj in xlsx_d] + [C[-1]]
-    rows4.append((tstar, row))
-print('问题4 烘干时长: t* = %d s = %.4f h (max C = %.6f, 此时 R = %.4f cm)'
-      % (tstar, tstar / 3600, C.max(), R * 100))
-np.set_printoptions(precision=4, suppress=True)
-print('表6 水分浓度 (kg/kg)，行=6,12,...h 直至 t*，列=0/0.5/1/1.5/2 cm + 表面:')
-for k, row in enumerate(tab6):
-    rr = ' '.join('  --' if np.isnan(v) else '%6.4f' % v for v in row)
-    trow = (k + 1) * 6.0 if k + 1 < len(tab6) else tstar / 3600.0
-    print('%7.1fh |%s' % (trow, rr))
-
-wb = openpyxl.Workbook()
-ws = wb.active; ws.title = 'Sheet1'
-ws.cell(1, 1, '时间\\到药材中心的距离')
-for j in range(len(xlsx_d)):
-    ws.cell(1, 2 + j, round(xlsx_d[j] * 100, 1))
-ws.cell(1, 2 + len(xlsx_d), '药材表面')
-for k, (tt, row) in enumerate(rows4):
-    ws.cell(2 + k, 1, tt)
-    for j, v in enumerate(row):
-        if v is not None:
-            ws.cell(2 + k, 2 + j, round(v, 4))
-wb.save(os.path.join(ROOT, 'result4.xlsx'))
-print('已写出 result4.xlsx（%d 行）' % len(rows4))
-
-# ================= 验证 =================
-# V1 动边界质量守恒: d/dt ∫C r dr = 2R'/R·∫C r dr - R·h_m(C_s-C_air)
-W0 = water_int(np.full(NZ, C0), R0)
-lhs = Whist[-1] - W0
-tt = np.arange(1, nstar + 1) * DT
-f1 = [2 * rp / r * w for rp, r, w in zip(Rphist, Rhist, Whist)]
-f2 = [-r * hm * (cs - C_air(t)) for r, cs, t in zip(Rhist, Cshist, tt)]
-rhs = np.trapezoid([a + b for a, b in zip(f1, f2)], tt)
-print('验证V1 离散守恒: ΣvΔC = %.6e，∫[2R\'/R·W - R h_m(C_R-C_air)]dt = %.6e，差 %.2e'
-      % (lhs, rhs, lhs - rhs))
-
-# V2 时间收敛: 前 6 h，dt=5 vs 2.5（同网格）
-def run6h(dt):
+if __name__ == "__main__":
+    # ================= 问题4：dt=5 s，直到 max C <= 0.15 =================
+    DT = 5.0
     T, C = np.full(NZ, T0), np.full(NZ, C0)
-    for n in range(1, int(21600 / dt) + 1):
-        T, C = step(T, C, (n - 1) * dt, n * dt, dt)
-    R = RofT(21600)
+    dist = np.array([0.0, 0.005, 0.01, 0.015, 0.02])     # 表6 固定距离列（m）
+    xlsx_d = np.arange(0.0, 0.02001, 0.001)             # result4 0:0.1:2 cm（m）
+    tab6, rows4 = [], []
+    Whist, Cshist, Rhist, Rphist = [], [], [], []
+    tstar, nstar = None, None
+    nmax = int(300 * 3600 / DT)
+    for n in range(1, nmax + 1):
+        tn = n * DT
+        T, C = step(T, C, tn - DT, tn, DT)
+        R = RofT(tn); Rp = RpofT(tn)
+        W = water_int(C, R)
+        Whist.append(W); Cshist.append(C[-1]); Rhist.append(R); Rphist.append(Rp)
+        if n % 4320 == 0:                       # 每 6 h 记表6 一行
+            row = []
+            for dj in dist:
+                row.append(float(np.interp(dj / R, zeta, C)) if dj <= R else np.nan)
+            row.append(C[-1])                   # 表面列
+            tab6.append(row)
+        if n % 12 == 0:                         # 每 60 s 记 result4 一行
+            row = []
+            for dj in xlsx_d:
+                row.append(float(np.interp(dj / R, zeta, C)) if dj <= R else None)
+            row.append(C[-1])
+            rows4.append((tn, row))
+        if C.max() <= CTARGET:
+            tstar, nstar = tn, n
+            break
+    if tstar is None:
+        raise RuntimeError('300 h 内未达烘干判据')
+    R = RofT(tstar)
     row = [float(np.interp(dj / R, zeta, C)) if dj <= R else np.nan for dj in dist] + [C[-1]]
-    return np.array(row)
-r5 = run6h(5.0); r25 = run6h(2.5)
-print('验证V2 时间收敛(6h 行): dt=5 vs 2.5 最大差 %.2e' % np.nanmax(np.abs(r5 - r25)))
+    tab6.append(row)
+    if nstar % 12:
+        row = [float(np.interp(dj / R, zeta, C)) if dj <= R else None for dj in xlsx_d] + [C[-1]]
+        rows4.append((tstar, row))
+    print('问题4 烘干时长: t* = %d s = %.4f h (max C = %.6f, 此时 R = %.4f cm)'
+          % (tstar, tstar / 3600, C.max(), R * 100))
+    np.set_printoptions(precision=4, suppress=True)
+    print('表6 水分浓度 (kg/kg)，行=6,12,...h 直至 t*，列=0/0.5/1/1.5/2 cm + 表面:')
+    for k, row in enumerate(tab6):
+        rr = ' '.join('  --' if np.isnan(v) else '%6.4f' % v for v in row)
+        trow = (k + 1) * 6.0 if k + 1 < len(tab6) else tstar / 3600.0
+        print('%7.1fh |%s' % (trow, rr))
 
-# V3 网格收敛: dZ=1/20（NZ=21）vs 1/40，前 6 h
-_NZ_save, _DZ_save, _zeta_save = NZ, DZ, zeta
-def run6h_coarse():
-    global NZ, DZ, zeta
-    NZ, DZ = 21, 1.0 / 20.0
-    zeta = np.arange(NZ) * DZ
+    wb = openpyxl.Workbook()
+    ws = wb.active; ws.title = 'Sheet1'
+    ws.cell(1, 1, '时间\\到药材中心的距离')
+    for j in range(len(xlsx_d)):
+        ws.cell(1, 2 + j, round(xlsx_d[j] * 100, 1))
+    ws.cell(1, 2 + len(xlsx_d), '药材表面')
+    for k, (tt, row) in enumerate(rows4):
+        ws.cell(2 + k, 1, tt)
+        for j, v in enumerate(row):
+            if v is not None:
+                ws.cell(2 + k, 2 + j, round(v, 4))
+    wb.save(os.path.join(ROOT, 'result4.xlsx'))
+    print('已写出 result4.xlsx（%d 行）' % len(rows4))
+
+    # ================= 验证 =================
+    # V1 动边界质量守恒: d/dt ∫C r dr = 2R'/R·∫C r dr - R·h_m(C_s-C_air)
+    W0 = water_int(np.full(NZ, C0), R0)
+    lhs = Whist[-1] - W0
+    tt = np.arange(1, nstar + 1) * DT
+    f1 = [2 * rp / r * w for rp, r, w in zip(Rphist, Rhist, Whist)]
+    f2 = [-r * hm * (cs - C_air(t)) for r, cs, t in zip(Rhist, Cshist, tt)]
+    rhs = np.trapezoid([a + b for a, b in zip(f1, f2)], tt)
+    print('验证V1 离散守恒: ΣvΔC = %.6e，∫[2R\'/R·W - R h_m(C_R-C_air)]dt = %.6e，差 %.2e'
+          % (lhs, rhs, lhs - rhs))
+
+    # V2 时间收敛: 前 6 h，dt=5 vs 2.5（同网格）
+    def run6h(dt):
+        T, C = np.full(NZ, T0), np.full(NZ, C0)
+        for n in range(1, int(21600 / dt) + 1):
+            T, C = step(T, C, (n - 1) * dt, n * dt, dt)
+        R = RofT(21600)
+        row = [float(np.interp(dj / R, zeta, C)) if dj <= R else np.nan for dj in dist] + [C[-1]]
+        return np.array(row)
+    r5 = run6h(5.0); r25 = run6h(2.5)
+    print('验证V2 时间收敛(6h 行): dt=5 vs 2.5 最大差 %.2e' % np.nanmax(np.abs(r5 - r25)))
+
+    # V3 网格收敛: dZ=1/20（NZ=21）vs 1/40，前 6 h
+    _NZ_save, _DZ_save, _zeta_save = NZ, DZ, zeta
+    def run6h_coarse():
+        global NZ, DZ, zeta
+        NZ, DZ = 21, 1.0 / 20.0
+        zeta = np.arange(NZ) * DZ
+        T, C = np.full(NZ, T0), np.full(NZ, C0)
+        for n in range(1, int(21600 / 5.0) + 1):
+            T, C = step(T, C, (n - 1) * 5.0, n * 5.0, 5.0)
+        R = RofT(21600)
+        row = [float(np.interp(dj / R, zeta, C)) if dj <= R else np.nan for dj in dist] + [C[-1]]
+        NZ, DZ = _NZ_save, _DZ_save
+        zeta = _zeta_save
+        return np.array(row)
+    rc = run6h_coarse()
+    print('验证V3 网格收敛(6h 行): dZ=1/20 vs 1/40 最大差 %.2e' % np.nanmax(np.abs(rc - r5)))
+
+    # V4 渐近: 常数边界，长时程（R 仍按附件2 收缩并保持 1.198 cm）
     T, C = np.full(NZ, T0), np.full(NZ, C0)
-    for n in range(1, int(21600 / 5.0) + 1):
-        T, C = step(T, C, (n - 1) * 5.0, n * 5.0, 5.0)
-    R = RofT(21600)
-    row = [float(np.interp(dj / R, zeta, C)) if dj <= R else np.nan for dj in dist] + [C[-1]]
-    NZ, DZ = _NZ_save, _DZ_save
-    zeta = _zeta_save
-    return np.array(row)
-rc = run6h_coarse()
-print('验证V3 网格收敛(6h 行): dZ=1/20 vs 1/40 最大差 %.2e' % np.nanmax(np.abs(rc - r5)))
-
-# V4 渐近: 常数边界，长时程（R 仍按附件2 收缩并保持 1.198 cm）
-T, C = np.full(NZ, T0), np.full(NZ, C0)
-for n in range(1, int(2.5e5 / DT) + 1):
-    T, C = step(T, C, (n - 1) * DT, n * DT, DT)
-    if n * DT in (50000, 150000, 250000):
-        print('验证V4 渐近: t=%ds 中心 T=%.4f (目标 %.4f)，表面 C=%.5f (目标 %.5f)，R=%.4f cm'
-              % (n * DT, T[0], TEND, C[-1], CEND, RofT(n * DT) * 100))
+    for n in range(1, int(2.5e5 / DT) + 1):
+        T, C = step(T, C, (n - 1) * DT, n * DT, DT)
+        if n * DT in (50000, 150000, 250000):
+            print('验证V4 渐近: t=%ds 中心 T=%.4f (目标 %.4f)，表面 C=%.5f (目标 %.5f)，R=%.4f cm'
+                  % (n * DT, T[0], TEND, C[-1], CEND, RofT(n * DT) * 100))
