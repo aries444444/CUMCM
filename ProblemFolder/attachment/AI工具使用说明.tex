@@ -1,0 +1,144 @@
+% !TEX program = xelatex
+% 在 VSCode 中请使用 XeLaTeX 编译（推荐 TeX Live 或 MiKTeX 完整版，并已安装 ctex 宏包）
+\documentclass[12pt,a4paper]{article}
+\usepackage[UTF8,scheme=plain]{ctex}
+\usepackage{geometry}
+\geometry{left=2.5cm,right=2.5cm,top=2.5cm,bottom=2.5cm}
+\usepackage{array}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{xcolor}
+\usepackage{makecell}
+% 将带圈数字①-⑳声明为CJK字符，使其走中文字体，避免缺字
+\xeCJKDeclareCharClass{CJK}{"2460 -> "2473}
+
+% 表格列定义：让内容居中或左对齐更贴近原表
+\newcolumntype{C}[1]{>{\centering\arraybackslash}m{#1}}
+\newcolumntype{L}[1]{>{\raggedright\arraybackslash}m{#1}}
+
+\linespread{1.3}
+
+\begin{document}
+
+% ============ 标题 ============
+\begin{center}
+    {\LARGE\bfseries 2026 全国大学生数学建模竞赛}\\[1.2em]
+    {\LARGE\bfseries AI 工具使用详情说明}
+\end{center}
+
+\vspace{1em}
+
+% ============ 一 ============
+\section*{一、所用 AI 工具名称、版本或型号}
+
+\vspace{0.5em}
+
+\begin{center}
+\begin{tabular}{|C{1.2cm}|C{3cm}|C{2.5cm}|L{6.5cm}|}
+\hline
+\textbf{序号} & \textbf{AI 工具名称} & \textbf{版本/型号} & \multicolumn{1}{C{6.5cm}|}{\textbf{主要用途}} \\
+
+\hline
+1 & Deepseek& Deepseek 4.0& 模型思路参考、代码调试、文字润色\\
+\hline
+2 & Doubao&2.28.13 win & 文字润色\\
+\hline
+\end{tabular}
+\end{center}
+
+\section*{二、具体使用目的和环节}
+
+
+\vspace{0.5em}
+
+\begin{center}
+\begin{tabular}{|C{1cm}|C{3.2cm}|C{1.5cm}|L{5cm}|C{2.5cm}|}
+\hline
+\textbf{序号} & \textbf{论文写作环节} & \textbf{是否使用} & \multicolumn{1}{C{5cm}|}{\textbf{使用目的}} & \textbf{使用工具} \\
+\hline
+1 & 赛题理解与问题分析 & 是 & 辅助拆解题目要求，识别关键约束条件 & Deepseek\\
+\hline
+2 & 模型假设与符号定义 & 是 & 参考常见假设类型，本队筛选后确定 & Deepseek\\
+\hline
+3 & 模型建立与算法设计 & 否 & 提供算法选型建议，核心建模由本队主导 & \\
+\hline
+4 & 模型求解与编程实现 & 否 & 辅助编写求解代码，调试报错，本队验证 & \\
+\hline
+5 & 结果分析与模型检验 & 是 & 辅助解读结果，提供检验方法参考 & Deepseek\\
+\hline
+6 & 论文撰写与文字润色 & 是 & 优化文字表达，调整语句通顺度 & Deepseek、Doubao\\
+\hline
+7 & 其他辅助环节（文献/数据/图表等） & 是 & 辅助整理文献格式，数据清洗 & Deepseek\\
+\hline
+\end{tabular}
+\end{center}
+
+% ============ 三 ============
+\section*{三、主要提示方式}
+
+\vspace{0.5em}
+
+\begin{center}
+\begin{tabular}{|C{1.2cm}|C{4cm}|C{1.8cm}|L{6cm}|}
+\hline
+\textbf{序号} & \textbf{提示方式} & \textbf{是否使用} & \multicolumn{1}{C{6cm}|}{\textbf{简要说明}} \\
+\hline
+1 & 网页对话框交互 & 是 & 用于问题咨询、思路讨论、文字润色 \\
+\hline
+2 & 代码编辑器内嵌 AI & 是& 用于代码补全、调试、修复bug \\
+\hline
+3 & 上传文件或数据对话 & 是 & 上传赛题数据或论文草稿进行分析 \\
+\hline
+\end{tabular}
+\end{center}
+
+
+\section*{四、对 AI 输出的采纳、人工修改和核验的主要情况}
+
+
+\vspace{0.5em}
+
+\begin{center}
+\begin{tabular}{|C{1cm}|C{3.5cm}|L{5cm}|L{4.5cm}|}
+\hline
+\textbf{序号} & \textbf{AI 输出内容类别} & \multicolumn{1}{C{5cm}|}{\textbf{采纳与修改情况}} & \multicolumn{1}{C{4.5cm}|}{\textbf{人工核验方式}} \\
+\hline
+1 & 建模思路与方法建议 & AI 提供大致解题思路，本队选择其一开始解题 & 本队独立推导验证，对比文献确认可行性 \\
+\hline
+2 & 相关文献参考 & AI 提供文献列表，本队筛选后查阅原文确认引用准确性&本队按照清单查找文献阅读理解做题 \\
+\hline
+3 & 代码编写与调试 & AI 提供代码示例，本队进行修改和完善 & 本队进行代码审查和测试 \\
+\hline
+4 & 论文核心论述（摘要/结论等） & AI 提供论述框架，本队进行填充和润色 & 本队进行内容审核和语言优化 \\
+\hline
+\end{tabular}
+\end{center}
+
+% ============ 核心环节人工主导确认 ============
+\section*{核心环节人工主导确认：}
+
+\vspace{0.5em}
+
+\begin{center}
+\begin{tabular}{|C{1.2cm}|C{4.5cm}|C{2.5cm}|L{6cm}|}
+\hline
+\textbf{序号} & \textbf{核心环节} & \textbf{是否本队主导} & \multicolumn{1}{C{6cm}|}{\textbf{本队贡献说明}} \\
+\hline
+1 & 模型结构与创新点 & 是 & \\
+\hline
+2 & 公式推导与求解步骤 & 是 & \\
+\hline
+3 & 程序逻辑与参数设置 & 是 & \\
+\hline
+4 & 结果分析与论文核心论述 & 是 & \\
+\hline
+5 & 论文撰写与图表制作等 & 是 & \\
+\hline
+\end{tabular}
+\end{center}
+
+\vspace{1.5em}
+
+\noindent\textbf{本队确认：}以上 AI 工具使用情况真实完整，无隐瞒、无虚假陈述。核心建模与分析由本队主导完成，所有 AI 输出内容（语言润色除外）均经过人工审查与核实。如有不实，本队愿承担相应责任。
+
+\end{document}
