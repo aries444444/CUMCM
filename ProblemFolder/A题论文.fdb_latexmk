@@ -1,8 +1,8 @@
 # Fdb version 4
-["pdflatex"] 1789221913.16055 "c:/Users/Admin/Desktop/CUMCM/ProblemFolder/A题论文.tex" "A题论文.pdf" "A题论文" 1789221921.54209 2
-  "A题论文.aux" 1789221918 8864 55d978f7afa3888eb9e8d6f2c9e5b848 "pdflatex"
-  "A题论文.out" 1789221919 5047 37f24834f998373af196854756140cee "pdflatex"
-  "A题论文.tex" 1789221909 56932 89f7e3a5359ecfdc39e7f9f4604bf3d2 ""
+["pdflatex"] 1789224975.87371 "c:/Users/Admin/Desktop/CUMCM/ProblemFolder/A题论文.tex" "A题论文.pdf" "A题论文" 1789224981.54031 0
+  "A题论文.aux" 1789224980 8741 8bf5cdec922465c60e1434cf2f682a63 "pdflatex"
+  "A题论文.out" 1789224980 5047 37f24834f998373af196854756140cee "pdflatex"
+  "A题论文.tex" 1789224971 56810 58b4f0c347dde26d46df2e34fb986567 ""
   "C:/Users/Admin/AppData/Local/MiKTeX/fonts/map/pdftex/pdftex.map" 1789186450 80909 eab91d9745dd2edfd62a31d53cd5fe15 ""
   "C:/Users/Admin/AppData/Local/MiKTeX/miktex/data/le/pdftex/pdflatex.fmt" 1789181296 13334449 47110fa19cdb4bab83779c05e96d1f91 ""
   "C:/Users/Admin/AppData/Local/Programs/MiKTeX25/fonts/sfd/ttf2pk/UGBK.sfd" 1458473944 185547 bcd31d5d273400b38612a969fcab55f9 ""
@@ -277,13 +277,14 @@
   "C:/Windows/Fonts/msyh.ttc" 1736732512 19704352 1e10e74402e59d54499af795caf0b135 ""
   "C:/Windows/Fonts/simhei.ttf" 1771519576 9745792 5c7fd3058dea9b77be5049ff7efa9f34 ""
   "C:/Windows/Fonts/simsun.ttc" 1771519576 18316748 0ba67eea91ba3af0ac4836d0e922d011 ""
-  "c:/Users/Admin/Desktop/CUMCM/ProblemFolder/A题论文.tex" 1789221909 56932 89f7e3a5359ecfdc39e7f9f4604bf3d2 ""
+  "c:/Users/Admin/Desktop/CUMCM/ProblemFolder/A题论文.tex" 1789224971 56810 58b4f0c347dde26d46df2e34fb986567 ""
   "fig04_q1.png" 1789203290 72043 8575430ad56da0c73ec2393bf929de56 ""
   "fig05_q2.png" 1789203290 123444 51a6db595fb61e9f9ae18dd6fdbbaf46 ""
   "fig08_q3.png" 1789203290 72004 61f9a1435e98e3e89c3662215a8e1a04 ""
-  "fig09_问题4_含收缩含水率演化.png" 0 -1 0 ""
+  "fig09_q4.png" 1789203290 86161 dd350eee5fd8c6f24969a59641bcb6f4 ""
   "fig12_sensetive.png" 1789203290 85277 8836bb629ec8c4bd4a1a61ccb9f64ca4 ""
   "fig13_overview.png" 1789204342 474351 7159819854b41f8a2ff0e9965637d640 ""
+  "fig1_overview_solution.png" 1789198785 820870 19b77af6d16cf7f842ddfe88059d9178 ""
   "fig2_heatmap.png" 1789198785 301857 4e1f1bdcb4f64182d458ba95a86c39e8 ""
   "fig3_validation.png" 1789198785 264518 b96f71f72774df91673084fdc136d104 ""
   (generated)

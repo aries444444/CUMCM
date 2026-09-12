@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.28 (MiKTeX 25.12) (preloaded format=pdflatex 2026.9.12)  12 SEP 2026 22:06
+This is pdfTeX, Version 3.141592653-2.6-1.40.28 (MiKTeX 25.12) (preloaded format=pdflatex 2026.9.12)  12 SEP 2026 22:56
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -997,166 +997,98 @@ e (quanjiao) on input line 74.
 
 
 ] [4] [5]
-<fig2_heatmap.png, id=397, 815.6874pt x 399.4122pt>
-File: fig2_heatmap.png Graphic file (type png)
-<use fig2_heatmap.png>
-Package pdftex.def Info: fig2_heatmap.png  used on input line 164.
-(pdftex.def)             Requested size: 409.71692pt x 200.62589pt.
- [6]
-<fig05_q2.png, id=424, 374.3586pt x 226.2051pt>
-File: fig05_q2.png Graphic file (type png)
-<use fig05_q2.png>
-Package pdftex.def Info: fig05_q2.png  used on input line 208.
-(pdftex.def)             Requested size: 432.48051pt x 261.33153pt.
-
-Overfull \hbox (1.99573pt too wide) detected at line 228
+<fig1_overview_solution.png, id=397, 1041.8925pt x 715.2321pt>
+File: fig1_overview_solution.png Graphic file (type png)
+<use fig1_overview_solution.png>
+Package pdftex.def Info: fig1_overview_solution.png  used on input line 164.
+(pdftex.def)             Requested size: 409.71692pt x 281.26398pt.
+ [6 <./fig1_overview_solution.png>]
+<fig3_validation.png, id=409, 968.1771pt x 375.0813pt>
+File: fig3_validation.png Graphic file (type png)
+<use fig3_validation.png>
+Package pdftex.def Info: fig3_validation.png  used on input line 191.
+(pdftex.def)             Requested size: 432.48051pt x 167.5488pt.
+ [7 <./fig3_validation.png>]
+Overfull \hbox (1.99573pt too wide) detected at line 231
 [][][]\OML/cmm/m/it/12 T[]\OT1/cmr/m/n/12 (\OML/cmm/m/it/12 t\OT1/cmr/m/n/12 ) 
 = []  \OML/cmm/m/it/12 C[]\OT1/cmr/m/n/12 (\OML/cmm/m/it/12 t\OT1/cmr/m/n/12 ) 
 = []
  []
 
-[7] [8 <./fig2_heatmap.png> <./fig05_q2.png>]
-<fig3_validation.png, id=452, 968.1771pt x 375.0813pt>
-File: fig3_validation.png Graphic file (type png)
-<use fig3_validation.png>
-Package pdftex.def Info: fig3_validation.png  used on input line 268.
-(pdftex.def)             Requested size: 409.71692pt x 158.72923pt.
- [9 <./fig3_validation.png>]
-[10] [11] [12] [13]
-<fig04_q1.png, id=510, 387.3672pt x 235.1184pt>
+<fig2_heatmap.png, id=434, 815.6874pt x 399.4122pt>
+File: fig2_heatmap.png Graphic file (type png)
+<use fig2_heatmap.png>
+Package pdftex.def Info: fig2_heatmap.png  used on input line 238.
+(pdftex.def)             Requested size: 409.71692pt x 200.62589pt.
+[8] [9 <./fig2_heatmap.png>] [10] [11] [12] [13]
+<fig04_q1.png, id=506, 387.3672pt x 235.1184pt>
 File: fig04_q1.png Graphic file (type png)
 <use fig04_q1.png>
-Package pdftex.def Info: fig04_q1.png  used on input line 403.
+Package pdftex.def Info: fig04_q1.png  used on input line 408.
 (pdftex.def)             Requested size: 432.48051pt x 262.5128pt.
  [14 <./fig04_q1.png>]
+<fig05_q2.png, id=514, 374.3586pt x 226.2051pt>
 File: fig05_q2.png Graphic file (type png)
 <use fig05_q2.png>
-Package pdftex.def Info: fig05_q2.png  used on input line 455.
+Package pdftex.def Info: fig05_q2.png  used on input line 460.
 (pdftex.def)             Requested size: 446.13727pt x 269.58432pt.
- [15]
-<fig08_q3.png, id=523, 389.2944pt x 235.1184pt>
+<fig08_q3.png, id=515, 389.2944pt x 235.1184pt>
 File: fig08_q3.png Graphic file (type png)
 <use fig08_q3.png>
-Package pdftex.def Info: fig08_q3.png  used on input line 494.
+Package pdftex.def Info: fig08_q3.png  used on input line 469.
 (pdftex.def)             Requested size: 432.48051pt x 261.20691pt.
- [16] [17 <./fig08_q3.png>]
-! Missing endcsname inserted.
-<to be read again> 
-                   �
-l.534 ...g09_问题4_含收缩含水率演化.png}
-                                                  
-The control sequence marked <to be read again> should
-not appear between \csname and \endcsname.
-
-! Use of ??? doesn't match its definition.
-<argument> ???  
-                ! LaTeX Error: � invalid in file name. Lost: fi ��题4_含�...
-l.534 ...g09_问题4_含收缩含水率演化.png}
-                                                  
-If you say, e.g., `\def\a1{...}', then you must always
-put `1' after `\a', since control sequence names are
-made up of letters only. The macro here has not been
-followed by the required stuff, so I'm ignoring it.
-
-! Missing endcsname inserted.
-<to be read again> 
-                   �
-l.534 ...g09_问题4_含收缩含水率演化.png}
-                                                  
-The control sequence marked <to be read again> should
-not appear between \csname and \endcsname.
-
-! Use of ??? doesn't match its definition.
-<argument> ???  
-                ! LaTeX Error: � invalid in file name. Lost: fi ��题4_含�...
-l.534 ...g09_问题4_含收缩含水率演化.png}
-                                                  
-If you say, e.g., `\def\a1{...}', then you must always
-put `1' after `\a', since control sequence names are
-made up of letters only. The macro here has not been
-followed by the required stuff, so I'm ignoring it.
-
-! Missing endcsname inserted.
-<to be read again> 
-                   �
-l.534 ...g09_问题4_含收缩含水率演化.png}
-                                                  
-The control sequence marked <to be read again> should
-not appear between \csname and \endcsname.
-
-! Use of ??? doesn't match its definition.
-<argument> ???  
-                ! LaTeX Error: � invalid in file name. Lost: fi ��题4_含�...
-l.534 ...g09_问题4_含收缩含水率演化.png}
-                                                  
-If you say, e.g., `\def\a1{...}', then you must always
-put `1' after `\a', since control sequence names are
-made up of letters only. The macro here has not been
-followed by the required stuff, so I'm ignoring it.
-
-
-! LaTeX Error: File `fig09_问题4_含收缩含水率演化.png' not found.
-
-See the LaTeX manual or LaTeX Companion for explanation.
-Type  H <return>  for immediate help.
- ...                                              
-                                                  
-l.534 ...g09_问题4_含收缩含水率演化.png}
-                                                  
-I could not locate the file with any of these extensions:
-.pdf,.png,.jpg,.mps,.jpeg,.jbig2,.jb2,.PDF,.PNG,.JPG,.JPEG,.JBIG2,.JB2,.eps
-Try typing  <return>  to proceed.
-If that doesn't work, type  X <return>  to quit.
-
-[18] [19] [20]
+ [15 <./fig05_q2.png>] [16 <./fig08_q3.png>] [17]
+<fig09_q4.png, id=538, 370.7451pt x 226.2051pt>
+File: fig09_q4.png Graphic file (type png)
+<use fig09_q4.png>
+Package pdftex.def Info: fig09_q4.png  used on input line 541.
+(pdftex.def)             Requested size: 432.48051pt x 263.88918pt.
+ [18 <./fig09_q4.png>] [19] [20]
 <fig12_sensetive.png, id=581, 439.6425pt x 266.1945pt>
 File: fig12_sensetive.png Graphic file (type png)
 <use fig12_sensetive.png>
-Package pdftex.def Info: fig12_sensetive.png  used on input line 622.
+Package pdftex.def Info: fig12_sensetive.png  used on input line 629.
 (pdftex.def)             Requested size: 432.48051pt x 261.86397pt.
- [21 <./fig12_sensetive.png>] [22] [23] [24] (A题论文.aux)
+
+[21] [22 <./fig12_sensetive.png>] [23] [24] (A题论文.aux)
  ***********
 LaTeX2e <2025-11-01>
 L3 programming layer <2026/07/13>
  ***********
 Package rerunfilecheck Info: File `A题论文.out' has not changed.
 (rerunfilecheck)             Checksum: 37F24834F998373AF196854756140CEE;5047.
- )
-(\end occurred when \ifx on line 534 was incomplete)
-(\end occurred when \ifx on line 534 was incomplete)
-(\end occurred when \ifx on line 534 was incomplete) 
+ ) 
 Here is how much of TeX's memory you used:
- 17367 strings out of 467871
- 302342 string characters out of 5417414
+ 17351 strings out of 467871
+ 302220 string characters out of 5417414
  697191 words of memory out of 5000000
- 45404 multiletter control sequences out of 15000+600000
+ 45388 multiletter control sequences out of 15000+600000
  730827 words of font info for 420 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 78i,12n,92p,1620b,630s stack positions out of 10000i,1000n,20000p,200000b,200000s
-<C:/Windows/Fonts/simsun.tt
-c><C:/Windows/Fonts/simsun.ttc><C:/Windows/Fonts/simhei.ttf><C:/Windows/Fonts/s
-imsun.ttc><C:/Windows/Fonts/simsun.ttc><C:/Windows/Fonts/simhei.ttf><C:/Windows
-/Fonts/simhei.ttf><C:/Windows/Fonts/simsun.ttc><C:/Windows/Fonts/simsun.ttc><C:
-/Windows/Fonts/simhei.ttf><C:/Windows/Fonts/simsun.ttc><C:/Windows/Fonts/simhei
-.ttf><C:/Windows/Fonts/simhei.ttf><C:/Windows/Fonts/simsun.ttc><C:/Windows/Font
-s/simhei.ttf><C:/Windows/Fonts/simhei.ttf><C:/Windows/Fonts/simhei.ttf><C:/Wind
+ 78i,12n,92p,1620b,632s stack positions out of 10000i,1000n,20000p,200000b,200000s
+<C:/Windows/Fonts/simsun.ttc><C:/Windows/Fonts/simsun.ttc><C:/Windows/Fonts/s
+imhei.ttf><C:/Windows/Fonts/simsun.ttc><C:/Windows/Fonts/simsun.ttc><C:/Windows
+/Fonts/simhei.ttf><C:/Windows/Fonts/simhei.ttf><C:/Windows/Fonts/simsun.ttc><C:
+/Windows/Fonts/simsun.ttc><C:/Windows/Fonts/simhei.ttf><C:/Windows/Fonts/simsun
+.ttc><C:/Windows/Fonts/simhei.ttf><C:/Windows/Fonts/simhei.ttf><C:/Windows/Font
+s/simsun.ttc><C:/Windows/Fonts/simhei.ttf><C:/Windows/Fonts/simhei.ttf><C:/Wind
 ows/Fonts/simhei.ttf><C:/Windows/Fonts/simhei.ttf><C:/Windows/Fonts/simhei.ttf>
 <C:/Windows/Fonts/simhei.ttf><C:/Windows/Fonts/simhei.ttf><C:/Windows/Fonts/sim
 hei.ttf><C:/Windows/Fonts/simhei.ttf><C:/Windows/Fonts/simhei.ttf><C:/Windows/F
 onts/simhei.ttf><C:/Windows/Fonts/simhei.ttf><C:/Windows/Fonts/simhei.ttf><C:/W
 indows/Fonts/simhei.ttf><C:/Windows/Fonts/simhei.ttf><C:/Windows/Fonts/simhei.t
 tf><C:/Windows/Fonts/simhei.ttf><C:/Windows/Fonts/simhei.ttf><C:/Windows/Fonts/
-simsun.ttc><C:/Windows/Fonts/simsun.ttc><C:/Windows/Fonts/simsun.ttc><C:/Window
-s/Fonts/simhei.ttf><C:/Windows/Fonts/simhei.ttf><C:/Windows/Fonts/simhei.ttf><C
+simhei.ttf><C:/Windows/Fonts/simsun.ttc><C:/Windows/Fonts/simsun.ttc><C:/Window
+s/Fonts/simsun.ttc><C:/Windows/Fonts/simhei.ttf><C:/Windows/Fonts/simhei.ttf><C
 :/Windows/Fonts/simhei.ttf><C:/Windows/Fonts/simhei.ttf><C:/Windows/Fonts/simhe
 i.ttf><C:/Windows/Fonts/simhei.ttf><C:/Windows/Fonts/simhei.ttf><C:/Windows/Fon
-ts/simsun.ttc><C:/Windows/Fonts/simsun.ttc><C:/Windows/Fonts/simhei.ttf><C:/Win
+ts/simhei.ttf><C:/Windows/Fonts/simsun.ttc><C:/Windows/Fonts/simsun.ttc><C:/Win
 dows/Fonts/simhei.ttf><C:/Windows/Fonts/simhei.ttf><C:/Windows/Fonts/simhei.ttf
-><C:/Windows/Fonts/simsun.ttc><C:/Windows/Fonts/simsun.ttc><C:/Windows/Fonts/si
+><C:/Windows/Fonts/simhei.ttf><C:/Windows/Fonts/simsun.ttc><C:/Windows/Fonts/si
 msun.ttc><C:/Windows/Fonts/simsun.ttc><C:/Windows/Fonts/simsun.ttc><C:/Windows/
-Fonts/simsun.ttc><C:/Windows/Fonts/simhei.ttf><C:/Windows/Fonts/simhei.ttf><C:/
-Windows/Fonts/simhei.ttf><C:/Windows/Fonts/simhei.ttf><C:/Windows/Fonts/simsun.
-ttc><C:/Windows/Fonts/simsun.ttc><C:/Windows/Fonts/simsun.ttc><C:/Windows/Fonts
+Fonts/simsun.ttc><C:/Windows/Fonts/simsun.ttc><C:/Windows/Fonts/simhei.ttf><C:/
+Windows/Fonts/simhei.ttf><C:/Windows/Fonts/simhei.ttf><C:/Windows/Fonts/simhei.
+ttf><C:/Windows/Fonts/simsun.ttc><C:/Windows/Fonts/simsun.ttc><C:/Windows/Fonts
 /simsun.ttc><C:/Windows/Fonts/simsun.ttc><C:/Windows/Fonts/simsun.ttc><C:/Windo
 ws/Fonts/simsun.ttc><C:/Windows/Fonts/simsun.ttc><C:/Windows/Fonts/simsun.ttc><
 C:/Windows/Fonts/simsun.ttc><C:/Windows/Fonts/simsun.ttc><C:/Windows/Fonts/sims
@@ -1165,7 +1097,7 @@ nts/simsun.ttc><C:/Windows/Fonts/simsun.ttc><C:/Windows/Fonts/simsun.ttc><C:/Wi
 ndows/Fonts/simsun.ttc><C:/Windows/Fonts/simsun.ttc><C:/Windows/Fonts/simsun.tt
 c><C:/Windows/Fonts/simsun.ttc><C:/Windows/Fonts/simsun.ttc><C:/Windows/Fonts/s
 imsun.ttc><C:/Windows/Fonts/simsun.ttc><C:/Windows/Fonts/simsun.ttc><C:/Windows
-/Fonts/simsun.ttc><C:/Windows/Fonts/simhei.ttf><C:/Windows/Fonts/simsun.ttc><C:
+/Fonts/simsun.ttc><C:/Windows/Fonts/simsun.ttc><C:/Windows/Fonts/simhei.ttf><C:
 /Windows/Fonts/simsun.ttc><C:/Windows/Fonts/simsun.ttc><C:/Windows/Fonts/simsun
 .ttc><C:/Windows/Fonts/simsun.ttc><C:/Windows/Fonts/simsun.ttc><C:/Windows/Font
 s/simsun.ttc><C:/Windows/Fonts/simsun.ttc><C:/Windows/Fonts/simsun.ttc><C:/Wind
@@ -1177,36 +1109,37 @@ indows/Fonts/simsun.ttc><C:/Windows/Fonts/simsun.ttc><C:/Windows/Fonts/simsun.t
 tc><C:/Windows/Fonts/simsun.ttc><C:/Windows/Fonts/simsun.ttc><C:/Windows/Fonts/
 simsun.ttc><C:/Windows/Fonts/simsun.ttc><C:/Windows/Fonts/simsun.ttc><C:/Window
 s/Fonts/simsun.ttc><C:/Windows/Fonts/simsun.ttc><C:/Windows/Fonts/simsun.ttc><C
-:/Windows/Fonts/simsun.ttc><C:/Windows/Fonts/simhei.ttf><C:/Windows/Fonts/simhe
+:/Windows/Fonts/simsun.ttc><C:/Windows/Fonts/simsun.ttc><C:/Windows/Fonts/simhe
 i.ttf><C:/Windows/Fonts/simhei.ttf><C:/Windows/Fonts/simhei.ttf><C:/Windows/Fon
 ts/simhei.ttf><C:/Windows/Fonts/simhei.ttf><C:/Windows/Fonts/simhei.ttf><C:/Win
 dows/Fonts/simhei.ttf><C:/Windows/Fonts/simhei.ttf><C:/Windows/Fonts/simhei.ttf
 ><C:/Windows/Fonts/simhei.ttf><C:/Windows/Fonts/simhei.ttf><C:/Windows/Fonts/si
 mhei.ttf><C:/Windows/Fonts/simhei.ttf><C:/Windows/Fonts/simhei.ttf><C:/Windows/
 Fonts/simhei.ttf><C:/Windows/Fonts/simhei.ttf><C:/Windows/Fonts/simhei.ttf><C:/
-Windows/Fonts/simhei.ttf><C:/Windows/Fonts/simhei.ttf><C:/Users/Admin/AppData/L
-ocal/Programs/MiKTeX25/fonts/type1/public/amsfonts/cm/cmbx12.pfb><C:/Users/Admi
-n/AppData/Local/Programs/MiKTeX25/fonts/type1/public/amsfonts/cm/cmex10.pfb><C:
-/Users/Admin/AppData/Local/Programs/MiKTeX25/fonts/type1/public/amsfonts/cm/cmm
-i10.pfb><C:/Users/Admin/AppData/Local/Programs/MiKTeX25/fonts/type1/public/amsf
-onts/cm/cmmi12.pfb><C:/Users/Admin/AppData/Local/Programs/MiKTeX25/fonts/type1/
-public/amsfonts/cm/cmmi6.pfb><C:/Users/Admin/AppData/Local/Programs/MiKTeX25/fo
-nts/type1/public/amsfonts/cm/cmmi7.pfb><C:/Users/Admin/AppData/Local/Programs/M
-iKTeX25/fonts/type1/public/amsfonts/cm/cmmi8.pfb><C:/Users/Admin/AppData/Local/
-Programs/MiKTeX25/fonts/type1/public/amsfonts/cm/cmr10.pfb><C:/Users/Admin/AppD
-ata/Local/Programs/MiKTeX25/fonts/type1/public/amsfonts/cm/cmr12.pfb><C:/Users/
-Admin/AppData/Local/Programs/MiKTeX25/fonts/type1/public/amsfonts/cm/cmr17.pfb>
-<C:/Users/Admin/AppData/Local/Programs/MiKTeX25/fonts/type1/public/amsfonts/cm/
-cmr6.pfb><C:/Users/Admin/AppData/Local/Programs/MiKTeX25/fonts/type1/public/ams
-fonts/cm/cmr7.pfb><C:/Users/Admin/AppData/Local/Programs/MiKTeX25/fonts/type1/p
-ublic/amsfonts/cm/cmr8.pfb><C:/Users/Admin/AppData/Local/Programs/MiKTeX25/font
-s/type1/public/amsfonts/cm/cmsy10.pfb><C:/Users/Admin/AppData/Local/Programs/Mi
-KTeX25/fonts/type1/public/amsfonts/cm/cmsy7.pfb><C:/Users/Admin/AppData/Local/P
-rograms/MiKTeX25/fonts/type1/public/amsfonts/cm/cmsy8.pfb><C:/Users/Admin/AppDa
-ta/Local/Programs/MiKTeX25/fonts/type1/public/amsfonts/symbols/msam10.pfb>
-Output written on A题论文.pdf (24 pages, 2261418 bytes).
+Windows/Fonts/simhei.ttf><C:/Windows/Fonts/simhei.ttf><C:/Windows/Fonts/simhei.
+ttf><C:/Users/Admin/AppData/Local/Programs/MiKTeX25/fonts/type1/public/amsfonts
+/cm/cmbx12.pfb><C:/Users/Admin/AppData/Local/Programs/MiKTeX25/fonts/type1/publ
+ic/amsfonts/cm/cmex10.pfb><C:/Users/Admin/AppData/Local/Programs/MiKTeX25/fonts
+/type1/public/amsfonts/cm/cmmi10.pfb><C:/Users/Admin/AppData/Local/Programs/MiK
+TeX25/fonts/type1/public/amsfonts/cm/cmmi12.pfb><C:/Users/Admin/AppData/Local/P
+rograms/MiKTeX25/fonts/type1/public/amsfonts/cm/cmmi6.pfb><C:/Users/Admin/AppDa
+ta/Local/Programs/MiKTeX25/fonts/type1/public/amsfonts/cm/cmmi7.pfb><C:/Users/A
+dmin/AppData/Local/Programs/MiKTeX25/fonts/type1/public/amsfonts/cm/cmmi8.pfb><
+C:/Users/Admin/AppData/Local/Programs/MiKTeX25/fonts/type1/public/amsfonts/cm/c
+mr10.pfb><C:/Users/Admin/AppData/Local/Programs/MiKTeX25/fonts/type1/public/ams
+fonts/cm/cmr12.pfb><C:/Users/Admin/AppData/Local/Programs/MiKTeX25/fonts/type1/
+public/amsfonts/cm/cmr17.pfb><C:/Users/Admin/AppData/Local/Programs/MiKTeX25/fo
+nts/type1/public/amsfonts/cm/cmr6.pfb><C:/Users/Admin/AppData/Local/Programs/Mi
+KTeX25/fonts/type1/public/amsfonts/cm/cmr7.pfb><C:/Users/Admin/AppData/Local/Pr
+ograms/MiKTeX25/fonts/type1/public/amsfonts/cm/cmr8.pfb><C:/Users/Admin/AppData
+/Local/Programs/MiKTeX25/fonts/type1/public/amsfonts/cm/cmsy10.pfb><C:/Users/Ad
+min/AppData/Local/Programs/MiKTeX25/fonts/type1/public/amsfonts/cm/cmsy7.pfb><C
+:/Users/Admin/AppData/Local/Programs/MiKTeX25/fonts/type1/public/amsfonts/cm/cm
+sy8.pfb><C:/Users/Admin/AppData/Local/Programs/MiKTeX25/fonts/type1/public/amsf
+onts/symbols/msam10.pfb>
+Output written on A题论文.pdf (24 pages, 2980056 bytes).
 PDF statistics:
  1139 PDF objects out of 1200 (max. 8388607)
  135 named destinations out of 1000 (max. 500000)
- 608 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 618 words of extra memory for PDF output out of 10000 (max. 10000000)
 
