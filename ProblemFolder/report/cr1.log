@@ -1,0 +1,139 @@
+xelatex: security risk: running with elevated privileges
+This is XeTeX, Version 3.141592653-2.6-0.999997 (MiKTeX 25.4) (preloaded format=xelatex.fmt)
+ restricted \write18 enabled.
+entering extended mode
+(A题论文评审报告.tex
+LaTeX2e <2025-11-01>
+L3 programming layer <2025-11-06>
+(C:\Program Files\MikTex\tex/latex/ctex\ctexart.cls
+(C:\Program Files\MikTex\tex/latex/ctex/config\ctexbackend.cfg)
+(C:\Program Files\MikTex\tex/latex/l3kernel\expl3.sty
+(C:\Program Files\MikTex\tex/latex/l3backend\l3backend-xetex.def))
+Document Class: ctexart 2022/07/14 v2.5.10 Chinese adapter for class article (C
+TEX)
+(C:\Program Files\MikTex\tex/latex/ctex\ctexhook.sty)
+(C:\Program Files\MikTex\tex/latex/ctex\ctexpatch.sty)
+(C:\Program Files\MikTex\tex/latex/base\fix-cm.sty
+(C:\Program Files\MikTex\tex/latex/base\ts1enc.def))
+(C:\Program Files\MikTex\tex/latex/ctex/config\ctexopts.cfg)
+(C:\Program Files\MikTex\tex/latex/base\article.cls
+Document Class: article 2025/01/22 v1.4n Standard LaTeX document class
+(C:\Program Files\MikTex\tex/latex/base\size12.clo))
+(C:\Program Files\MikTex\tex/latex/ctex/engine\ctex-engine-xetex.def
+(C:\Program Files\MikTex\tex/xelatex/xecjk\xeCJK.sty
+(C:\Program Files\MikTex\tex/latex/l3packages/xtemplate\xtemplate.sty)
+(C:\Program Files\MikTex\tex/latex/fontspec\fontspec.sty
+(C:\Program Files\MikTex\tex/latex/l3packages/xparse\xparse.sty)
+(C:\Program Files\MikTex\tex/latex/fontspec\fontspec-xetex.sty
+(C:\Program Files\MikTex\tex/latex/base\fontenc.sty)
+(C:\Program Files\MikTex\tex/latex/fontspec\fontspec.cfg)))
+(C:\Program Files\MikTex\tex/xelatex/xecjk\xeCJK.cfg)))
+(C:\Program Files\MikTex\tex/latex/zhnumber\zhnumber.sty
+(C:\Program Files\MikTex\tex/latex/zhnumber\zhnumber-utf8.cfg))
+(C:\Program Files\MikTex\tex/latex/ctex/scheme\ctex-scheme-chinese-article.def
+(C:\Program Files\MikTex\tex/latex/ctex/config\ctex-name-utf8.cfg))
+(C:\Program Files\MikTex\tex/latex/ctex/fontset\ctex-fontset-windows.def))
+(C:\Program Files\MikTex\tex/latex/ctex/config\ctex.cfg)
+(C:\Program Files\MikTex\tex/latex/amsmath\amsmath.sty
+For additional information on amsmath, use the `?' option.
+(C:\Program Files\MikTex\tex/latex/amsmath\amstext.sty
+(C:\Program Files\MikTex\tex/latex/amsmath\amsgen.sty))
+(C:\Program Files\MikTex\tex/latex/amsmath\amsbsy.sty)
+(C:\Program Files\MikTex\tex/latex/amsmath\amsopn.sty))
+(C:\Program Files\MikTex\tex/latex/amsfonts\amssymb.sty
+(C:\Program Files\MikTex\tex/latex/amsfonts\amsfonts.sty))
+(C:\Program Files\MikTex\tex/latex/booktabs\booktabs.sty)
+(C:\Program Files\MikTex\tex/latex/tools\array.sty)
+(C:\Program Files\MikTex\tex/latex/geometry\geometry.sty
+(C:\Program Files\MikTex\tex/latex/graphics\keyval.sty)
+(C:\Program Files\MikTex\tex/generic/iftex\ifvtex.sty
+(C:\Program Files\MikTex\tex/generic/iftex\iftex.sty))
+(C:\Program Files\MikTex\tex/latex/geometry\geometry.cfg))
+(C:\Program Files\MikTex\tex/latex/enumitem\enumitem.sty)
+(C:\Program Files\MikTex\tex/latex/hyperref\hyperref.sty
+(C:\Program Files\MikTex\tex/latex/kvsetkeys\kvsetkeys.sty)
+(C:\Program Files\MikTex\tex/generic/kvdefinekeys\kvdefinekeys.sty)
+(C:\Program Files\MikTex\tex/generic/pdfescape\pdfescape.sty
+(C:\Program Files\MikTex\tex/generic/ltxcmds\ltxcmds.sty)
+(C:\Program Files\MikTex\tex/generic/pdftexcmds\pdftexcmds.sty
+(C:\Program Files\MikTex\tex/generic/infwarerr\infwarerr.sty)))
+(C:\Program Files\MikTex\tex/latex/hycolor\hycolor.sty)
+(C:\Program Files\MikTex\tex/latex/hyperref\nameref.sty
+(C:\Program Files\MikTex\tex/latex/refcount\refcount.sty)
+(C:\Program Files\MikTex\tex/generic/gettitlestring\gettitlestring.sty
+(C:\Program Files\MikTex\tex/latex/kvoptions\kvoptions.sty)))
+(C:\Program Files\MikTex\tex/latex/etoolbox\etoolbox.sty)
+(C:\Program Files\MikTex\tex/generic/stringenc\stringenc.sty)
+(C:\Program Files\MikTex\tex/latex/hyperref\pd1enc.def)
+(C:\Program Files\MikTex\tex/generic/intcalc\intcalc.sty)
+(C:\Program Files\MikTex\tex/latex/hyperref\puenc.def)
+(C:\Program Files\MikTex\tex/latex/url\url.sty)
+(C:\Program Files\MikTex\tex/generic/bitset\bitset.sty
+(C:\Program Files\MikTex\tex/generic/bigintcalc\bigintcalc.sty)))
+(C:\Program Files\MikTex\tex/latex/hyperref\hxetex.def
+(C:\Program Files\MikTex\tex/latex/rerunfilecheck\rerunfilecheck.sty
+(C:\Program Files\MikTex\tex/generic/uniquecounter\uniquecounter.sty)))
+No file A题论文评审报告.aux.
+*geometry* driver: auto-detecting
+*geometry* detected driver: xetex
+(A题论文评审报告.out) (A题论文评审报告.out)
+
+Package hyperref Warning: Rerun to get /PageLabels entry.
+
+(C:\Program Files\MikTex\tex/latex/amsfonts\umsa.fd)
+(C:\Program Files\MikTex\tex/latex/amsfonts\umsb.fd)
+Missing character: There is no ⏸ in font [lmroman10-regular]:mapping=tex-text;!
+Missing character: There is no ✅ in font [lmroman10-regular]:mapping=tex-text;!
+Missing character: There is no ⏸ in font [lmroman10-regular]:mapping=tex-text;!
+Missing character: There is no ✅ in font [lmroman10-regular]:mapping=tex-text;!
+Missing character: There is no ✅ in font [lmroman10-regular]:mapping=tex-text;!
+Missing character: There is no ✅ in font [lmroman10-regular]:mapping=tex-text;!
+Missing character: There is no ✅ in font [lmroman10-regular]:mapping=tex-text;!
+Missing character: There is no ⏸ in font [lmroman10-regular]:mapping=tex-text;!
+Missing character: There is no ✅ in font [lmroman10-regular]:mapping=tex-text;!
+Missing character: There is no ⏸ in font [lmroman10-regular]:mapping=tex-text;!
+Missing character: There is no ⏸ in font [lmroman10-regular]:mapping=tex-text;!
+Missing character: There is no ✅ in font [lmroman10-regular]:mapping=tex-text;!
+Missing character: There is no ⏸ in font [lmroman10-regular]:mapping=tex-text;!
+Missing character: There is no ✅ in font [lmroman10-regular]:mapping=tex-text;!
+Missing character: There is no ⏸ in font [lmroman10-regular]:mapping=tex-text;!
+Missing character: There is no ⏸ in font [lmroman10-regular]:mapping=tex-text;!
+Missing character: There is no ✅ in font [lmroman10-regular]:mapping=tex-text;!
+
+Overfull \hbox (374.16594pt too wide) in paragraph at lines 49--72
+ [] 
+[1miktex-dvipdfmx: security risk: running with elevated privileges
+]
+Missing character: There is no ⏸ in font [lmroman12-bold]:mapping=tex-text;!
+[2]
+Missing character: There is no ✅ in font [lmroman12-bold]:mapping=tex-text;!
+Missing character: There is no ✅ in font [lmroman12-bold]:mapping=tex-text;!
+Missing character: There is no ✅ in font [lmroman12-bold]:mapping=tex-text;!
+Missing character: There is no ⏸ in font [lmroman12-bold]:mapping=tex-text;!
+Missing character: There is no ⏸ in font [lmroman12-bold]:mapping=tex-text;!
+Missing character: There is no ⏸ in font [lmroman12-bold]:mapping=tex-text;!
+[3]
+Missing character: There is no ⏸ in font [lmroman12-bold]:mapping=tex-text;!
+Missing character: There is no ✅ in font [lmroman12-bold]:mapping=tex-text;!
+Missing character: There is no ✅ in font [lmroman12-bold]:mapping=tex-text;!
+Missing character: There is no ⏸ in font [lmroman12-bold]:mapping=tex-text;!
+Missing character: There is no ✅ in font [lmroman12-bold]:mapping=tex-text;!
+Missing character: There is no ⏸ in font [lmroman12-bold]:mapping=tex-text;!
+
+Overfull \hbox (177.56696pt too wide) in paragraph at lines 140--161
+ [] 
+[4] [5]
+Overfull \hbox (0.47604pt too wide) in paragraph at lines 197--198
+[][][][][][][][][][][][][][][] [] [][][][][][][][][][][][][][][][][][][][][][][
+][][][][][][][][][] [] [][][][] [] [][][][] [] [][][][][][][][][][] [] [][][] [
+] [][] [] [][] [] [][] [] [][] []
+[6] (A题论文评审报告.aux)
+
+Package rerunfilecheck Warning: File `A题论文评审报告.out' has changed.
+(rerunfilecheck)                Rerun to get outlines right
+(rerunfilecheck)                or use package `bookmark'.
+
+ )
+(see the transcript file for additional information)
+Output written on A题论文评审报告.pdf (6 pages).
+Transcript written on A题论文评审报告.log.

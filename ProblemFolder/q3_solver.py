@@ -2,10 +2,10 @@
 """2026 CUMCM A 题 问题3 求解器
 整个烘干过程模型，经验公式统一采用附录3（物性随 C、T 变），
 热质双向耦合，交错迭代 + Crank--Nicolson + Thomas。
-问题3：Δr=0.25 mm, Δt=2.5 s，从初态直至 max C <= 0.15 -> 烘干时长 t*、表5
+问题3：Δr=0.125 mm, Δt=2.5 s，从初态直至 max C <= 0.15 -> 烘干时长 t*、表5
        + result3.xlsx（每 60 s、每 0.1 cm）。
 烘房条件：0--14400 s 用附件1 插值，之后恒温段取附件1 末值 (50.165 °C, 0.04986)。
-验证：V1 离散质量守恒（机器精度）、V2 时间收敛、V3 网格收敛（0.5 mm 对照）、V4 渐近。
+验证：V1 离散质量守恒（机器精度）、V2 时间收敛、V3 网格收敛（0.25 mm 对照）、V4 渐近。
 """
 import sys, os
 import numpy as np
@@ -20,7 +20,7 @@ except Exception:
 ROOT = os.path.dirname(os.path.abspath(__file__))
 ANNEX1 = os.path.join(ROOT, 'OriginalMaterial', 'A题', '附件', '附件1.xlsx')
 
-R, dr, N = 0.02, 2.5e-4, 81            # 半径 2 cm，主网格 0.25 mm，81 节点
+R, dr, N = 0.02, 1.25e-4, 161          # 半径 2 cm，主网格 0.125 mm，161 节点（0.25 mm 下表5 早段误差约 1.8e-4，加密至 0.125 mm 后约 4.4e-5，四位小数可靠）
 r = np.arange(N) * dr
 T0, C0 = 28.0, 2.55
 h, hm = 25.0, 8e-7
@@ -118,17 +118,17 @@ def run_drying(drg, Ng, dtt, sample6h=True):
     return tstar, np.array(tab5), C.copy(), np.array(CR_hist)
 
 if __name__ == "__main__":
-    # ================= 问题3：Δr=0.25 mm, Δt=2.5 s，直至 max C <= 0.15 =================
+    # ================= 问题3：Δr=0.125 mm, Δt=2.5 s，直至 max C <= 0.15 =================
     dt3 = 2.5
-    tstar, tab5, C3f, CR_hist = run_drying(2.5e-4, 81, dt3)
+    tstar, tab5, C3f, CR_hist = run_drying(1.25e-4, 161, dt3)
     nstar = int(tstar / dt3)
     print('问题3 烘干时长: t* = %d s = %.4f h (max C = %.6f)' % (tstar, tstar / 3600, C3f.max()))
     tab5r = np.round(tab5, 4)
     print('表5 水分浓度 (kg/kg)，行=6,12,...h 直至 t*，列=0/0.5/1/1.5/2 cm:')
     print(tab5r)
 
-    # result3.xlsx：每 60 s、每 0.1 cm（0.25 mm 网格上每 4 节点一列）
-    ri10 = np.arange(0, N, 4)
+    # result3.xlsx：每 60 s、每 0.1 cm（0.125 mm 网格上每 8 节点一列）
+    ri10 = np.arange(0, N, 8)
     T, C = np.full(N, T0), np.full(N, C0)
     wb = openpyxl.Workbook()
     ws = wb.active; ws.title = 'Sheet1'
@@ -161,26 +161,26 @@ if __name__ == "__main__":
     v[N - 1] = ((N - 1) ** 2 - (N - 1.5) ** 2) * dr ** 2 / 2
     lhs = (C3f * v).sum() - C0 * v.sum()
     rhs = -R * np.trapezoid(CR_hist, np.arange(0, len(CR_hist)) * dt3)
-    print('验证V1 离散守恒(0.25mm): ΣvΔC = %.6e，-R∫h_m(C_R-C_air)dt = %.6e，差 %.2e'
+    print('验证V1 离散守恒(0.125mm): ΣvΔC = %.6e，-R∫h_m(C_R-C_air)dt = %.6e，差 %.2e'
           % (lhs, rhs, lhs - rhs))
 
     # V2 时间收敛：Δt=2.5 vs 1.25（前 6 h 表5 首行，主网格）
     def row6h(dt):
         global N, dr, r
-        N, dr, r = 81, 2.5e-4, np.arange(81) * 2.5e-4
+        N, dr, r = 161, 1.25e-4, np.arange(161) * 1.25e-4
         T, C = np.full(N, T0), np.full(N, C0)
         for n in range(1, int(21600 / dt) + 1):
             T, C = step(T, C, (n - 1) * dt, n * dt, dt)
-        ri5 = [0, 20, 40, 60, 80]
+        ri5 = [0, 40, 80, 120, 160]
         return C[ri5].copy()
     r25 = row6h(2.5); r125 = row6h(1.25)
     print('验证V2 时间收敛(6h): dt=2.5 vs 1.25 最大差 %.2e kg/kg' % np.max(np.abs(r25 - r125)))
 
-    # V3 网格收敛：Δr=0.5 mm 全程对照（t* 与 表5）
-    tstar_c, tab5_c, _, _ = run_drying(5e-4, 41, 2.5)
-    print('验证V3 网格收敛: 0.5mm t* = %.4f h vs 0.25mm t* = %.4f h (差 %.3f h)'
+    # V3 网格收敛：Δr=0.25 mm 全程对照（t* 与 表5）
+    tstar_c, tab5_c, _, _ = run_drying(2.5e-4, 81, 2.5)
+    print('验证V3 网格收敛: 0.25mm t* = %.4f h vs 0.125mm t* = %.4f h (差 %.3f h)'
           % (tstar_c / 3600, tstar / 3600, (tstar_c - tstar) / 3600))
-    print('              表5 最大差 0.5mm vs 0.25mm: %.2e kg/kg'
+    print('              表5 最大差 0.25mm vs 0.125mm: %.2e kg/kg'
           % np.max(np.abs(tab5_c - tab5)))
 
     # V4 渐近：常数边界 (50.165, 0.04986)，长时程

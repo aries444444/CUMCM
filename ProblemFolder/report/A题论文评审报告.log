@@ -2,8 +2,8 @@ This is XeTeX, Version 3.141592653-2.6-0.999997 (MiKTeX 25.4) (preloaded format=
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
-**./A题论文.tex
-(A题论文.tex
+**./A题论文评审报告.tex
+(A题论文评审报告.tex
 LaTeX2e <2025-11-01>
 L3 programming layer <2025-11-06>
 (C:\Program Files\MikTex\tex/latex/ctex\ctexart.cls
@@ -620,26 +620,6 @@ Package: enumitem 2025/02/06 v3.11 Customized lists
 \enit@count@id=\count329
 \enitdp@description=\count330
 )
-(C:\Program Files\MikTex\tex/latex/graphics\graphicx.sty
-Package: graphicx 2024/12/31 v1.2e Enhanced LaTeX Graphics (DPC,SPQR)
-
-(C:\Program Files\MikTex\tex/latex/graphics\graphics.sty
-Package: graphics 2024/08/06 v1.4g Standard LaTeX Graphics (DPC,SPQR)
-
-(C:\Program Files\MikTex\tex/latex/graphics\trig.sty
-Package: trig 2023/12/02 v1.11 sin cos tan (DPC)
-)
-(C:\Program Files\MikTex\tex/latex/graphics-cfg\graphics.cfg
-File: graphics.cfg 2016/06/04 v1.11 sample graphics configuration
-)
-Package graphics Info: Driver file: xetex.def on input line 106.
-
-(C:\Program Files\MikTex\tex/latex/graphics-def\xetex.def
-File: xetex.def 2025/11/01 v5.0p Graphics/color driver for xetex
-))
-\Gin@req@height=\dimen271
-\Gin@req@width=\dimen272
-)
 (C:\Program Files\MikTex\tex/latex/hyperref\hyperref.sty
 Package: hyperref 2025-07-12 v7.01o Hypertext links for LaTeX
 
@@ -691,7 +671,7 @@ Package: etoolbox 2025/10/02 v2.5m e-TeX tools for LaTeX (JAW)
 Package: stringenc 2019/11/29 v1.12 Convert strings between diff. encodings (HO
 )
 )
-\@linkdim=\dimen273
+\@linkdim=\dimen271
 \Hy@linkcounter=\count333
 \Hy@pagecounter=\count334
 
@@ -721,7 +701,7 @@ Package hyperref Info: Bookmarks ON on input line 4462.
 Package: url 2013/09/16  ver 3.4  Verb mode for urls, etc.
 )
 LaTeX Info: Redefining \url on input line 4801.
-\XeTeXLinkMargin=\dimen274
+\XeTeXLinkMargin=\dimen272
 
 (C:\Program Files\MikTex\tex/generic/bitset\bitset.sty
 Package: bitset 2019/12/09 v1.3 Handle bit-vector datatype (HO)
@@ -731,8 +711,8 @@ Package: bigintcalc 2019/12/15 v1.5 Expandable calculations on big integers (HO
 )
 ))
 \Fld@menulength=\count337
-\Field@Width=\dimen275
-\Fld@charsize=\dimen276
+\Field@Width=\dimen273
+\Fld@charsize=\dimen274
 Package hyperref Info: Hyper figures OFF on input line 6078.
 Package hyperref Info: Link nesting OFF on input line 6083.
 Package hyperref Info: Hyper index ON on input line 6086.
@@ -765,29 +745,29 @@ Package uniquecounter Info: New unique counter `rerunfilecheck' on input line 2
 )
 \Hy@SectionHShift=\skip66
 )
-(A题论文.aux)
-\openout1 = `A题论文.aux'.
+(A题论文评审报告.aux)
+\openout1 = `A题论文评审报告.aux'.
 
-LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 26.
-LaTeX Font Info:    ... okay on input line 26.
-LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 26.
-LaTeX Font Info:    ... okay on input line 26.
-LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 26.
-LaTeX Font Info:    ... okay on input line 26.
-LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 26.
-LaTeX Font Info:    ... okay on input line 26.
-LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 26.
-LaTeX Font Info:    ... okay on input line 26.
-LaTeX Font Info:    Checking defaults for TU/lmr/m/n on input line 26.
-LaTeX Font Info:    ... okay on input line 26.
-LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 26.
-LaTeX Font Info:    ... okay on input line 26.
-LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 26.
-LaTeX Font Info:    ... okay on input line 26.
-LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 26.
-LaTeX Font Info:    ... okay on input line 26.
-LaTeX Font Info:    Checking defaults for PU/pdf/m/n on input line 26.
-LaTeX Font Info:    ... okay on input line 26.
+LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 20.
+LaTeX Font Info:    ... okay on input line 20.
+LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 20.
+LaTeX Font Info:    ... okay on input line 20.
+LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 20.
+LaTeX Font Info:    ... okay on input line 20.
+LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 20.
+LaTeX Font Info:    ... okay on input line 20.
+LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 20.
+LaTeX Font Info:    ... okay on input line 20.
+LaTeX Font Info:    Checking defaults for TU/lmr/m/n on input line 20.
+LaTeX Font Info:    ... okay on input line 20.
+LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 20.
+LaTeX Font Info:    ... okay on input line 20.
+LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 20.
+LaTeX Font Info:    ... okay on input line 20.
+LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 20.
+LaTeX Font Info:    ... okay on input line 20.
+LaTeX Font Info:    Checking defaults for PU/pdf/m/n on input line 20.
+LaTeX Font Info:    ... okay on input line 20.
 
 Package fontspec Info: 
 (fontspec)             Adjusting the maths setup (use [no-math] to avoid
@@ -795,56 +775,56 @@ Package fontspec Info:
 
 \symlegacymaths=\mathgroup6
 LaTeX Font Info:    Overwriting symbol font `legacymaths' in version `bold'
-(Font)                  OT1/cmr/m/n --> OT1/cmr/bx/n on input line 26.
-LaTeX Font Info:    Redeclaring math accent \acute on input line 26.
-LaTeX Font Info:    Redeclaring math accent \grave on input line 26.
-LaTeX Font Info:    Redeclaring math accent \ddot on input line 26.
-LaTeX Font Info:    Redeclaring math accent \tilde on input line 26.
-LaTeX Font Info:    Redeclaring math accent \bar on input line 26.
-LaTeX Font Info:    Redeclaring math accent \breve on input line 26.
-LaTeX Font Info:    Redeclaring math accent \check on input line 26.
-LaTeX Font Info:    Redeclaring math accent \hat on input line 26.
-LaTeX Font Info:    Redeclaring math accent \dot on input line 26.
-LaTeX Font Info:    Redeclaring math accent \mathring on input line 26.
-LaTeX Font Info:    Redeclaring math symbol \Gamma on input line 26.
-LaTeX Font Info:    Redeclaring math symbol \Delta on input line 26.
-LaTeX Font Info:    Redeclaring math symbol \Theta on input line 26.
-LaTeX Font Info:    Redeclaring math symbol \Lambda on input line 26.
-LaTeX Font Info:    Redeclaring math symbol \Xi on input line 26.
-LaTeX Font Info:    Redeclaring math symbol \Pi on input line 26.
-LaTeX Font Info:    Redeclaring math symbol \Sigma on input line 26.
-LaTeX Font Info:    Redeclaring math symbol \Upsilon on input line 26.
-LaTeX Font Info:    Redeclaring math symbol \Phi on input line 26.
-LaTeX Font Info:    Redeclaring math symbol \Psi on input line 26.
-LaTeX Font Info:    Redeclaring math symbol \Omega on input line 26.
-LaTeX Font Info:    Redeclaring math symbol \mathdollar on input line 26.
-LaTeX Font Info:    Redeclaring symbol font `operators' on input line 26.
+(Font)                  OT1/cmr/m/n --> OT1/cmr/bx/n on input line 20.
+LaTeX Font Info:    Redeclaring math accent \acute on input line 20.
+LaTeX Font Info:    Redeclaring math accent \grave on input line 20.
+LaTeX Font Info:    Redeclaring math accent \ddot on input line 20.
+LaTeX Font Info:    Redeclaring math accent \tilde on input line 20.
+LaTeX Font Info:    Redeclaring math accent \bar on input line 20.
+LaTeX Font Info:    Redeclaring math accent \breve on input line 20.
+LaTeX Font Info:    Redeclaring math accent \check on input line 20.
+LaTeX Font Info:    Redeclaring math accent \hat on input line 20.
+LaTeX Font Info:    Redeclaring math accent \dot on input line 20.
+LaTeX Font Info:    Redeclaring math accent \mathring on input line 20.
+LaTeX Font Info:    Redeclaring math symbol \Gamma on input line 20.
+LaTeX Font Info:    Redeclaring math symbol \Delta on input line 20.
+LaTeX Font Info:    Redeclaring math symbol \Theta on input line 20.
+LaTeX Font Info:    Redeclaring math symbol \Lambda on input line 20.
+LaTeX Font Info:    Redeclaring math symbol \Xi on input line 20.
+LaTeX Font Info:    Redeclaring math symbol \Pi on input line 20.
+LaTeX Font Info:    Redeclaring math symbol \Sigma on input line 20.
+LaTeX Font Info:    Redeclaring math symbol \Upsilon on input line 20.
+LaTeX Font Info:    Redeclaring math symbol \Phi on input line 20.
+LaTeX Font Info:    Redeclaring math symbol \Psi on input line 20.
+LaTeX Font Info:    Redeclaring math symbol \Omega on input line 20.
+LaTeX Font Info:    Redeclaring math symbol \mathdollar on input line 20.
+LaTeX Font Info:    Redeclaring symbol font `operators' on input line 20.
 LaTeX Font Info:    Encoding `OT1' has changed to `TU' for symbol font
-(Font)              `operators' in the math version `normal' on input line 26.
+(Font)              `operators' in the math version `normal' on input line 20.
 LaTeX Font Info:    Overwriting symbol font `operators' in version `normal'
-(Font)                  OT1/cmr/m/n --> TU/lmr/m/n on input line 26.
+(Font)                  OT1/cmr/m/n --> TU/lmr/m/n on input line 20.
 LaTeX Font Info:    Encoding `OT1' has changed to `TU' for symbol font
-(Font)              `operators' in the math version `bold' on input line 26.
+(Font)              `operators' in the math version `bold' on input line 20.
 LaTeX Font Info:    Overwriting symbol font `operators' in version `bold'
-(Font)                  OT1/cmr/bx/n --> TU/lmr/m/n on input line 26.
+(Font)                  OT1/cmr/bx/n --> TU/lmr/m/n on input line 20.
 LaTeX Font Info:    Overwriting symbol font `operators' in version `normal'
-(Font)                  TU/lmr/m/n --> TU/lmr/m/n on input line 26.
+(Font)                  TU/lmr/m/n --> TU/lmr/m/n on input line 20.
 LaTeX Font Info:    Overwriting math alphabet `\mathit' in version `normal'
-(Font)                  OT1/cmr/m/it --> TU/lmr/m/it on input line 26.
+(Font)                  OT1/cmr/m/it --> TU/lmr/m/it on input line 20.
 LaTeX Font Info:    Overwriting math alphabet `\mathbf' in version `normal'
-(Font)                  OT1/cmr/bx/n --> TU/lmr/b/n on input line 26.
+(Font)                  OT1/cmr/bx/n --> TU/lmr/b/n on input line 20.
 LaTeX Font Info:    Overwriting math alphabet `\mathsf' in version `normal'
-(Font)                  OT1/cmss/m/n --> TU/lmss/m/n on input line 26.
+(Font)                  OT1/cmss/m/n --> TU/lmss/m/n on input line 20.
 LaTeX Font Info:    Overwriting math alphabet `\mathtt' in version `normal'
-(Font)                  OT1/cmtt/m/n --> TU/lmtt/m/n on input line 26.
+(Font)                  OT1/cmtt/m/n --> TU/lmtt/m/n on input line 20.
 LaTeX Font Info:    Overwriting symbol font `operators' in version `bold'
-(Font)                  TU/lmr/m/n --> TU/lmr/b/n on input line 26.
+(Font)                  TU/lmr/m/n --> TU/lmr/b/n on input line 20.
 LaTeX Font Info:    Overwriting math alphabet `\mathit' in version `bold'
-(Font)                  OT1/cmr/bx/it --> TU/lmr/b/it on input line 26.
+(Font)                  OT1/cmr/bx/it --> TU/lmr/b/it on input line 20.
 LaTeX Font Info:    Overwriting math alphabet `\mathsf' in version `bold'
-(Font)                  OT1/cmss/bx/n --> TU/lmss/b/n on input line 26.
+(Font)                  OT1/cmss/bx/n --> TU/lmss/b/n on input line 20.
 LaTeX Font Info:    Overwriting math alphabet `\mathtt' in version `bold'
-(Font)                  OT1/cmtt/m/n --> TU/lmtt/b/n on input line 26.
+(Font)                  OT1/cmtt/m/n --> TU/lmtt/b/n on input line 20.
 
 *geometry* driver: auto-detecting
 *geometry* detected driver: xetex
@@ -880,10 +860,10 @@ LaTeX Font Info:    Overwriting math alphabet `\mathtt' in version `bold'
 * \@reversemarginfalse
 * (1in=72.27pt=25.4mm, 1cm=28.453pt)
 
-Package hyperref Info: Link coloring OFF on input line 26.
-(A题论文.out) (A题论文.out)
+Package hyperref Info: Link coloring OFF on input line 20.
+(A题论文评审报告.out) (A题论文评审报告.out)
 \@outlinefile=\write3
-\openout3 = `A题论文.out'.
+\openout3 = `A题论文评审报告.out'.
 
 
 Package fontspec Info: 
@@ -911,44 +891,114 @@ Package fontspec Info:
 (fontspec)             - 'normal' (m/n) with NFSS spec.:
 (fontspec)             <->"SimHei/OT:script=hani;language=dflt;"
 
-LaTeX Font Info:    Trying to load font information for U+msa on input line 41.
 
- (C:\Program Files\MikTex\tex/latex/amsfonts\umsa.fd
+Package fontspec Info: 
+(fontspec)             Could not resolve font "FangSong/BI" (it probably
+(fontspec)             doesn't exist).
+
+
+Package fontspec Info: 
+(fontspec)             Could not resolve font "FangSong/B" (it probably
+(fontspec)             doesn't exist).
+
+
+Package fontspec Info: 
+(fontspec)             Could not resolve font "FangSong/I" (it probably
+(fontspec)             doesn't exist).
+
+
+Package fontspec Info: 
+(fontspec)             Font family 'FangSong(0)' created for font 'FangSong'
+(fontspec)             with options [Script={CJK}].
+(fontspec)              
+(fontspec)              This font family consists of the following NFSS
+(fontspec)             series/shapes:
+(fontspec)              
+(fontspec)             - 'normal' (m/n) with NFSS spec.:
+(fontspec)             <->"FangSong/OT:script=hani;language=dflt;"
+
+LaTeX Font Info:    Trying to load font information for U+msa on input line 34.
+
+
+(C:\Program Files\MikTex\tex/latex/amsfonts\umsa.fd
 File: umsa.fd 2013/01/14 v3.01 AMS symbols A
 )
-LaTeX Font Info:    Trying to load font information for U+msb on input line 41.
+LaTeX Font Info:    Trying to load font information for U+msb on input line 34.
 
 
 (C:\Program Files\MikTex\tex/latex/amsfonts\umsb.fd
 File: umsb.fd 2013/01/14 v3.01 AMS symbols B
-) [1
+)
+Missing character: There is no ⏸ in font [lmroman10-regular]:mapping=tex-text;!
+Missing character: There is no ✅ in font [lmroman10-regular]:mapping=tex-text;!
+Missing character: There is no ⏸ in font [lmroman10-regular]:mapping=tex-text;!
+Missing character: There is no ✅ in font [lmroman10-regular]:mapping=tex-text;!
+Missing character: There is no ✅ in font [lmroman10-regular]:mapping=tex-text;!
+Missing character: There is no ✅ in font [lmroman10-regular]:mapping=tex-text;!
+Missing character: There is no ✅ in font [lmroman10-regular]:mapping=tex-text;!
+Missing character: There is no ⏸ in font [lmroman10-regular]:mapping=tex-text;!
+Missing character: There is no ✅ in font [lmroman10-regular]:mapping=tex-text;!
+Missing character: There is no ⏸ in font [lmroman10-regular]:mapping=tex-text;!
+Missing character: There is no ⏸ in font [lmroman10-regular]:mapping=tex-text;!
+Missing character: There is no ✅ in font [lmroman10-regular]:mapping=tex-text;!
+Missing character: There is no ⏸ in font [lmroman10-regular]:mapping=tex-text;!
+Missing character: There is no ✅ in font [lmroman10-regular]:mapping=tex-text;!
+Missing character: There is no ⏸ in font [lmroman10-regular]:mapping=tex-text;!
+Missing character: There is no ⏸ in font [lmroman10-regular]:mapping=tex-text;!
+Missing character: There is no ✅ in font [lmroman10-regular]:mapping=tex-text;!
 
-]
-LaTeX Font Info:    Font shape `TU/SimSun(0)/m/sl' in size <12> not available
-(Font)              Font shape `TU/SimSun(0)/m/it' tried instead on input line 
-78.
- [2] [3] [4] [5]
-Overfull \hbox (2.97327pt too wide) detected at line 191
-[][][]\OML/cmm/m/it/12 T[]\OT1/cmr/m/n/12 (\OML/cmm/m/it/12 t\OT1/cmr/m/n/12 ) 
-= []  \OML/cmm/m/it/12 C[]\OT1/cmr/m/n/12 (\OML/cmm/m/it/12 t\OT1/cmr/m/n/12 ) 
-= []
+Overfull \hbox (374.16594pt too wide) in paragraph at lines 49--72
+ [] 
  []
 
-[6] [7] [8] [9] [10] [11] [12] [13] [14] [15] [16] [17] [18] [19] (A题论文.aux)
+LaTeX Font Info:    Font shape `TU/SimSun(0)/m/sl' in size <12> not available
+(Font)              Font shape `TU/SimSun(0)/m/it' tried instead on input line 
+72.
+[1
+
+]
+Missing character: There is no ⏸ in font [lmroman12-bold]:mapping=tex-text;!
+[2]
+Missing character: There is no ✅ in font [lmroman12-bold]:mapping=tex-text;!
+Missing character: There is no ✅ in font [lmroman12-bold]:mapping=tex-text;!
+Missing character: There is no ✅ in font [lmroman12-bold]:mapping=tex-text;!
+Missing character: There is no ⏸ in font [lmroman12-bold]:mapping=tex-text;!
+Missing character: There is no ⏸ in font [lmroman12-bold]:mapping=tex-text;!
+Missing character: There is no ⏸ in font [lmroman12-bold]:mapping=tex-text;!
+[3]
+Missing character: There is no ⏸ in font [lmroman12-bold]:mapping=tex-text;!
+Missing character: There is no ✅ in font [lmroman12-bold]:mapping=tex-text;!
+Missing character: There is no ✅ in font [lmroman12-bold]:mapping=tex-text;!
+Missing character: There is no ⏸ in font [lmroman12-bold]:mapping=tex-text;!
+Missing character: There is no ✅ in font [lmroman12-bold]:mapping=tex-text;!
+Missing character: There is no ⏸ in font [lmroman12-bold]:mapping=tex-text;!
+
+Overfull \hbox (177.56696pt too wide) in paragraph at lines 140--161
+ [] 
+ []
+
+[4] [5]
+Overfull \hbox (0.47604pt too wide) in paragraph at lines 197--198
+[][][][][][][][][][][][][][][] [] [][][][][][][][][][][][][][][][][][][][][][][
+][][][][][][][][][] [] [][][][] [] [][][][] [] [][][][][][][][][][] [] [][][] [
+] [][] [] [][] [] [][] [] [][] []
+ []
+
+[6] (A题论文评审报告.aux)
  ***********
 LaTeX2e <2025-11-01>
 L3 programming layer <2022/07/14>
  ***********
-Package rerunfilecheck Info: File `A题论文.out' has not changed.
-(rerunfilecheck)             Checksum: AC0C0E1FCAA8878DF3B2706878A46B7C;5120.
+Package rerunfilecheck Info: File `A题论文评审报告.out' has not changed.
+(rerunfilecheck)             Checksum: B3E780E82042C398E2C0A8BA92B4819C;1642.
  ) 
 Here is how much of TeX's memory you used:
- 16700 strings out of 402987
- 370310 string characters out of 5452872
- 800302 words of memory out of 5000000
- 45198 multiletter control sequences out of 15000+600000
- 639080 words of font info for 120 fonts, out of 8000000 for 9000
+ 16482 strings out of 402987
+ 379618 string characters out of 5452872
+ 790616 words of memory out of 5000000
+ 44990 multiletter control sequences out of 15000+600000
+ 637519 words of font info for 112 fonts, out of 8000000 for 9000
  1348 hyphenation exceptions out of 8191
- 93i,12n,111p,1032b,512s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 93i,9n,111p,458b,510s stack positions out of 10000i,1000n,20000p,200000b,200000s
 
-Output written on A题论文.pdf (19 pages).
+Output written on A题论文评审报告.pdf (6 pages).

@@ -27,7 +27,7 @@ R0, T0, C0 = 0.02, 28.0, 2.55
 h, hm = 25.0, 8e-7
 TEND, CEND = 50.165, 0.04986        # 附件1 末值（恒温干燥段）
 CTARGET = 0.15                      # 问题4 烘干判据
-DZ, NZ = 1.0 / 40.0, 41             # zeta 网格 41 节点
+DZ, NZ = 1.0 / 80.0, 81             # zeta 网格 81 节点(1/40 网格下 6h 行误差约 1.8e-4,加密至 1/80 后约 5.4e-5,四位小数可靠)
 zeta = np.arange(NZ) * DZ
 
 # 附录4 经验式（C<0.02 时取 0.02，仅为数值保险：物理解 C >= C_air=0.04986）
@@ -197,11 +197,11 @@ if __name__ == "__main__":
     r5 = run6h(5.0); r25 = run6h(2.5)
     print('验证V2 时间收敛(6h 行): dt=5 vs 2.5 最大差 %.2e' % np.nanmax(np.abs(r5 - r25)))
 
-    # V3 网格收敛: dZ=1/20（NZ=21）vs 1/40，前 6 h
+    # V3 网格收敛: dZ=1/40（NZ=41）vs 1/80，前 6 h
     _NZ_save, _DZ_save, _zeta_save = NZ, DZ, zeta
     def run6h_coarse():
         global NZ, DZ, zeta
-        NZ, DZ = 21, 1.0 / 20.0
+        NZ, DZ = 41, 1.0 / 40.0
         zeta = np.arange(NZ) * DZ
         T, C = np.full(NZ, T0), np.full(NZ, C0)
         for n in range(1, int(21600 / 5.0) + 1):
@@ -212,7 +212,7 @@ if __name__ == "__main__":
         zeta = _zeta_save
         return np.array(row)
     rc = run6h_coarse()
-    print('验证V3 网格收敛(6h 行): dZ=1/20 vs 1/40 最大差 %.2e' % np.nanmax(np.abs(rc - r5)))
+    print('验证V3 网格收敛(6h 行): dZ=1/40 vs 1/80 最大差 %.2e' % np.nanmax(np.abs(rc - r5)))
 
     # V4 渐近: 常数边界，长时程（R 仍按附件2 收缩并保持 1.198 cm）
     T, C = np.full(NZ, T0), np.full(NZ, C0)
