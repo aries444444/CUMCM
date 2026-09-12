@@ -115,7 +115,11 @@ $\rho,c_p,k$ 是否随 $C$ 变 & 否（常数） & 是 & 是 & 是 \\
 \bottomrule
 \end{tabular}}
 \end{center}
-
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.82\textwidth]{fig1_overview.png}
+  \caption{四个问题的模型架构与关键结果概览：对应问题 1--4 的求解情形与主结论。}
+\end{figure}
 \section{三、模型假设}
 
 \begin{enumerate}[label=H\arabic*.,leftmargin=2.2em]
@@ -460,12 +464,6 @@ t^*=182780\ \mathrm{s}=\mathbf{50.7722\ h}\ \ (\text{约 2.12 天}).
 
 \section{七、模型的检验}
 
-\begin{figure}[htbp]
-  \centering
-  \includegraphics[width=0.82\textwidth]{fig1_overview.png}
-  \caption{问题 1--4 总体结果概览：对应式 \eqref{eq:heat1}--\eqref{eq:bcC1}、\eqref{eq:heat23}--\eqref{eq:bc4} 的数值解，展示不同模型下的温度与水分演化及关键判据。}
-\end{figure}
-
 \subsection{7.1 Bessel 级数解析解对照（问题 1 热传导）}
 
 对问题 1 的热传导方程 \eqref{eq:heat1}，在常数边界 $T_a=41.513\ ^\circ$C（附件 1 中 1800 s 时刻的环境温度）下存在解析解（Carslaw--Jaeger 级数解\cite{carslaw}）：
@@ -481,11 +479,6 @@ T(r,t)=T_a+(T_0-T_a)\sum_{n=1}^{\infty}A_n\,\mathrm{e}^{-\alpha\beta_n^2 t/R^2}J
   \caption{模型验证与灵敏度分析：对应式 \eqref{eq:cn}、\eqref{eq:conserv} 及仿真结果的收敛性、守恒性与参数敏感性检验}
 \end{figure}
 
-\begin{figure}[htbp]
-  \centering
-  \includegraphics[width=0.9\textwidth]{fig3_validation.png}
-  \caption{模型验证与灵敏度分析：对应式 \eqref{eq:cn}、\eqref{eq:conserv} 及数值求解结果的收敛性、守恒性和参数敏感性检验。}
-\end{figure}
 
 \subsection{7.2 收敛性检验}
 
