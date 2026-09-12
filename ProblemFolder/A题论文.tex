@@ -6,11 +6,25 @@
 \usepackage{enumitem}
 \usepackage{graphicx}
 \usepackage[hidelinks]{hyperref}
+\usepackage{fancyhdr}
 \geometry{margin=2.5cm}
 \setlength{\parskip}{0.5em}
 \setlength{\parindent}{2em}
 \linespread{1.25}
 \renewcommand{\arraystretch}{1.15}
+
+% 页码置于页面底部中间，且保持当前字号不变
+\pagestyle{fancy}
+\fancyhf{}
+\fancyfoot[C]{\normalfont\thepage}
+\renewcommand{\headrulewidth}{0pt}
+\renewcommand{\footrulewidth}{0pt}
+\fancypagestyle{plain}{
+  \fancyhf{}
+  \fancyfoot[C]{\normalfont\thepage}
+  \renewcommand{\headrulewidth}{0pt}
+  \renewcommand{\footrulewidth}{0pt}
+}
 
 % ——中文论文格式规范:标题层级用黑体,正文宋体小四,表格五号——
 \setcounter{secnumdepth}{-1}
@@ -428,7 +442,19 @@ t^*=182780\ \mathrm{s}=\mathbf{50.7722\ h}\ \ (\text{约 2.12 天}).
 
 结果分析：半径在干燥前期快速收缩（2 cm$\to$约 1.5 cm 在前 3.5 h），故 1.5 cm、2 cm 两列自 6 h 起即已落在药材之外。与问题 3 对比：$t^*$ 由 57.09 h 缩短为 50.77 h，缩短约 6.3 h（11.1\%）。这一净效应由两个相反方向的因素合成：附录 4 的扩散系数比附录 3 小约 2--5 倍（高含水率端约 5 倍、低含水率端约 2 倍），使干燥变慢；而收缩使算子系数 $D/R^2$ 增大 2.8 倍并缩短扩散路径，使干燥加快。为定量分离两者贡献，作消融对照实验：将附录 4 物性代入无收缩模型（固定 $R=2$ cm，其余求解设置相同），得 $t^*=128.88$ h——物性差异单独使烘干时长增加 71.8 h（$+126\%$）；在其上恢复收缩后 $t^*=50.77$ h——收缩单独使时长缩短 78.1 h（$-60.6\%$）。两因素叠加的净效应为 $-6.3$ h（$-11.1\%$），收缩加速占主导。此外，表面含水率列显示表面在 12 h 内即降至 0.167 kg/kg 并持续逼近平衡值，失水主要发生在干燥前期，与收缩曲线（前期收缩快、67 h 起稳定于 1.198 cm）互为印证。
 
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.9\textwidth]{fig2_heatmap.png}
+  \caption{问题 4 的收缩模型对应图：由式 \eqref{eq:zeta}、\eqref{eq:mass4}、\eqref{eq:heat4} 及 $R(t)$ 变动导致的含水率时空分布。该图体现收缩缩短扩散路径、加速干燥的机制。}
+\end{figure}
+
 \section{七、模型的检验}
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.82\textwidth]{fig1_overview.png}
+  \caption{问题 1--4 总体结果概览：对应式 \eqref{eq:heat1}--\eqref{eq:bcC1}、\eqref{eq:heat23}--\eqref{eq:bc4} 的数值解，展示不同模型下的温度与水分演化及关键判据。}
+\end{figure}
 
 \subsection{7.1 Bessel 级数解析解对照（问题 1 热传导）}
 
@@ -438,6 +464,18 @@ T(r,t)=T_a+(T_0-T_a)\sum_{n=1}^{\infty}A_n\,\mathrm{e}^{-\alpha\beta_n^2 t/R^2}J
 \label{eq:bessel}
 \end{equation}
 其中 $\beta_n$ 为特征方程 $\beta J_1(\beta)=\mathrm{Bi}\,J_0(\beta)$ 的正根（$\mathrm{Bi}=hR/k=1.389$），系数 $A_n=\dfrac{2J_1(\beta_n)}{\beta_n\bigl(J_0^2(\beta_n)+J_1^2(\beta_n)\bigr)}$。取前 40 项级数与相同常数边界下的数值解（空间步长 0.03125 mm）在 $t=1800$ s 对照：中心 数值 37.8050 $^\circ$C、解析 37.8050 $^\circ$C；表面 数值 39.4483 $^\circ$C、解析 39.4483 $^\circ$C，四位小数完全一致（误差不超过 $5\times10^{-5}\ ^\circ$C）。这同时验证了离散格式与 Robin 表面处理（含表面控制体体积、通量系数 $Rh$）的正确性。
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.9\textwidth]{fig3_validation.png}
+  \caption{模型验证与灵敏度分析：对应式 \eqref{eq:cn}、\eqref{eq:conserv} 及仿真结果的收敛性、守恒性与参数敏感性检验}
+\end{figure}
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.9\textwidth]{fig3_validation.png}
+  \caption{模型验证与灵敏度分析：对应式 \eqref{eq:cn}、\eqref{eq:conserv} 及数值求解结果的收敛性、守恒性和参数敏感性检验。}
+\end{figure}
 
 \subsection{7.2 收敛性检验}
 
