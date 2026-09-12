@@ -1,9 +1,10 @@
-This is XeTeX, Version 3.141592653-2.6-0.999997 (MiKTeX 25.4) (preloaded format=xelatex 2026.5.4)  12 SEP 2026 14:28
+This is XeTeX, Version 3.141592653-2.6-0.999997 (MiKTeX 25.4) (preloaded format=xelatex 2026.5.4)  12 SEP 2026 14:36
 entering extended mode
  restricted \write18 enabled.
+ file:line:error style messages enabled.
  %&-line parsing enabled.
-**./A题论文.tex
-(A题论文.tex
+**f:/Desktop/CUMCM/正赛/CUMCM/ProblemFolder/A题论文.tex
+(f:/Desktop/CUMCM/正赛/CUMCM/ProblemFolder/A题论文.tex
 LaTeX2e <2025-11-01>
 L3 programming layer <2025-11-06>
 (C:\Program Files\MikTex\tex/latex/ctex\ctexart.cls
@@ -943,12 +944,12 @@ Package rerunfilecheck Info: File `A题论文.out' has not changed.
 (rerunfilecheck)             Checksum: AC0C0E1FCAA8878DF3B2706878A46B7C;5120.
  ) 
 Here is how much of TeX's memory you used:
- 16700 strings out of 402987
- 370310 string characters out of 5452872
+ 16701 strings out of 402987
+ 370428 string characters out of 5452872
  800302 words of memory out of 5000000
  45198 multiletter control sequences out of 15000+600000
  639080 words of font info for 120 fonts, out of 8000000 for 9000
  1348 hyphenation exceptions out of 8191
- 93i,12n,111p,1032b,512s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 93i,12n,111p,1070b,512s stack positions out of 10000i,1000n,20000p,200000b,200000s
 
 Output written on A题论文.pdf (19 pages).
