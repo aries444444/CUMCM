@@ -694,22 +694,12 @@ $h_m-50\%$ & $+7.56$（$+13.3\%$） & $+3.34$（$+6.6\%$） \\
 
 本文模型可直接推广为中药材干燥工艺的仿真工具：给定烘房温湿曲线与药材物性，即可预测任意时刻的温度场、水分场与烘干时长，进而为工艺参数（烘房温度、湿度、风速）的选取与能耗优化提供依据；模型输出的温度、水分时空分布可作为品质分析的定量输入——文献表明活性成分降解与干燥过程的温度、含水率直接相关\cite{ren}，故模型可用于评估变温策略（如分段降温保成分）中各时段的品质风险，但不直接预测成分含量。
 
-\section*{附录：AI 工具使用声明}
+\section*{AI 工具使用声明}
 
 \noindent 本参赛队在竞赛过程中使用了AI工具（Deepseek、Doubao），主要用于辅助题目分析与建模思路参考、代码调试和文字润色，所有结果均经本队人工核验；具体使用情况见AI工具使用详情说明。
 
 
 
-
-\section*{附录：支撑材料文件列表}
-
-\noindent 本文全部计算与结果可复现，支撑材料文件清单如下：
-\begin{itemize}[leftmargin=2em]
-\item result1.xlsx--result4.xlsx：四个问题的完整输出（问题 1、2 各含「温度」「水分浓度」两个工作表，问题 3、4 单表存水分浓度并含烘干结束时刻一行，均保留四位小数）；
-\item q1\_solver.py、q2\_solver.py、q3\_solver.py、q4\_solver.py：四个问题的求解程序；
-\item q78\_sensitivity.py：表 7 物性×几何消融与表 8 参数灵敏度的计算程序；
-\item verify\_q1.py、verify\_q3.py、verify\_q4.py：Bessel 解析解对照、离散守恒闭合与收敛链的验证程序。
-\end{itemize}
 
 \begin{thebibliography}{9}
 \setlength{\itemsep}{0pt}
@@ -731,6 +721,16 @@ $h_m-50\%$ & $+7.56$（$+13.3\%$） & $+3.34$（$+6.6\%$） \\
 \bibitem{baizhu} 郭慧玲, 徐梦甜, 伍振峰, 等. 白术热风干燥动力学及其挥发性成分变化规律的研究[J]. 中国中药杂志, 2022, 47(4): 922-930.
 \bibitem{mills} MILLS R. Self-diffusion in normal and heavy water in the range 1-45$^\circ$C[J]. Journal of Physical Chemistry, 1973, 77(5): 685-688.
 \end{thebibliography}
+
+\section*{附录：支撑材料文件列表}
+
+\noindent 本文全部计算与结果可复现，支撑材料文件清单如下：
+\begin{itemize}[leftmargin=2em]
+\item result1.xlsx--result4.xlsx：四个问题的完整输出（问题 1、2 各含「温度」「水分浓度」两个工作表，问题 3、4 单表存水分浓度并含烘干结束时刻一行，均保留四位小数）；
+\item q1\_solver.py、q2\_solver.py、q3\_solver.py、q4\_solver.py：四个问题的求解程序；
+\item q78\_sensitivity.py：表 7 物性×几何消融与表 8 参数灵敏度的计算程序；
+\item verify\_q1.py、verify\_q3.py、verify\_q4.py：Bessel 解析解对照、离散守恒闭合与收敛链的验证程序。
+\end{itemize}
 
 \end{document}
 
