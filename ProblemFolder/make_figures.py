@@ -10,10 +10,11 @@ import pandas as pd
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
+from scipy.interpolate import PchipInterpolator
 
-BASE = r"C:/Users/Admin/Desktop/CUMCM/ProblemFolder"
+BASE = os.path.dirname(os.path.abspath(__file__))
 SUPP = os.path.join(BASE, "支撑材料")
-OUT = r"C:/Users/Admin/Desktop/CUMCM/figures"
+OUT = os.path.join(os.path.dirname(BASE), "figures")
 os.makedirs(OUT, exist_ok=True)
 
 # ---------------- 全局样式 ----------------
@@ -21,6 +22,7 @@ plt.rcParams.update({
     "font.sans-serif": ["Microsoft YaHei", "SimHei", "DejaVu Sans"],
     "axes.unicode_minus": False,
     "svg.fonttype": "path",          # 文字转曲, 保证跨机器一致
+    "pdf.fonttype": 3,               # 文字转曲线, PDF 文本提取无乱码
     "figure.facecolor": "white",
     "axes.facecolor": "white",
     "axes.edgecolor": "#555555",
@@ -52,6 +54,9 @@ def save_fig(fig, name, title):
     fig.text(0.5, 0.015, title, ha="center", va="bottom", fontsize=12)
     fig.savefig(os.path.join(OUT, name), format="svg",
                 bbox_inches="tight", pad_inches=0.15)
+    if name.startswith(("fig07", "fig08", "fig09", "fig10", "fig11")):
+        fig.savefig(os.path.join(OUT, name.replace(".svg", ".pdf")),
+                    format="pdf", bbox_inches="tight", pad_inches=0.15)
     if os.environ.get("FIG_PREVIEW"):
         prev = os.environ["FIG_PREVIEW"]
         os.makedirs(prev, exist_ok=True)
@@ -195,8 +200,11 @@ a2.columns = ["t", "R"]
 tr_h = a2["t"].to_numpy(dtype=float) / 3600.0
 Rcm = a2["R"].to_numpy(dtype=float)
 fig, ax = plt.subplots(figsize=(7.0, 4.4))
-ax.plot(tr_h, Rcm, color=C_BLUE, lw=1.8, marker="o", ms=2.6,
-        mfc="white", mec=C_BLUE, label="附件 2 实测半径")
+tg = np.linspace(tr_h[0], tr_h[-1], 1200)
+Rp = PchipInterpolator(tr_h, Rcm)(tg)
+ax.plot(tg, Rp, color=C_BLUE, lw=1.8, label="Pchip 插值 $R(t)$")
+ax.plot(tr_h, Rcm, ls="none", marker="o", ms=2.6, mfc="white",
+        mec=C_BLUE, mew=0.8, label="附件 2 实测半径")
 ax.annotate(f"R(0) = {Rcm[0]:.4f} cm", xy=(0, Rcm[0]), xytext=(6, 1.90),
             fontsize=10, color="#444444",
             arrowprops=dict(arrowstyle="->", color="#444444", lw=0.9))
@@ -326,6 +334,6 @@ for a in axes:
     style_ax(a)
 fig.subplots_adjust(left=0.09, right=0.98, top=0.90, bottom=0.26, wspace=0.28)
 save_fig(fig, "fig11_grid_convergence_tstar.svg",
-         "图 11  烘干时长 t* 随空间网格加密的收敛情况")
+         "图 11  烘干时长 t* 随空间离散加密的收敛情况")
 
 print("ALL DONE")

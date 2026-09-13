@@ -41,7 +41,7 @@ ANNEX2 = os.path.join(PF, 'OriginalMaterial', 'A题', '附件', '附件2.xlsx')
 
 C0 = 2.55          # 初始干基含水率 kg/kg
 CTARGET = 0.15     # 烘干判据 kg/kg
-TSTAR3, TSTAR4 = 205082.5, 182495.0   # 烘干时长 (s)
+TSTAR3, TSTAR4 = 205701.0, 182897.5   # 烘干时长 (s)，生产值（论文 6.3/6.4）
 
 # 统一配色
 CLR3, CLR4 = '#2563eb', '#dc2626'     # 问题3 蓝 / 问题4 红
@@ -103,10 +103,10 @@ ax.axvline(h3[-1], color=CLR3, lw=1, ls=':', alpha=0.8)
 ax.axvline(h4[-1], color=CLR4, lw=1, ls=':', alpha=0.8)
 ax.plot([h3[-1]], [C3[-1, i0]], 'o', color=CLR3, ms=8, zorder=5)
 ax.plot([h4[-1]], [C4[-1, i0]], 'o', color=CLR4, ms=8, zorder=5)
-ax.annotate('$t^*=56.97$ h', (h3[-1], C3[-1, i0]), xytext=(-112, 20),
+ax.annotate('$t^*=57.14$ h', (h3[-1], C3[-1, i0]), xytext=(-112, 20),
             textcoords='offset points', color=CLR3, fontsize=10,
             arrowprops=dict(arrowstyle='->', color=CLR3, lw=1.2))
-ax.annotate('$t^*=50.69$ h', (h4[-1], C4[-1, i0]), xytext=(14, 74),
+ax.annotate('$t^*=50.80$ h', (h4[-1], C4[-1, i0]), xytext=(14, 74),
             textcoords='offset points', color=CLR4, fontsize=10,
             arrowprops=dict(arrowstyle='->', color=CLR4, lw=1.2))
 # 交叉点（跳过起始段的伪交叉）
@@ -163,7 +163,7 @@ ax.legend(fontsize=9); ax.set_xlim(0, 52)
 # -- (d) 问题4 径向剖面（含动边界） --
 ax = axes[1, 1]
 dgrid = np.linspace(0, 2.0, 400)
-times = [6, 12, 24, 36, 50.69]
+times = [6, 12, 24, 36, 50.80]
 cmap = plt.get_cmap('plasma')
 for j, th in enumerate(times):
     i = int(np.argmin(abs(h4 - th)))
@@ -185,7 +185,9 @@ ax.legend(fontsize=9, title='时刻', ncol=2); ax.set_xlim(0, 2.35)
 
 fig.tight_layout(rect=[0, 0, 1, 0.97])
 p1 = os.path.join(HERE, 'fig1_overview.png')
-fig.savefig(p1); plt.close(fig)
+fig.savefig(p1)
+fig.savefig(os.path.join(PF, 'fig1_overview_solution.png'))
+plt.close(fig)
 print('已保存', p1)
 
 
@@ -225,8 +227,8 @@ for ax, (Z, h, title, tstar) in zip(
 axes[0].set_ylabel('到药材中心的距离 / cm')
 axes[1].plot(h4, [R_at(x * 3600) for x in h4], color='#dc2626', lw=2.2,
              label='实际表面 $R(t)$')
-axes[1].axvline(TSTAR4 / 3600, color='#dc2626', lw=2.2, ls='--', label='$t^*=50.69$ h')
-axes[0].axvline(TSTAR3 / 3600, color='#2563eb', lw=2.2, ls='--', label='$t^*=56.97$ h')
+axes[1].axvline(TSTAR4 / 3600, color='#dc2626', lw=2.2, ls='--', label='$t^*=50.80$ h')
+axes[0].axvline(TSTAR3 / 3600, color='#2563eb', lw=2.2, ls='--', label='$t^*=57.14$ h')
 axes[0].legend(fontsize=9, loc='upper right'); axes[1].legend(fontsize=9, loc='upper right')
 axes[1].axhline(1.198, color='#dc2626', lw=1, ls=':', alpha=0.7)
 cb = fig.colorbar(pm, ax=axes, orientation='vertical', pad=0.02, aspect=28)
@@ -244,7 +246,7 @@ fig.suptitle('模型检验：误差量级与烘干时长', fontsize=15, fontweig
 # 数据来源: ProblemFolder/q1~q4_out.txt
 labels = ['问题1\n守恒闭合差', '问题3\n守恒闭合差', '问题4\n守恒闭合差',
           '问题3\nV2 时间收敛', '问题4\nV2 时间收敛',
-          '问题3\nV3 网格收敛', '问题4\nV3 网格收敛']
+          '问题3\nV3 空间收敛', '问题4\nV3 空间收敛']
 vals = [1.5e-18, 1.7e-17, 4.15e-7, 5.58e-6, 1.10e-5, 5.27e-4, 5.33e-4]
 cols = [CLR3, CLR3, CLR4, CLR3, CLR4, CLR3, CLR4]
 ax = axes[0]

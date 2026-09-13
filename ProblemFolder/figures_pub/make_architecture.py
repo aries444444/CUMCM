@@ -136,15 +136,15 @@ box(ax, 68, 14.5, 26, 8.5, '交错 Picard 迭代（两轮）',
 band_label(ax, 10.0, '问题分支与结果输出', C_OUT[1])
 box(ax, 3, 0.5, 21, 8, '问题 1', '预热平衡 0–1800 s\n表 1/2 · result1.xlsx', C_OUT)
 box(ax, 27.5, 0.5, 21, 8, '问题 2', '全过程前 3 h\n表 3/4 · result2.xlsx', C_OUT)
-box(ax, 52, 0.5, 21, 8, '问题 3', '判据 $\\max_r C\\leq0.15$\n$t^*=57.09$ h · 表 5', C_OUT)
-box(ax, 76.5, 0.5, 21, 8, '问题 4', '含收缩动边界\n$t^*=50.77$ h · 表 6', C_OUT)
+box(ax, 52, 0.5, 21, 8, '问题 3', '判据 $\\max_r C\\leq0.15$\n$t^*=57.14$ h · 表 5', C_OUT)
+box(ax, 76.5, 0.5, 21, 8, '问题 4', '含收缩动边界\n$t^*=50.80$ h · 表 6', C_OUT)
 
 # ============ 第五层：模型检验（底部横条 + 右侧反馈） ============
 band_label(ax, -4.0, '模型检验', C_CHECK[1])
 box(ax, 6, -12.5, 88, 7, None, None, C_CHECK)
 ax.text(50, -9.0,
-        '空间 / 时间收敛性检验（加密网格，差值 $O(10^{-5})$）　｜　'
-        '离散守恒恒等式　｜　参数灵敏度分析（表 7，最不利组合增幅 < 20%）',
+        '空间 / 时间收敛性检验（加密离散，差值 $O(10^{-5})$）　｜　'
+        '离散守恒恒等式　｜　参数灵敏度分析（表 8，最不利组合增幅 < 20%）',
         ha='center', va='center', fontsize=7.8, color=SUB, zorder=3)
 arrow(ax, 94.5, -5.5, 94.5, 33.0, color=C_CHECK[1], lw=1.3, ls=(0, (4, 2)))
 ax.text(96.0, 14, '反馈修正', rotation=90, fontsize=7.5, color=C_CHECK[1],
@@ -162,5 +162,7 @@ fig.savefig(os.path.join(BASE, 'fig13_模型总体架构图.png'),
             dpi=300, bbox_inches='tight', pad_inches=0.1, facecolor='white')
 fig.savefig(os.path.join(BASE, 'fig13_模型总体架构图.pdf'),
             bbox_inches='tight', pad_inches=0.1, facecolor='white')
+fig.savefig(os.path.join(os.path.dirname(BASE), 'jiagoutu.png'),
+            dpi=300, bbox_inches='tight', pad_inches=0.1, facecolor='white')
 plt.close(fig)
 print('saved fig13')
