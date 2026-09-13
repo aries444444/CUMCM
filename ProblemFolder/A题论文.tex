@@ -5,6 +5,7 @@
 \usepackage{geometry}
 \usepackage{enumitem}
 \usepackage{graphicx}
+\usepackage{float}
 \usepackage[hidelinks]{hyperref}
 \usepackage{fancyhdr}
 \geometry{margin=2.5cm}
@@ -56,7 +57,7 @@
 
 \textbf{针对问题 2}，采用附录 3 的经验公式，其中密度、比热容、导热系数随水分浓度 $C$ 变化，扩散系数 $D(C,T)=2.4\times10^{-3}\mathrm{e}^{-0.45/C}\mathrm{e}^{-3850/T}$ 随 $C$ 与绝对温度 $T$ 变化，建立热质双向弱耦合模型：温度场通过 Arrhenius 因子影响水分扩散，水分场通过物性参数影响温度场；求解 0--3 h 的温度与水分场（表 3、表 4）。\textbf{针对问题 3}，沿用该模型，烘房条件取附件 1 插值（$t\le14400$ s）与恒温段参数 $(50.165\,^\circ\mathrm{C},\,0.04986\ \mathrm{kg/kg})$ 两段拼接，按判据「各处水分浓度 $\le0.15$ kg/kg」求得烘干时长 $t^*=205701$ s，即 \textbf{57.14 h}（约 2.38 天），处于题述「烘干过程一般持续 2--3 天」范围内。
 
-\textbf{针对问题 4}，考虑药材尺寸收缩：采用附录 4 的经验公式，并以附件 2 的半径数据经 Pchip 保形插值构造动边界 $R(t)$；引入随体坐标 $\zeta=r/R(t)$，将热传导与水分扩散方程变换为无对流项的 Lagrange 形式，在同一守恒离散框架下求解。求得含收缩时的烘干时长 $t^*=182897$ s，即 \textbf{50.80 h}（约 2.12 天）。
+\textbf{针对问题 4}，考虑药材尺寸收缩：采用附录 4 的经验公式，并以附件 2 的半径数据经 Pchip 保形插值构造动边界 $R(t)$；引入随体坐标 $\zeta=r/R(t)$，将热传导与水分扩散方程变换为无对流项的 Lagrange 形式，在同一守恒离散框架下求解。求得含收缩时的烘干时长 $t^*=182897.5$ s，即 \textbf{50.80 h}（约 2.12 天）。
 
 \textbf{数值方法与检验}：空间采用离散通量严格闭合的有限体积离散（表面节点位于真实表面，Robin 通量与内部界面通量逐时间层对消），时间采用 Crank--Nicolson 格式，非线性与双向耦合用交错 Picard 迭代处理。模型通过四重检验：与 Bessel 级数解析解对照，温度场四位小数完全一致；空间步长减半收敛比达理论值 4（问题 1、2 实测比值 4.0），验证二阶精度；离散质量守恒闭合差在 $10^{-7}$ 以内（问题 1 达机器精度）；长时程渐近精确收敛到烘房参数。此外对水分汽化潜热作数量级分析：表面蒸发吸热与对流显热之比约 3--5，其不确定性以时长敏感性区间（约 $+40\%\sim50\%$，见 7.6 节）计入结果解读。
 
@@ -64,6 +65,14 @@
 \noindent{\heiti 关键词}：热风干燥；热质耦合传递；圆柱轴对称扩散；Crank--Nicolson 格式；移动边界；有效水分扩散系数
 
 \newpage
+\begin{figure}[htbp]
+    \centering
+  \includegraphics[width=0.90\linewidth]{jiagoutu.png}
+    \caption{架构图}
+    \label{fig:architecture}
+\end{figure}
+
+
 \section{一、问题重述}
 
 中药材热风干燥通常包含预热平衡与恒温干燥两个阶段，通过调控烘房温湿环境完成干燥。某中药材形状近似为圆柱形，长 25 cm，半径 2 cm，初始温度 28 $^\circ$C，初始水分浓度（干基含水率）2.55 kg/kg。需建立数学模型研究如下四个问题：
@@ -216,6 +225,12 @@ C_a(t)=
 \label{eq:zeta}
 \end{equation}
 
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.78\textwidth]{../figures/fig07_q4_radius_shrinkage_curve.pdf}
+\par\small\textbf{说明：}附件 2 的半径数据及 Pchip 插值结果，对应式 \eqref{eq:zeta} 中的动边界 $R(t)$。
+\end{figure}
+
 各向同性且径向均匀的收缩（假设 H8）意味着任一物质点按统一比例 $R(t)/R(0)$ 收缩，即物质点位置 $r_p(t)=\zeta_pR(t)$、径向速度 $v_r=\zeta_pR'(t)=(R'/R)\,r_p$，故 $\zeta$ 恒标记同一干物质质点。下面从守恒律推导随体坐标下的方程：干基含水率 $C$ 定义于固相骨架，对随骨架运动的物质元，干固体质量守恒要求 $\mathrm{d}M_d=\rho_d\,\mathrm{d}V$ 恒定（$\rho_d=\rho/(1+C)$ 为干物质密度），水分守恒给出 $\mathrm{d}M_d\,\mathrm{D}C/\mathrm{D}t=-\nabla\cdot q_d\,\mathrm{d}V$，其中 $q_d=-\rho_d D\nabla C$ 为相对骨架的 Fick 通量\cite{whitaker}，$\mathrm{D}/\mathrm{D}t$ 为随体导数。联立两式并利用干固体守恒恒等式 $\partial\rho_d/\partial t+\nabla\cdot(\rho_d v)=0$，对流项 $v\cdot\nabla C$ 与 $\rho_d$ 的变化率项严格相消，得 $\rho_d\,\mathrm{D}C/\mathrm{D}t=\nabla\cdot(\rho_d D\nabla C)$——这正是「随体坐标无对流项」的由来。在题给有效参数观点下（假设 H5），$\rho_d$ 随 $C$ 的变化已隐含于 $D(C,T)$ 的经验标定中，取 $\rho_d$ 均匀近似即得式 \eqref{eq:mass4} 的水分方程；热量方程经同样的随体变换并忽略水分携焓交叉项（见 2.2 节）化为
 \begin{equation}
 \pdd{C}{t}\Big|_{\zeta}=\frac{1}{R^2(t)\,\zeta}\pdd{}{\zeta}\Bigl(\zeta\,D(C,T)\pdd{C}{\zeta}\Bigr),
@@ -324,7 +339,19 @@ D(C,T)=4.2\times10^{-4}\,\mathrm{e}^{-0.30/C}\,\mathrm{e}^{-3850/T}\quad(\mathrm
 
 \section{六、求解结果}
 
+<<<<<<< HEAD
+以下结果均按题面要求保留四位小数：问题 1、2 给出各时刻的温度与水分浓度两套数据；问题 3、4 给出各时刻的水分浓度，并附烘干结束时刻 $t^*$（205701 s / 182897.5 s）的一行，与表 5、表 6 的末行一致。
+=======
+
+\begin{figure}[htbp]
+    \centering
+  \includegraphics[width=0.75\linewidth]{fig1_overview_solution.png}
+    \caption{整体解答流程示意图。}
+    \label{fig:overview_solution}
+\end{figure}
+
 以下结果均按题面要求保留四位小数：问题 1、2 给出各时刻的温度与水分浓度两套数据；问题 3、4 给出各时刻的水分浓度，并附烘干结束时刻 $t^*$（205701 s / 182897 s）的一行，与表 5、表 6 的末行一致。
+>>>>>>> ff66d88f5174f18256bab4d76ba71e0c8a391789
 
 \subsection{6.1 问题 1：预热平衡阶段（表 1、表 2）}
 
@@ -460,7 +487,7 @@ t^*=205701\ \mathrm{s}=\mathbf{57.14\pm0.03\ h}\ \ (\text{约 2.38 天；不确�
 
 附件 2 的 $R(t)$ 经 Pchip 插值代入 $\zeta$ 坐标离散求解，得
 \begin{equation}
-t^*=182897\ \mathrm{s}=\mathbf{50.80\pm0.01\ h}\ \ (\text{约 2.12 天；不确定度估计见 7.2 节}).
+t^*=182897.5\ \mathrm{s}=\mathbf{50.80\pm0.01\ h}\ \ (\text{约 2.12 天；不确定度估计见 7.2 节}).
 \end{equation}
 每隔 6 h 的水分浓度如表 6 所示。
 
@@ -488,6 +515,12 @@ t^*=182897\ \mathrm{s}=\mathbf{50.80\pm0.01\ h}\ \ (\text{约 2.12 天；不确�
 
 结果分析：半径在干燥前期快速收缩（前 3.5 h 内由 2 cm 缩至约 1.5 cm），故 1.5 cm、2 cm 两列自 6 h 起即已落在药材之外。与问题 3 对比：$t^*$ 由 57.14 h 缩短为 50.80 h，缩短约 6.3 h（11.1\%）。这一净效应由两个相反方向的因素合成：附录 4 的扩散系数比附录 3 小约 2--5 倍（高含水率端约 5 倍、低含水率端约 2 倍），使干燥变慢；而收缩使算子系数 $D/R^2$ 增大 2.8 倍（等效于扩散路径缩短），使干燥加快。
 
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.88\textwidth]{../figures/fig08_q4_moisture_time_evolution.pdf}
+\par\small\textbf{说明：}含收缩模型的中心、不同半径位置及表面含水率演化，对应式 \eqref{eq:mass4} 及 $\max C\le0.15$ kg/kg 的烘干判据。
+\end{figure}
+
 由于问题 3 与问题 4 同时更换了物性与几何，两因素贡献须用同一套离散设置的消融对照分离，结果如表 7 所示。四个组合采用同一套验证离散（$\Delta\zeta=1/160$、物理分辨率 0.125 mm、$\Delta t=5$ s，迭代判据与 5.5 节相同）；附录 3 固定几何值 57.0884 h 与问题 3 生产值（57.14 h，0.0625 mm）相差 0.05 h，属该验证离散的空间偏差，各组合受同向影响，表内百分比结论的影响小于 0.1 个百分点。
 
 \begin{center}
@@ -504,6 +537,12 @@ t^*=182897\ \mathrm{s}=\mathbf{50.80\pm0.01\ h}\ \ (\text{约 2.12 天；不确�
 \end{center}
 
 表中可见：固定几何下附录 3→附录 4 的物性差异使烘干时长增加 71.93 h，增幅为 $+126.0\%$；收缩在附录 3、附录 4 下分别使时长缩短 31.97 h（$-56.0\%$）与 78.21 h（$-60.6\%$），且 $D$ 越小、干燥越受内部扩散控制时，收缩的加速作用越强；两因素叠加（问题 3→问题 4 的实际组合）的净效应为 $-6.3$ h（约 $-11\%$），收缩加速占主导。
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.78\textwidth]{../figures/fig09_ablation_property_geometry.pdf}
+\par\small\textbf{说明：}物性参数与几何收缩的 2×2 消融结果，支撑“收缩加速占主导、物性差异使时长增加”的结论。
+\end{figure}
 
 此外，表面含水率列显示表面在 12 h 内即降至 0.167 kg/kg 并持续逼近烘房水分浓度 0.04986 kg/kg，失水主要发生在干燥前期，与收缩曲线（前期收缩快、67 h 起稳定于 1.198 cm）互为印证。
 
@@ -525,6 +564,12 @@ T(r,t)=T_a+(T_0-T_a)\sum_{n=1}^{\infty}A_n\,\mathrm{e}^{-\alpha\beta_n^2 t/R^2}J
 问题 3 在 0.125/0.0625/0.03125 mm 下的表 5 对齐行逐格差：$0.125\to0.0625$ mm 最大 $1.03\times10^{-4}$、$0.0625\to0.03125$ mm 最大 $4.14\times10^{-5}$ kg/kg，最大差均位于 42 h、1.5 cm 处；表 5 行的实测收敛阶低于格式二阶（末行由 $t^*$ 时间插值取值、最大差位置处于时间-浓度剖面最陡处），按末段实测阶 $p=1.33$ 估计，0.0625 mm 解的残余误差约 $2.7\times10^{-5}$，四位小数可信。问题 4 的 $\zeta$ 方向加密实测：固定距离列经线性插值取值时，$1/40\to1/80\to1/160$ 的表 6 行最大差为 $3.98\times10^{-4}$、$1.58\times10^{-4}$ kg/kg，收敛比仅 2.5——线性插值的 $O(\Delta\zeta^2)$ 误差在 30 h 前后的陡梯度区主导了行差；固定距离列改用 Pchip 三次插值（$C(\zeta)$ 为抛物方程的光滑解，插值误差 $O(\Delta\zeta^3)$）后，$1/80\to1/160\to1/320$ 的最大差降至 $1.48\times10^{-4}$、$5.33\times10^{-5}$ kg/kg，实测收敛阶约 1.5，$1/160$ 离散的 Richardson 估计约 $3.0\times10^{-5}$，四位小数可信。
 
 烘干时长 $t^*$ 的空间离散敏感性：问题 3 在 $\Delta r=0.5$、0.25、0.125、0.0625、0.03125 mm 五档下 $t^*$ 为 56.7064、56.9672、57.0874、57.1392、57.1597 h，实测收敛阶 1.12/1.22/1.33，按末段实测阶外推 57.1732 h，与生产值相差 0.034 h，空间离散不确定度约 0.03 h；问题 4 在 $\Delta\zeta=1/20\sim1/320$ 五档下 $t^*$ 为 50.5416、50.6928、50.7713、50.8049、50.8170 h，按实测阶 $p=1.47$ 外推 50.8239 h，不确定度约 0.01 h。
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.90\textwidth]{../figures/fig11_grid_convergence_tstar.pdf}
+\par\small\textbf{说明：}问题 3、4 的 $t^*$ 随空间网格加密趋于稳定，支撑空间离散不确定度分别约为 0.03 h 和 0.01 h。
+\end{figure}
 
 \textbf{时间收敛}。问题 1 时间步加密（$\Delta t$ 减半）后表 2 差值为 $O(10^{-5})$；问题 2：$\Delta t=0.5\to0.25$ s，表 3 最大差 $2.02\times10^{-5}$ $^\circ$C、表 4 最大差 $6.59\times10^{-6}$ kg/kg；问题 3：$\Delta t=2.5\to1.25$ s 前 6 h 最大差 $5.58\times10^{-6}$ kg/kg；问题 4：$\Delta t=5\to2.5$ s 最大差 $1.10\times10^{-5}$ kg/kg。时间离散误差均比空间误差小 1--2 个量级，不影响四位小数。
 
@@ -599,6 +644,12 @@ $h_m-50\%$ & $+7.56$（$+13.3\%$） & $+3.34$（$+6.6\%$） \\
 \item $C_a$ 与 $h$ 的影响不足 1\%，烘房湿度波动与对流换热强度的不确定性对结论影响甚微；
 \item 最不利联合工况（$T_a-2\ ^\circ$C 与 $h_m-50\%$ 同时施加，与表 8 同一验证离散）实际重算得问题 3 的 $t^*$ 增加 11.25 h（$+19.8\%$，68.22 h）、问题 4 增加 6.65 h（$+13.1\%$，57.42 h），与两因素单独影响之和 11.42 h、6.77 h 接近，非线性交互作用小；68.22 h 约合 2.84 天，仍在题述「2--3 天」范围内，模型结论稳健。
 \end{enumerate}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.90\textwidth]{../figures/fig10_sensitivity_tstar_tornado.pdf}
+\par\small\textbf{说明：}参数扰动引起的 $t^*$ 变化，支撑烘房温度最敏感、传质系数次之且 $h$ 与 $C_a$ 影响较小的结论。
+\end{figure}
 
 \section{八、模型的评价与推广}
 
