@@ -1,0 +1,1434 @@
+\subsection*{q1\_solver.py}
+\begin{lstlisting}[language=Python]
+# -*- coding: utf-8 -*-
+"""2026 CUMCM A 题 问题1 求解器
+圆柱轴对称热传导 + 水分扩散（非线性 D(C)），守恒型有限体积离散 + Crank--Nicolson + Thomas。
+输出：表1/表2（控制台）、result1.xlsx（两个 sheet，1800 行 x 21 列，保留 4 位小数）、
+四重验证（Bessel 解析锚点 / 离散收敛 / 质量守恒 / 渐近行为）。
+"""
+import sys, os
+import numpy as np
+import openpyxl
+from scipy.special import j0, j1
+from scipy.optimize import brentq
+
+try:
+    sys.stdout.reconfigure(encoding='utf-8')
+except Exception:
+    pass
+
+ROOT = os.path.dirname(os.path.abspath(__file__))
+
+def _annex(name):
+    """定位赛题附件数据:优先脚本同目录(支撑材料布局),其次仓库目录结构。"""
+    for p in (os.path.join(ROOT, name),
+              os.path.join(ROOT, 'OriginalMaterial', 'A题', '附件', name)):
+        if os.path.exists(p):
+            return p
+    raise FileNotFoundError('未找到 %s:请将赛题附件文件放在脚本同目录下' % name)
+
+ANNEX1 = _annex('附件1.xlsx')
+ANNEX2 = _annex('附件2.xlsx')
+OUTXLSX = os.path.join(ROOT, 'result1.xlsx')
+
+# ---------- 参数（附录2） ----------
+R, dr, N = 0.02, 3.125e-5, 641     # 半径 2 cm，主离散空间步长 0.03125 mm，641 个节点
+                                    # （0.125 mm 下 (100s,表面) 误差约 4.7e-4，加密至 0.03125 mm 后约 3e-5，四位小数可靠）
+r = np.arange(N) * dr              # 节点半径 r_i = i*dr（r_{N-1} = R 为表面节点）
+rho, cp, k, h, hm = 820.0, 2600.0, 0.36, 25.0, 8e-7
+alpha = k / (rho * cp)             # 热扩散率
+T0, C0 = 28.0, 2.55                # 初值
+DofC = lambda C: 7e-9 * np.exp(-0.89 / C)   # 附录2：指数为 -0.89/C
+
+# ---------- 附件1：烘房环境（线性插值） ----------
+d = np.array([row for row in
+              openpyxl.load_workbook(ANNEX1, data_only=True)['Sheet1'].iter_rows(values_only=True)][1:],
+             float)
+T_air = lambda t: np.interp(t, d[:, 0], d[:, 1])
+C_air = lambda t: np.interp(t, d[:, 0], d[:, 2])
+
+def thomas(a, b, c, rhs):
+    n = len(rhs); cp = np.zeros(n); dp = np.zeros(n)
+    cp[0] = c[0] / b[0]; dp[0] = rhs[0] / b[0]
+    for i in range(1, n):
+        m = b[i] - a[i] * cp[i - 1]; cp[i] = c[i] / m; dp[i] = (rhs[i] - a[i] * dp[i - 1]) / m
+    x = np.zeros(n); x[-1] = dp[-1]
+    for i in range(n - 2, -1, -1): x[i] = dp[i] - cp[i] * x[i + 1]
+    return x
+
+def crank_step(u, K, beta, bc_prev, bc_next, dt):
+    """守恒型空间离散 + Crank--Nicolson 一步。
+    K: 每节点扩散系数数组（热: alpha；质: D(C_i)）；beta: 表面 Robin 系数（h/k 或 h_m/D_s）。
+    离散算子: (1/r) d(rK du/dr)/dr，r=0 用对称性+洛必达（4(u1-u0)/dr^2），
+    表面控制体 [r_{N-3/2}, R] 上以 Robin 边界条件重构真实表面值 u_R，通量严格守恒。"""
+    Km = (K[:-1] + K[1:]) / 2
+    lo = np.zeros(N); di = np.zeros(N); up = np.zeros(N); s = np.zeros(N)
+    di[0] = -4 * Km[0] / dr ** 2; up[0] = 4 * Km[0] / dr ** 2
+    for i in range(1, N - 1):
+        lo[i] = Km[i - 1] * (i - 0.5) / (i * dr ** 2)
+        di[i] = -(Km[i] * (i + 0.5) + Km[i - 1] * (i - 0.5)) / (i * dr ** 2)
+        up[i] = Km[i] * (i + 0.5) / (i * dr ** 2)
+    # 表面控制体 [r_{N-3/2}, R]：表面节点 r_{N-1}=(N-1)dr=R 位于真实表面，
+    # Robin 条件直接取节点值：表面通量 -R·beta·K_s·(u_{N-1}-bc)
+    # （热: -R·h(T_R-T_air)；质: -R·h_m(C_R-C_air)），与内部界面通量逐时间层严格守恒。
+    vhat = ((N - 1) ** 2 - (N - 1.5) ** 2) * dr ** 2 / 2  # 控制体体积 ∫_{r_{N-3/2}}^R r dr
+    Bc = (N - 1) * dr * beta * K[-1]                      # = R·beta·K_s（热: R·h；质: R·h_m）
+    lo[N - 1] = Km[N - 2] * (N - 1.5) / vhat
+    di[N - 1] = -(lo[N - 1] + Bc / vhat)
+    up[N - 1] = 0.0
+    def src(bc):
+        s = np.zeros(N); s[N - 1] = Bc * bc / vhat; return s
+    lhs_lo = -0.5 * dt * lo; lhs_di = 1 - 0.5 * dt * di; lhs_up = -0.5 * dt * up
+    rhs = u + 0.5 * dt * (lo * np.roll(u, 1) + di * u + up * np.roll(u, -1)) \
+        + 0.5 * dt * (src(bc_next) + src(bc_prev))
+    rhs[0] = u[0] + 0.5 * dt * (di[0] * u[0] + up[0] * u[1]) \
+        + 0.5 * dt * (src(bc_next)[0] + src(bc_prev)[0])
+    rhs[N - 1] = u[N - 1] + 0.5 * dt * (lo[N - 1] * u[N - 2] + di[N - 1] * u[N - 1]) \
+        + 0.5 * dt * (src(bc_next)[N - 1] + src(bc_prev)[N - 1])
+    return thomas(lhs_lo, lhs_di, lhs_up, rhs)
+
+def solve(nt, dt, Tair, Cair, Kheat=None, DofC=DofC, record=None):
+    """求解 0..nt*dt 秒。返回 (T(t_ev, r_ev), C(t_ev, r_ev), T_full, C_full)。
+    record: dict(t -> 半径位置列表)。"""
+    Kheat = np.full(N, alpha) if Kheat is None else Kheat
+    T = np.full(N, T0); C = np.full(N, C0)
+    rec = {tt: [] for tt in record}
+    for n in range(1, nt + 1):
+        t_prev, t_cur = (n - 1) * dt, n * dt
+        T = crank_step(T, Kheat, h / k, Tair(t_prev), Tair(t_cur), dt)
+        Dc = DofC(C)
+        C = crank_step(C, Dc, hm / Dc[-1], Cair(t_prev), Cair(t_cur), dt)
+        if n * dt in record:
+            rec[n * dt].append((T.copy(), C.copy()))
+    Tout = np.array([[rec[tt][0][0][i] for i in record[tt]] for tt in record], float)
+    Cout = np.array([[rec[tt][0][1][i] for i in record[tt]] for tt in record], float)
+    return Tout, Cout, T, C
+
+if __name__ == "__main__":
+    # ---------- 主计算：附件1 时变边界，0--1800 s，Δr=0.03125 mm，Δt=0.125 s ----------
+    # 表2 表面处存在陡峭的浓度边界层，0.125 mm 离散下 (100s,表面) 误差约 4.7e-4，
+    # 故主离散取 0.03125 mm（误差约 3e-5，四位小数可靠）；result1.xlsx 仍按模板输出每 1 s、每 0.1 cm。
+    t_ev = [100, 300, 600, 900, 1200, 1500, 1800]
+    ri = [0, 160, 320, 480, 640]     # 0, 0.5, 1, 1.5, 2 cm
+    record = {tt: ri for tt in t_ev}
+    Ttab, Ctab, T, C = solve(14400, 0.125, T_air, C_air, record=record)
+    np.set_printoptions(precision=4, suppress=True)
+    print('表1 温度 (°C)，行=100..1800 s，列=0/0.5/1/1.5/2 cm:')
+    print(np.round(Ttab, 4))
+    print('表2 水分浓度 (kg/kg):')
+    print(np.round(Ctab, 4))
+    print('烘房@1800s: T=%.4f C=%.5f' % (T_air(1800), C_air(1800)))
+    print('D(C) 表面值: t=0 -> %.4e, t=1800s -> %.4e' % (DofC(C0), DofC(C[-1])))
+
+    # ---------- 写出 result1.xlsx（与附件3模板一致：每 1 s 一行、每 0.1 cm 一列） ----------
+    wb = openpyxl.Workbook()
+    wsT = wb.active; wsT.title = '温度'
+    wsC = wb.create_sheet('水分浓度')
+    xcols = list(range(0, N, 32))     # 0:0.1:2 cm（0.03125 mm 离散上每 32 节点一列）
+    for ws in (wsT, wsC):
+        ws.cell(1, 1, '时间\\到药材中心的距离')
+        for j, i in enumerate(xcols):
+            ws.cell(1, 2 + j, round(r[i] * 100, 1))
+    T, C = np.full(N, T0), np.full(N, C0)
+    Kheat = np.full(N, alpha)
+    for n in range(1, 14401):
+        T = crank_step(T, Kheat, h / k, T_air((n - 1) * 0.125), T_air(n * 0.125), 0.125)
+        Dc = DofC(C)
+        C = crank_step(C, Dc, hm / Dc[-1], C_air((n - 1) * 0.125), C_air(n * 0.125), 0.125)
+        if n % 8 == 0:                          # 每 1 s 记一行
+            m = n // 8
+            wsT.cell(1 + m, 1, m); wsC.cell(1 + m, 1, m)   # 时间 1..1800 s
+            for j, i in enumerate(xcols):
+                wsT.cell(1 + m, 2 + j, round(float(T[i]), 4))
+                wsC.cell(1 + m, 2 + j, round(float(C[i]), 4))
+    wb.save(OUTXLSX)
+    print('已写出 %s' % OUTXLSX)
+
+    # ---------- 验证1：Bessel 解析锚点（常数边界 T_air=41.513，主离散 Δr=0.03125 mm） ----------
+    Ta = 41.513
+    Bi = h * R / k
+    f = lambda b: b * j1(b) - Bi * j0(b)
+    bs = [brentq(f, lo, hi) for lo, hi in
+          zip(np.arange(0.05, 400, 0.5), np.arange(0.55, 400.5, 0.5)) if f(lo) * f(hi) < 0][:40]
+    bs = np.array(bs)
+    An = 2 * j1(bs) / (bs * (j0(bs) ** 2 + j1(bs) ** 2))
+    def T_exact(rr, t):
+        return Ta + (T0 - Ta) * (An * np.exp(-alpha * bs ** 2 * t / R ** 2) * j0(bs * rr / R)).sum()
+    Tb, Cb, _, _ = solve(14400, 0.125, lambda t: Ta, lambda t: 0.04986, record=record)
+    print('验证1 Bessel: 中心 数值=%.4f 解析=%.4f | 表面 数值=%.4f 解析=%.4f'
+          % (Tb[-1][0], T_exact(0.0, 1800), Tb[-1][4], T_exact(0.02, 1800)))
+
+    # ---------- 验证2：离散收敛（0.125 mm 与 0.0625 mm 两套粗离散，Δt=0.125 s 固定，与主离散同位置采样） ----------
+    global_dr = dr; global_N = N
+    dr = 1.25e-4; N = 161
+    ri2 = [0, 40, 80, 120, 160]            # 0.125 mm 离散上的 0 / 0.5 / 1 / 1.5 / 2 cm
+    T2, C2, T2f, C2f = solve(14400, 0.125, T_air, C_air, record={tt: ri2 for tt in t_ev})
+    dr = 6.25e-5; N = 321
+    ri1 = [0, 80, 160, 240, 320]           # 0.0625 mm 离散上的同一物理位置
+    T1, C1, T1f, C1f = solve(14400, 0.125, T_air, C_air, record={tt: ri1 for tt in t_ev})
+    dr = global_dr; N = global_N
+    print('验证2 收敛: 表1 最大差 0.125mm->0.0625mm: %.2e °C, 0.0625mm->0.03125mm: %.2e °C'
+          % (np.max(np.abs(T2 - T1)), np.max(np.abs(T1 - Ttab))))
+    print('         表2 最大差 0.125mm->0.0625mm: %.2e, 0.0625mm->0.03125mm: %.2e kg/kg'
+          % (np.max(np.abs(C2 - C1)), np.max(np.abs(C1 - Ctab))))
+
+    # ---------- 验证3：离散质量守恒（0.125 mm 与 0.03125 mm 两套离散上分别做） ----------
+    # 恒等式 Σ_i v_i(C^f_i-C^0_i) = -R∫h_m(C_R-C_air)dt（v_i 为控制体体积，C_R 即表面节点值）
+    # 由格式构造逐时间层成立，数值上应闭合至机器精度。
+    def cv_volumes(dr, N):
+        v = np.zeros(N)
+        v[0] = dr ** 2 / 8
+        v[1:N - 1] = np.arange(1, N - 1) * dr ** 2
+        v[N - 1] = ((N - 1) ** 2 - (N - 1.5) ** 2) * dr ** 2 / 2
+        return v
+
+    def check_conserve(Cf, drg, Ng, dt, nt):
+        global N, dr
+        v = cv_volumes(drg, Ng)
+        lhs = (Cf * v).sum() - C0 * v.sum()
+        N_save, dr_save = N, dr
+        N, dr = Ng, drg                       # crank_step 读取模块级 N, dr
+        Cchk = np.full(Ng, C0)
+        Fhist = [hm * (C0 - C_air(0.0))]      # F_n = h_m(C^n_R - C_air(t_n))，C_R 即表面节点
+        for n in range(1, nt + 1):
+            Dc = DofC(Cchk)
+            Cchk = crank_step(Cchk, Dc, hm / Dc[-1], C_air((n - 1) * dt), C_air(n * dt), dt)
+            Fhist.append(hm * (Cchk[-1] - C_air(n * dt)))
+        N, dr = N_save, dr_save
+        rhs = -R * np.trapezoid(Fhist, np.arange(0, nt + 1) * dt)
+        return lhs, rhs
+
+    lhs2, rhs2 = check_conserve(C2f, 1.25e-4, 161, 0.125, 14400)
+    lhs3, rhs3 = check_conserve(C, 3.125e-5, 641, 0.125, 14400)   # 主离散
+    print('验证3 离散守恒: 0.125mm 离散 ΣvΔC=%.6e vs -R∫h_m(C_R-C_air)dt=%.6e，差 %.2e'
+          % (lhs2, rhs2, lhs2 - rhs2))
+    print('              0.03125mm 离散 ΣvΔC=%.6e vs -R∫h_m(C_R-C_air)dt=%.6e，差 %.2e'
+          % (lhs3, rhs3, lhs3 - rhs3))
+
+    # ---------- 验证4：渐近行为（常数边界，长时程，1 mm 离散） ----------
+    Ta, Ca = 41.513, 0.04986
+    ri1mm = [0, 5, 10, 15, 20]            # 1 mm 离散上的 0 / 0.5 / 1 / 1.5 / 2 cm
+    rec4 = {20000: ri1mm, 50000: ri1mm, 100000: ri1mm}
+    dr = 1e-3; N = 21
+    r = np.arange(N) * dr
+    T4, C4, _, _ = solve(100000, 1.0, lambda t: Ta, lambda t: Ca, record=rec4)
+    dr = global_dr; N = global_N
+    r = np.arange(N) * dr
+    for k, tt in enumerate(rec4):
+        print('验证4 渐近: t=%ds 中心 T=%.4f (目标 %.4f)，表面 C=%.5f (目标 %.5f)'
+              % (tt, T4[k][0], Ta, C4[k][4], Ca))
+
+    # ---------- 附件2 收缩数据核对（支撑问题1忽略收缩的假设） ----------
+    d2 = np.array([row for row in
+                   openpyxl.load_workbook(ANNEX2, data_only=True)['Sheet1'].iter_rows(values_only=True)][1:],
+                  float)
+    print('附件2: t=0 半径=%.4f cm，t=1800s 半径=%.4f cm，末点 t=%ds 半径=%.4f cm'
+          % (d2[0, 1], d2[1, 1], d2[-1, 0], d2[-1, 1]))
+\end{lstlisting}
+
+\subsection*{q2\_solver.py}
+\begin{lstlisting}[language=Python]
+# -*- coding: utf-8 -*-
+"""2026 CUMCM A 题 问题2 求解器
+整个烘干过程模型（预热平衡 + 恒温干燥两阶段烘房条件），经验公式统一采用附录3。
+物性随 C、T 变，热质双向耦合，交错 Picard + Crank--Nicolson + Thomas。
+问题2：0--10800 s（主离散 Δr=0.125 mm, Δt=0.25 s）-> 表3/表4 + result2.xlsx（每 1 s、每 0.1 cm）。
+烘房条件：0--14400 s 用附件1 插值，之后恒温段取附件1 末值 (50.165 °C, 0.04986)。
+迭代：T、C 无穷范数相对变化 < 1e-8 停止（上限 20 轮）。
+  依据：时间步误差量级实测为 O(1e-5)（Δt 减半差值），迭代残差须再低 2--3 个量级，
+  取 1e-8（相对）使迭代误差不成为精度瓶颈；系数在迭代中取最新可用层。
+验证：V1 时间收敛、V2 空间收敛（0.5/0.25/0.125 mm 同 Δt）、V3 渐近。
+"""
+import sys, os
+import numpy as np
+import openpyxl
+
+try:
+    sys.stdout.reconfigure(encoding='utf-8')
+except Exception:
+    pass
+
+ROOT = os.path.dirname(os.path.abspath(__file__))
+
+def _annex(name):
+    """定位赛题附件数据:优先脚本同目录(支撑材料布局),其次仓库目录结构。"""
+    for p in (os.path.join(ROOT, name),
+              os.path.join(ROOT, 'OriginalMaterial', 'A题', '附件', name)):
+        if os.path.exists(p):
+            return p
+    raise FileNotFoundError('未找到 %s:请将赛题附件文件放在脚本同目录下' % name)
+
+ANNEX1 = _annex('附件1.xlsx')
+
+R, dr, N = 0.02, 1.25e-4, 161          # 半径 2 cm，主离散 0.125 mm，161 节点
+r = np.arange(N) * dr
+T0, C0 = 28.0, 2.55
+h, hm = 25.0, 8e-7
+TEND, CEND = 50.165, 0.04986          # 附件1 末值（恒温干燥段）
+PICARD_TOL, PICARD_MAXIT = 1e-8, 20
+
+# 附录3 经验式（问题2、问题3 统一采用）
+rho23 = lambda C: 650.0 + 128.0 * C
+cp23 = lambda C: 1450.0 + 2736.0 * C / (C + 1.0)
+k23 = lambda C: 0.21 + 0.38 * C / (C + 1.0)
+D23 = lambda C, T: 2.4e-3 * np.exp(-0.45 / C) * np.exp(-3850.0 / T)   # T 用开尔文
+
+d = np.array([row for row in
+              openpyxl.load_workbook(ANNEX1, data_only=True)['Sheet1'].iter_rows(values_only=True)][1:],
+             float)
+T_air = lambda t: np.interp(t, d[:, 0], d[:, 1]) if t <= 14400 else TEND
+C_air = lambda t: np.interp(t, d[:, 0], d[:, 2]) if t <= 14400 else CEND
+
+def thomas(a, b, c, rhs):
+    n = len(rhs); cp = np.zeros(n); dp = np.zeros(n)
+    cp[0] = c[0] / b[0]; dp[0] = rhs[0] / b[0]
+    for i in range(1, n):
+        m = b[i] - a[i] * cp[i - 1]; cp[i] = c[i] / m; dp[i] = (rhs[i] - a[i] * dp[i - 1]) / m
+    x = np.zeros(n); x[-1] = dp[-1]
+    for i in range(n - 2, -1, -1): x[i] = dp[i] - cp[i] * x[i + 1]
+    return x
+
+def crank_step(u, K, Cp, beta, bc_prev, bc_next, dt):
+    """Cp_i (u^{n+1}_i - u^n_i)/dt = Lu + s；K: 每节点扩散系数；Cp: 每节点容量系数。
+    热方程: K=k(C), Cp=rho(C)c_p(C), beta=h/k_s；质方程: K=D, Cp=1, beta=h_m/D_s。"""
+    Km = (K[:-1] + K[1:]) / 2
+    lo = np.zeros(N); di = np.zeros(N); up = np.zeros(N); s = np.zeros(N)
+    di[0] = -4 * Km[0] / dr ** 2; up[0] = 4 * Km[0] / dr ** 2
+    for i in range(1, N - 1):
+        lo[i] = Km[i - 1] * (i - 0.5) / (i * dr ** 2)
+        di[i] = -(Km[i] * (i + 0.5) + Km[i - 1] * (i - 0.5)) / (i * dr ** 2)
+        up[i] = Km[i] * (i + 0.5) / (i * dr ** 2)
+    # 表面控制体 [r_{N-3/2}, R]：表面节点 r_{N-1}=(N-1)dr=R 位于真实表面，
+    # Robin 条件直接取节点值：表面通量 -R·beta·K_s·(u_{N-1}-bc)
+    # （热: -R·h(T_R-T_air)；质: -R·h_m(C_R-C_air)），与内部界面通量逐时间层严格守恒。
+    vhat = ((N - 1) ** 2 - (N - 1.5) ** 2) * dr ** 2 / 2
+    Bc = (N - 1) * dr * beta * K[-1]
+    lo[N - 1] = Km[N - 2] * (N - 1.5) / vhat
+    di[N - 1] = -(lo[N - 1] + Bc / vhat)
+    up[N - 1] = 0.0
+    def src(bc):
+        s = np.zeros(N); s[N - 1] = Bc * bc / vhat; return s
+    # Crank--Nicolson: Cp_i (u^{n+1}-u^n)/dt = 1/2(Lu^{n+1}+Lu^n) + 1/2(s^{n+1}+s^n)
+    lhs_lo = -0.5 * lo
+    lhs_di = Cp / dt - 0.5 * di
+    lhs_up = -0.5 * up
+    rhs = Cp / dt * u + 0.5 * (lo * np.roll(u, 1) + di * u + up * np.roll(u, -1)) \
+        + 0.5 * (src(bc_next) + src(bc_prev))
+    rhs[0] = Cp[0] / dt * u[0] + 0.5 * (di[0] * u[0] + up[0] * u[1]) \
+        + 0.5 * (src(bc_next)[0] + src(bc_prev)[0])
+    rhs[N - 1] = Cp[N - 1] / dt * u[N - 1] \
+        + 0.5 * (lo[N - 1] * u[N - 2] + di[N - 1] * u[N - 1]) \
+        + 0.5 * (src(bc_next)[N - 1] + src(bc_prev)[N - 1])
+    return thomas(lhs_lo, lhs_di, lhs_up, rhs)
+
+def step(T, C, t_prev, t_cur, dt):
+    """一个时间步：交错 Picard，每轮从 u^n 出发；T、C 相对变化（无穷范数，分母取
+    max(‖u‖∞,1)）小于 1e-8 或满 20 轮停止。返回 (T, C, 轮数, 退出残差)。"""
+    Tn, Cn = T.copy(), C.copy()
+    for it in range(1, PICARD_MAXIT + 1):
+        Kk = k23(C); Rc = rho23(C) * cp23(C)
+        T = crank_step(Tn, Kk, Rc, h / Kk[-1], T_air(t_prev), T_air(t_cur), dt)
+        Tk = T + 273.15
+        Dc = D23(C, Tk)
+        C = crank_step(Cn, Dc, np.ones(N), hm / Dc[-1], C_air(t_prev), C_air(t_cur), dt)
+        if it > 1:
+            rel = max(np.max(np.abs(T - To)) / max(np.max(np.abs(T)), 1.0),
+                      np.max(np.abs(C - Co)) / max(np.max(np.abs(C)), 1.0))
+            if rel < PICARD_TOL:
+                return T, C, it, rel
+        To, Co = T.copy(), C.copy()
+    return T, C, PICARD_MAXIT, rel
+
+def run3h(drg, Ng, dtt):
+    """前 3 h 求解，返回 (表3, 表4, 迭代统计)。"""
+    global N, dr, r
+    N, dr, r = Ng, drg, np.arange(Ng) * drg
+    T, C = np.full(N, T0), np.full(N, C0)
+    t2 = np.arange(1800, 10801, 1800)
+    ri = [0, Ng // 4, Ng // 2, 3 * Ng // 4, Ng - 1]
+    tab3, tab4, iters = [], [], []
+    for n in range(1, int(10800 / dtt) + 1):
+        T, C, it, rel = step(T, C, (n - 1) * dtt, n * dtt, dtt)
+        iters.append(it)
+        if n * dtt in t2:
+            tab3.append(T[ri].copy()); tab4.append(C[ri].copy())
+    return np.array(tab3), np.array(tab4), np.array(iters)
+
+# ================= 问题2：0--10800 s，主离散 Δr=0.125 mm, Δt=0.25 s =================
+tab3, tab4, iters = run3h(1.25e-4, 161, 0.25)
+tab3r = np.round(tab3, 4); tab4r = np.round(tab4, 4)
+print('表3 温度 (°C)，行=0.5..3.0 h，列=0/0.5/1/1.5/2 cm:')
+print(tab3r)
+print('表4 水分浓度 (kg/kg):')
+print(tab4r)
+print('Picard 统计: 平均 %.2f 轮，最大 %d 轮，步数 %d' % (iters.mean(), iters.max(), len(iters)))
+
+# result2.xlsx：每 1 s、每 0.1 cm（0.125 mm 离散上每 8 节点一列）
+wb = openpyxl.Workbook()
+wsT = wb.active; wsT.title = '温度'
+wsC = wb.create_sheet('水分浓度')
+xcols = list(range(0, N, 8))
+for ws in (wsT, wsC):
+    ws.cell(1, 1, '时间\\到药材中心的距离')
+    for j, i in enumerate(xcols):
+        ws.cell(1, 2 + j, round(r[i] * 100, 1))
+T, C = np.full(N, T0), np.full(N, C0)
+for n in range(1, 43201):
+    T, C, it, rel = step(T, C, (n - 1) * 0.25, n * 0.25, 0.25)
+    if n % 4 == 0:
+        m = n // 4
+        wsT.cell(1 + m, 1, m); wsC.cell(1 + m, 1, m)
+        for j, i in enumerate(xcols):
+            wsT.cell(1 + m, 2 + j, round(float(T[i]), 4))
+            wsC.cell(1 + m, 2 + j, round(float(C[i]), 4))
+wb.save(os.path.join(ROOT, 'result2.xlsx'))
+print('已写出 result2.xlsx')
+
+# ================= 验证 =================
+# V1 时间收敛：Δt=0.5 vs 0.25（主离散，表3/表4 最大差）
+tab3b, tab4b, _ = run3h(1.25e-4, 161, 0.5)
+print('验证V1 时间收敛: 表3 最大差 %.2e °C，表4 最大差 %.2e kg/kg'
+      % (np.max(np.abs(tab3b - tab3)), np.max(np.abs(tab4b - tab4))))
+
+# V2 空间收敛：0.5 mm 与 0.25 mm 两套离散（同 Δt=0.25 s、同位置采样）
+tab3_05, tab4_05, _ = run3h(5e-4, 41, 0.25)
+tab3_025, tab4_025, _ = run3h(2.5e-4, 81, 0.25)
+print('验证V2 空间收敛: 表3 最大差 0.5->0.25mm: %.2e °C, 0.25->0.125mm: %.2e °C'
+      % (np.max(np.abs(tab3_05 - tab3_025)), np.max(np.abs(tab3_025 - tab3))))
+print('              表4 最大差 0.5->0.25mm: %.2e, 0.25->0.125mm: %.2e kg/kg'
+      % (np.max(np.abs(tab4_05 - tab4_025)), np.max(np.abs(tab4_025 - tab4))))
+
+# V3 渐近：常数边界 (50.165, 0.04986)，长时程
+N, dr, r = 21, 1e-3, np.arange(21) * 1e-3
+T, C = np.full(N, T0), np.full(N, C0)
+for n in range(1, int(3e5 / 2.5) + 1):
+    T, C, it, rel = step(T, C, (n - 1) * 2.5, n * 2.5, 2.5)
+    if n * 2.5 in (100000, 200000, 300000):
+        print('验证V3 渐近: t=%ds 中心 T=%.4f (目标 %.4f)，表面 C=%.5f (目标 %.5f)'
+              % (n * 2.5, T[0], TEND, C[-1], CEND))
+\end{lstlisting}
+
+\subsection*{q3\_solver.py}
+\begin{lstlisting}[language=Python]
+# -*- coding: utf-8 -*-
+"""2026 CUMCM A 题 问题3 求解器
+整个烘干过程模型，经验公式统一采用附录3（物性随 C、T 变），
+热质双向耦合，交错 Picard + Crank--Nicolson + Thomas。
+问题3：Δr=0.0625 mm (N=321), Δt=2.5 s，从初态直至 max C <= 0.15 -> 烘干时长 t*、表5
+       + result3.xlsx（每 60 s、每 0.1 cm）。
+  步长依据：0.125 mm 生产离散的表 5 对齐行 Richardson 估计（按 t* 链实测阶 p=1.22）约 7.8e-5，
+  高于四位小数对应的 0.5e-4 阈值；0.0625 mm 的估计（按 p=1.33）约 2.7e-5，达标，故生产离散取 0.0625 mm。
+  收敛阶低于整阶二阶的原因：表 5 最大差位于 42 h 行、1.5 cm 列（时间-浓度剖面最陡处），且末行
+  由 t* 时间插值取值，行收敛阶 1.1--1.3（V3 逐格定位与 t* 链给出），按实测阶做 Richardson 估计。
+烘房条件：0--14400 s 用附件1 插值，之后恒温段取附件1 末值 (50.165 °C, 0.04986)。
+迭代：T、C 无穷范数相对变化 < 1e-8 停止（上限 20 轮）。
+  依据：时间步误差量级实测为 O(1e-5)（Δt 减半差值），迭代残差须再低 2--3 个量级，
+  取 1e-8（相对）使迭代误差不成为精度瓶颈；系数在迭代中取最新可用层。
+事件时间：g(t)=max C(r,t)-0.15 在相邻时间层间线性插值求根，末行取 t* 处的插值状态。
+  依据：判据由中心点控制，中心 C(t) 平滑，线性求根误差 O(Δt²) 远小于空间离散不确定度。
+验证：V1 离散质量守恒（机器精度，末行插值后为 1e-11 量级）、V2 时间收敛、
+      V3 空间收敛（t* 五点链 + 表5 逐格差定位）、V4 渐近。
+"""
+import sys, os
+import numpy as np
+import openpyxl
+from scipy.linalg import solve_banded
+
+try:
+    sys.stdout.reconfigure(encoding='utf-8')
+except Exception:
+    pass
+
+ROOT = os.path.dirname(os.path.abspath(__file__))
+
+def _annex(name):
+    """定位赛题附件数据:优先脚本同目录(支撑材料布局),其次仓库目录结构。"""
+    for p in (os.path.join(ROOT, name),
+              os.path.join(ROOT, 'OriginalMaterial', 'A题', '附件', name)):
+        if os.path.exists(p):
+            return p
+    raise FileNotFoundError('未找到 %s:请将赛题附件文件放在脚本同目录下' % name)
+
+ANNEX1 = _annex('附件1.xlsx')
+
+R, dr, N = 0.02, 6.25e-5, 321          # 半径 2 cm，主离散 0.0625 mm，321 节点
+r = np.arange(N) * dr
+T0, C0 = 28.0, 2.55
+h, hm = 25.0, 8e-7
+TEND, CEND = 50.165, 0.04986          # 附件1 末值（恒温干燥段）
+CTARGET = 0.15                        # 问题3 烘干判据
+PICARD_TOL, PICARD_MAXIT = 1e-8, 20
+
+# 附录3 经验式（问题2、问题3 统一采用）
+rho23 = lambda C: 650.0 + 128.0 * C
+cp23 = lambda C: 1450.0 + 2736.0 * C / (C + 1.0)
+k23 = lambda C: 0.21 + 0.38 * C / (C + 1.0)
+D23 = lambda C, T: 2.4e-3 * np.exp(-0.45 / C) * np.exp(-3850.0 / T)   # T 用开尔文
+
+d = np.array([row for row in
+              openpyxl.load_workbook(ANNEX1, data_only=True)['Sheet1'].iter_rows(values_only=True)][1:],
+             float)
+T_air = lambda t: np.interp(t, d[:, 0], d[:, 1]) if t <= 14400 else TEND
+C_air = lambda t: np.interp(t, d[:, 0], d[:, 2]) if t <= 14400 else CEND
+
+def thomas(a, b, c, rhs):
+    """三对角求解:与追赶法数学等价,调用 LAPACK 带状求解(提速,结果不变)。"""
+    n = len(rhs)
+    ab = np.zeros((3, n))
+    ab[0, 1:] = c[:-1]
+    ab[1, :] = b
+    ab[2, :-1] = a[1:]
+    return solve_banded((1, 1), ab, rhs)
+
+def crank_step(u, K, Cp, beta, bc_prev, bc_next, dt):
+    """Cp_i (u^{n+1}_i - u^n_i)/dt = Lu + s；K: 每节点扩散系数；Cp: 每节点容量系数。
+    热方程: K=k(C), Cp=rho(C)c_p(C), beta=h/k_s；质方程: K=D, Cp=1, beta=h_m/D_s。"""
+    Km = (K[:-1] + K[1:]) / 2
+    lo = np.zeros(N); di = np.zeros(N); up = np.zeros(N); s = np.zeros(N)
+    di[0] = -4 * Km[0] / dr ** 2; up[0] = 4 * Km[0] / dr ** 2
+    for i in range(1, N - 1):
+        lo[i] = Km[i - 1] * (i - 0.5) / (i * dr ** 2)
+        di[i] = -(Km[i] * (i + 0.5) + Km[i - 1] * (i - 0.5)) / (i * dr ** 2)
+        up[i] = Km[i] * (i + 0.5) / (i * dr ** 2)
+    # 表面控制体 [r_{N-3/2}, R]：表面节点 r_{N-1}=(N-1)dr=R 位于真实表面，
+    # Robin 条件直接取节点值：表面通量 -R·beta·K_s·(u_{N-1}-bc)
+    # （热: -R·h(T_R-T_air)；质: -R·h_m(C_R-C_air)），与内部界面通量逐时间层严格守恒。
+    vhat = ((N - 1) ** 2 - (N - 1.5) ** 2) * dr ** 2 / 2
+    Bc = (N - 1) * dr * beta * K[-1]
+    lo[N - 1] = Km[N - 2] * (N - 1.5) / vhat
+    di[N - 1] = -(lo[N - 1] + Bc / vhat)
+    up[N - 1] = 0.0
+    def src(bc):
+        s = np.zeros(N); s[N - 1] = Bc * bc / vhat; return s
+    # Crank--Nicolson: Cp_i (u^{n+1}-u^n)/dt = 1/2(Lu^{n+1}+Lu^n) + 1/2(s^{n+1}+s^n)
+    lhs_lo = -0.5 * lo
+    lhs_di = Cp / dt - 0.5 * di
+    lhs_up = -0.5 * up
+    rhs = Cp / dt * u + 0.5 * (lo * np.roll(u, 1) + di * u + up * np.roll(u, -1)) \
+        + 0.5 * (src(bc_next) + src(bc_prev))
+    rhs[0] = Cp[0] / dt * u[0] + 0.5 * (di[0] * u[0] + up[0] * u[1]) \
+        + 0.5 * (src(bc_next)[0] + src(bc_prev)[0])
+    rhs[N - 1] = Cp[N - 1] / dt * u[N - 1] \
+        + 0.5 * (lo[N - 1] * u[N - 2] + di[N - 1] * u[N - 1]) \
+        + 0.5 * (src(bc_next)[N - 1] + src(bc_prev)[N - 1])
+    return thomas(lhs_lo, lhs_di, lhs_up, rhs)
+
+def step(T, C, t_prev, t_cur, dt):
+    """一个时间步：交错 Picard，每轮从 u^n 出发；T、C 相对变化（无穷范数，分母取
+    max(‖u‖∞,1)）小于 1e-8 或满 20 轮停止。返回 (T, C, 轮数, 退出残差)。"""
+    Tn, Cn = T.copy(), C.copy()
+    rel = 0.0
+    for it in range(1, PICARD_MAXIT + 1):
+        Kk = k23(C); Rc = rho23(C) * cp23(C)
+        T = crank_step(Tn, Kk, Rc, h / Kk[-1], T_air(t_prev), T_air(t_cur), dt)
+        Tk = T + 273.15
+        Dc = D23(C, Tk)
+        C = crank_step(Cn, Dc, np.ones(N), hm / Dc[-1], C_air(t_prev), C_air(t_cur), dt)
+        if it > 1:
+            rel = max(np.max(np.abs(T - To)) / max(np.max(np.abs(T)), 1.0),
+                      np.max(np.abs(C - Co)) / max(np.max(np.abs(C)), 1.0))
+            if rel < PICARD_TOL:
+                return T, C, it, rel
+        To, Co = T.copy(), C.copy()
+    return T, C, PICARD_MAXIT, rel
+
+def run_drying(drg, Ng, dtt, sample6h=True, rows_every=None, ri10=None):
+    """全程求解直至 max C <= 0.15，t* 在相邻时间层间插值求根。
+    返回 (tstar, tab5, Cstar, CR_hist, iters, rels, rows60)。
+    tab5: 每 6 h 一行 + 烘干结束时刻末行（0/0.5/1/1.5/2 cm，末行为 t* 处插值状态）。
+    rows60: rows_every 秒记一行 C[ri10]（含 t* 处插值末行），rows_every=None 时不记。"""
+    global N, dr, r
+    N, dr, r = Ng, drg, np.arange(Ng) * drg
+    T, C = np.full(N, T0), np.full(N, C0)
+    tstar, nstar = None, None
+    ri5 = [0, Ng // 4, Ng // 2, 3 * Ng // 4, Ng - 1]
+    tab5 = []
+    rows60 = []
+    CR_hist = [hm * (C0 - C_air(0.0))]
+    iters, rels = [], []
+    nmax = int(300 * 3600 / dtt)       # 最多 300 h
+    for n in range(1, nmax + 1):
+        Cprev = C.copy()
+        T, C, it, rel = step(T, C, (n - 1) * dtt, n * dtt, dtt)
+        iters.append(it); rels.append(rel)
+        CR_hist.append(hm * (C[-1] - C_air(n * dtt)))
+        if sample6h and n % int(6 * 3600 / dtt) == 0:
+            tab5.append(C[ri5].copy())
+        if rows_every is not None and n % int(rows_every / dtt) == 0:
+            rows60.append((n * dtt, C[ri10].copy()))
+        if C.max() <= CTARGET:
+            # g = max C - 0.15 在 [t_{n-1}, t_n] 间线性求根
+            gp = Cprev.max() - CTARGET
+            gn = C.max() - CTARGET
+            frac = gp / (gp - gn)
+            tstar = (n - 1) * dtt + dtt * frac
+            Cstar = Cprev + frac * (C - Cprev)
+            nstar = n
+            break
+    if tstar is None:
+        raise RuntimeError('300 h 内未达烘干判据')
+    if sample6h:
+        tab5.append(Cstar[ri5].copy())     # 末行：烘干结束时刻 t*
+    if rows_every is not None:
+        rows60.append((tstar, Cstar[ri10].copy()))
+    return tstar, np.array(tab5), Cstar, np.array(CR_hist), np.array(iters), np.array(rels), rows60
+
+if __name__ == "__main__":
+    # ================= 问题3：Δr=0.0625 mm, Δt=2.5 s，直至 max C <= 0.15 =================
+    dt3 = 2.5
+    ri10 = np.arange(0, N, int(round(0.001 / dr)))      # 0:0.1:2 cm，0.0625 mm 下每 16 节点
+    tstar, tab5, C3f, CR_hist, iters, rels, rows60 = run_drying(dr, N, dt3, rows_every=60, ri10=ri10)
+    print('问题3 烘干时长: t* = %.3f s = %.4f h (max C = %.6f)'
+          % (tstar, tstar / 3600, C3f.max()))
+    print('Picard 统计: 平均 %.2f 轮，最大 %d 轮，退出残差 中位 %.2e / 最大 %.2e'
+          % (iters.mean(), iters.max(), np.median(rels), rels.max()))
+    tab5r = np.round(tab5, 4)
+    print('表5 水分浓度 (kg/kg)，行=6,12,...h 直至 t*，列=0/0.5/1/1.5/2 cm:')
+    print(tab5r)
+
+    # result3.xlsx：每 60 s、每 0.1 cm（与上同一次求解），末行补 t* 处插值状态
+    wb = openpyxl.Workbook()
+    ws = wb.active; ws.title = 'Sheet1'
+    ws.cell(1, 1, '时间\\到药材中心的距离')
+    for j, i in enumerate(ri10):
+        ws.cell(1, 2 + j, round(r[i] * 100, 1))
+    for k, (tt, row) in enumerate(rows60):
+        ws.cell(2 + k, 1, round(tt, 1))
+        for j in range(len(ri10)):
+            ws.cell(2 + k, 2 + j, round(float(row[j]), 4))
+    wb.save(os.path.join(ROOT, 'result3.xlsx'))
+    print('已写出 result3.xlsx（%d 行）' % len(rows60))
+
+    # ================= 验证 =================
+    # V1 离散质量守恒（全程：ΣvΔC vs 表面通量积分；末行为 t* 处插值状态，
+    # 插值使闭合差由机器精度升至 1e-11 量级，相对总失水量仍可忽略）
+    v = np.zeros(N); v[0] = dr ** 2 / 8
+    v[1:N - 1] = np.arange(1, N - 1) * dr ** 2
+    v[N - 1] = ((N - 1) ** 2 - (N - 1.5) ** 2) * dr ** 2 / 2
+    lhs = (C3f * v).sum() - C0 * v.sum()
+    rhs = -R * np.trapezoid(CR_hist, np.arange(0, len(CR_hist)) * dt3)
+    print('验证V1 离散守恒(0.0625mm): ΣvΔC = %.6e，-R∫h_m(C_R-C_air)dt = %.6e，差 %.2e'
+          % (lhs, rhs, lhs - rhs))
+
+    # V2 时间收敛：Δt=2.5 vs 1.25（前 6 h 表5 首行，主离散）
+    def row6h(dt):
+        global N, dr, r
+        N, dr, r = 321, 6.25e-5, np.arange(321) * 6.25e-5
+        T, C = np.full(N, T0), np.full(N, C0)
+        for n in range(1, int(21600 / dt) + 1):
+            T, C, it, rel = step(T, C, (n - 1) * dt, n * dt, dt)
+        ri5 = [0, 80, 160, 240, 320]
+        return C[ri5].copy()
+    r25 = row6h(2.5); r125 = row6h(1.25)
+    print('验证V2 时间收敛(6h): dt=2.5 vs 1.25 最大差 %.2e kg/kg' % np.max(np.abs(r25 - r125)))
+
+    # V3 空间收敛：t* 五点链（0.5/0.25/0.125/0.0625/0.03125 mm，同 Δt=2.5 s）
+    # + 表5 对齐行逐格差（定位最大差所在行/列）
+    ts = []; tabs = []
+    for drg, Ng in ((5e-4, 41), (2.5e-4, 81), (1.25e-4, 161), (6.25e-5, 321), (3.125e-5, 641)):
+        t_, tab_, _, _, it_, rl_, _ = run_drying(drg, Ng, dt3)
+        ts.append(t_); tabs.append(tab_)
+        print('V3 链 Δr=%.5f mm: t* = %.4f h (%d s), 平均 %.2f 轮'
+              % (drg * 1e3, t_ / 3600, round(t_), it_.mean()))
+    th = [t / 3600.0 for t in ts]
+    dd1, dd2, dd3, dd4 = th[1] - th[0], th[2] - th[1], th[3] - th[2], th[4] - th[3]
+    p12, p23, p34 = np.log2(dd1 / dd2), np.log2(dd2 / dd3), np.log2(dd3 / dd4)
+    ext = th[4] + dd4 / (2 ** p34 - 1.0)
+    print('V3 实测收敛阶: p12=%.3f (0.5->0.25->0.125), p23=%.3f (0.25->0.125->0.0625),'
+          ' p34=%.3f (0.125->0.0625->0.03125)' % (p12, p23, p34))
+    print('V3 按实测阶外推: t* = %.4f h；最细两档差 = %.4f h；外推-最细 = %.4f h'
+          % (ext, dd4, ext - th[4]))
+    for lab, a, b in (('0.125 vs 0.0625 mm', tabs[2][:-1], tabs[3][:-1]),
+                      ('0.0625 vs 0.03125 mm', tabs[3][:-1], tabs[4][:-1])):
+        diff = np.abs(a - b)
+        i, j = np.unravel_index(np.argmax(diff), diff.shape)
+        print('V3 表5 逐格差 %s: 最大 %.2e 位于 第 %d 行 (%.0f h) 第 %d 列 (%.1f cm)，'
+              '整表最大差 %.2e'
+              % (lab, diff.max(), i + 1, (i + 1) * 6.0, j, j * 0.5, diff.max()))
+    print('V3 表5 末行差(0.0625 vs 0.03125): %.2e kg/kg（t* 差 %.4f h）'
+          % (np.max(np.abs(tabs[3][-1] - tabs[4][-1])), th[4] - th[3]))
+
+    # V4 渐近：常数边界 (50.165, 0.04986)，长时程
+    N, dr, r = 21, 1e-3, np.arange(21) * 1e-3
+    T, C = np.full(N, T0), np.full(N, C0)
+    for n in range(1, int(3e5 / dt3) + 1):
+        T, C, it, rel = step(T, C, (n - 1) * dt3, n * dt3, dt3)
+        if n * dt3 in (100000, 200000, 300000):
+            print('验证V4 渐近: t=%ds 中心 T=%.4f (目标 %.4f)，表面 C=%.5f (目标 %.5f)'
+                  % (n * dt3, T[0], TEND, C[-1], CEND))
+\end{lstlisting}
+
+\subsection*{q4\_solver.py}
+\begin{lstlisting}[language=Python]
+# -*- coding: utf-8 -*-
+"""2026 CUMCM A 题 问题4 求解器（含收缩）
+附录4 经验式（物性随 C、T 变），热质双向耦合，交错 Picard + Crank--Nicolson + Thomas。
+收缩：附件2 半径 R(t)（Pchip 插值），拉格朗日坐标 zeta = r/R(t) 随物料变形，
+      菲克/傅里叶定律相对固相骨架，zeta 系中无对流项：
+      dC/dt = 1/(R^2 zeta) d(zeta D dC/dzeta)/dzeta，
+      rho c_p dT/dt = 1/(R^2 zeta) d(zeta k dT/dzeta)/dzeta（d/dt 为固定 zeta 的随体导数）。
+主离散：Δζ=1/160（161 节点），Δt=5 s。
+  依据：1/40 离散 6 h 行误差约 1.6e-4，1/80 约 5.4e-5（Richardson），仍未低于四位小数
+  对应的 0.5e-4 阈值，故生产离散加密至 1/160。
+迭代：T、C 无穷范数相对变化 < 1e-8 停止（上限 20 轮）；系数取迭代最新可用层，R 取半步中点。
+事件时间：g(t)=max C(r,t)-0.15 在相邻时间层间线性插值求根，末行取 t* 处插值状态。
+输出：表6（每 6 h x 0/0.5/1/1.5/2 cm + 表面，域外记 '-'）+ result4.xlsx（每 60 s，22 列）。
+固定物理距离列用 Pchip 插值（见 interp_dist 依据）。
+验证：V1 动边界质量守恒（含压缩项 2R'/R ∫C r dr）、V2 时间收敛、V3 ζ 离散五点链（至 1/320）、V4 渐近。
+"""
+import sys, os
+import numpy as np
+import openpyxl
+from scipy.linalg import solve_banded
+from scipy.interpolate import PchipInterpolator
+
+try:
+    sys.stdout.reconfigure(encoding='utf-8')
+except Exception:
+    pass
+
+ROOT = os.path.dirname(os.path.abspath(__file__))
+
+def _annex(name):
+    """定位赛题附件数据:优先脚本同目录(支撑材料布局),其次仓库目录结构。"""
+    for p in (os.path.join(ROOT, name),
+              os.path.join(ROOT, 'OriginalMaterial', 'A题', '附件', name)):
+        if os.path.exists(p):
+            return p
+    raise FileNotFoundError('未找到 %s:请将赛题附件文件放在脚本同目录下' % name)
+
+ANNEX1 = _annex('附件1.xlsx')
+ANNEX2 = _annex('附件2.xlsx')
+
+R0, T0, C0 = 0.02, 28.0, 2.55
+h, hm = 25.0, 8e-7
+TEND, CEND = 50.165, 0.04986        # 附件1 末值（恒温干燥段）
+CTARGET = 0.15                      # 问题4 烘干判据
+DZ, NZ = 1.0 / 160.0, 161           # ζ 主离散 161 节点
+zeta = np.arange(NZ) * DZ
+PICARD_TOL, PICARD_MAXIT = 1e-8, 20
+
+# 附录4 经验式（C<0.02 时取 0.02，仅为数值保险：物理解 C >= C_air=0.04986）
+rho4 = lambda C: 760.0 + 90.0 * C
+cp4 = lambda C: 1850.0 + 2150.0 * C / (C + 1.0)
+k4 = lambda C: 0.12 + 0.20 * C / (C + 1.0)
+D4 = lambda C, T: 4.2e-4 * np.exp(-0.30 / np.maximum(C, 0.02)) * np.exp(-3850.0 / T)  # T 开尔文
+
+d1 = np.array([row for row in
+               openpyxl.load_workbook(ANNEX1, data_only=True)['Sheet1'].iter_rows(values_only=True)][1:],
+              float)
+T_air = lambda t: np.interp(t, d1[:, 0], d1[:, 1]) if t <= 14400 else TEND
+C_air = lambda t: np.interp(t, d1[:, 0], d1[:, 2]) if t <= 14400 else CEND
+
+d2 = np.array([row for row in
+               openpyxl.load_workbook(ANNEX2, data_only=True)['Sheet1'].iter_rows(values_only=True)][1:],
+              float)
+T2END = d2[-1, 0]; REND = d2[-1, 1] / 100.0    # 259200 s 后半径保持 1.198 cm（附件2 单位为 cm）
+_Rp = PchipInterpolator(d2[:, 0], d2[:, 1] / 100.0, extrapolate=False)
+RofT = lambda t: _Rp(t) if t <= T2END else REND
+_Rpd = _Rp.derivative()
+RpofT = lambda t: float(_Rpd(t)) if t <= T2END else 0.0
+
+def interp_dist(C, R, dj):
+    """固定物理距离 dj 处的浓度：在 ζ=dj/R 处用 Pchip（三次 Hermite、保单调）插值。
+    依据：C(ζ) 为抛物方程的光滑解（无激波），三次插值误差 O(Δζ^3)，远小于线性插值的
+    O(Δζ^2)；后者在 30 h 前后的陡梯度区已主导表 6 行差（1/80→1/160 实测 1.58e-4，
+    与线性插值误差估计同量级，导致收敛比仅 2.5 而非 4），故输出与收敛检验统一改用 Pchip。"""
+    return float(PchipInterpolator(zeta, C)(dj / R))
+
+def thomas(a, b, c, rhs):
+    """三对角求解:与追赶法数学等价,调用 LAPACK 带状求解(提速,结果不变)。"""
+    n = len(rhs)
+    ab = np.zeros((3, n))
+    ab[0, 1:] = c[:-1]
+    ab[1, :] = b
+    ab[2, :-1] = a[1:]
+    return solve_banded((1, 1), ab, rhs)
+
+def crank_step(u, K, Cp, R, beta, bc_prev, bc_next, dt):
+    """zeta 系 Crank--Nicolson 一步（物料随体坐标，无对流项；扩散系数含 1/R^2）。
+    beta: 表面 Robin 系数（热 h*R/k_s；质 h_m*R/D_s）。"""
+    Km = (K[:-1] + K[1:]) / 2
+    R2 = R * R
+    lo = np.zeros(NZ); di = np.zeros(NZ); up = np.zeros(NZ); s = np.zeros(NZ)
+    di[0] = -4 * Km[0] / (DZ ** 2 * R2); up[0] = 4 * Km[0] / (DZ ** 2 * R2)
+    for i in range(1, NZ - 1):
+        lo[i] = Km[i - 1] * (i - 0.5) / (i * DZ ** 2 * R2)
+        di[i] = -(Km[i] * (i + 0.5) + Km[i - 1] * (i - 0.5)) / (i * DZ ** 2 * R2)
+        up[i] = Km[i] * (i + 0.5) / (i * DZ ** 2 * R2)
+    # 表面控制体 [zeta_{NZ-3/2}, 1]：表面节点位于真实表面 zeta=1（ζ 离散），
+    # Robin 通量直接取 -R·beta·K_s·(u_{NZ-1}-bc)，逐时间层严格守恒。
+    # 界面通量 = zeta_{NZ-3/2}·D_m·(u_{NZ-2}-u)/DZ = (NZ-1.5)·D_m·(u_{NZ-2}-u)（DZ 抵消）。
+    vhat = (1.0 - ((NZ - 1.5) * DZ) ** 2) / 2.0
+    Bc = beta * K[-1]                              # beta 已含 R：热 h·R/k_s，质 h_m·R/D_s
+    lo[NZ - 1] = Km[NZ - 2] * (NZ - 1.5) / (vhat * R2)
+    di[NZ - 1] = -(lo[NZ - 1] + Bc / (vhat * R2))
+    up[NZ - 1] = 0.0
+    def src(bc):
+        s = np.zeros(NZ); s[NZ - 1] = Bc * bc / (vhat * R2); return s
+    lhs_lo = -0.5 * lo
+    lhs_di = Cp / dt - 0.5 * di
+    lhs_up = -0.5 * up
+    rhs = Cp / dt * u + 0.5 * (lo * np.roll(u, 1) + di * u + up * np.roll(u, -1)) \
+        + 0.5 * (src(bc_next) + src(bc_prev))
+    rhs[0] = Cp[0] / dt * u[0] + 0.5 * (di[0] * u[0] + up[0] * u[1]) \
+        + 0.5 * (src(bc_next)[0] + src(bc_prev)[0])
+    rhs[NZ - 1] = Cp[NZ - 1] / dt * u[NZ - 1] \
+        + 0.5 * (lo[NZ - 1] * u[NZ - 2] + di[NZ - 1] * u[NZ - 1]) \
+        + 0.5 * (src(bc_next)[NZ - 1] + src(bc_prev)[NZ - 1])
+    return thomas(lhs_lo, lhs_di, lhs_up, rhs)
+
+def step(T, C, t_prev, t_cur, dt):
+    """一个时间步：R、R' 取半步中点，交错 Picard，每轮从 u^n 出发；
+    T、C 相对变化（无穷范数，分母取 max(‖u‖∞,1)）小于 1e-8 或满 20 轮停止。"""
+    tm = 0.5 * (t_prev + t_cur)
+    R = RofT(tm)
+    Tn, Cn = T.copy(), C.copy()
+    rel = 0.0
+    for it in range(1, PICARD_MAXIT + 1):
+        Kk = k4(C); Rc = rho4(C) * cp4(C)
+        T = crank_step(Tn, Kk, Rc, R, h * R / Kk[-1], T_air(t_prev), T_air(t_cur), dt)
+        Tk = T + 273.15
+        Dc = D4(C, Tk)
+        C = crank_step(Cn, Dc, np.ones(NZ), R, hm * R / Dc[-1], C_air(t_prev), C_air(t_cur), dt)
+        if it > 1:
+            rel = max(np.max(np.abs(T - To)) / max(np.max(np.abs(T)), 1.0),
+                      np.max(np.abs(C - Co)) / max(np.max(np.abs(C)), 1.0))
+            if rel < PICARD_TOL:
+                return T, C, it, rel
+        To, Co = T.copy(), C.copy()
+    return T, C, PICARD_MAXIT, rel
+
+def water_int(C, R):
+    """W = Σ v_i C_i（随体域离散控制体体积积分，v_i 与 crank_step 一致）。"""
+    v = np.zeros(NZ); v[0] = DZ ** 2 / 8
+    v[1:NZ - 1] = zeta[1:NZ - 1] * DZ
+    v[NZ - 1] = (1.0 - ((NZ - 1.5) * DZ) ** 2) / 2.0
+    return R * R * (C * v).sum()
+
+def run4(dzg, Nzg, dt, write_files=True):
+    """全程求解直至 max C <= 0.15（t* 插值求根）。返回
+    (tstar, tab6, rows4, 统计)。tab6 末行为 t* 处插值状态。"""
+    global NZ, DZ, zeta
+    NZ, DZ, zeta = Nzg, dzg, np.arange(Nzg) * dzg
+    T, C = np.full(NZ, T0), np.full(NZ, C0)
+    dist = np.array([0.0, 0.005, 0.01, 0.015, 0.02])     # 表6 固定距离列（m）
+    xlsx_d = np.arange(0.0, 0.02001, 0.001)             # result4 0:0.1:2 cm（m）
+    tab6, rows4 = [], []
+    Whist, Cshist, Rhist, Rphist = [], [], [], []
+    iters, rels = [], []
+    tstar, nstar = None, None
+    nmax = int(300 * 3600 / dt)
+    for n in range(1, nmax + 1):
+        tn = n * dt
+        Cprev = C.copy()
+        T, C, it, rel = step(T, C, tn - dt, tn, dt)
+        iters.append(it); rels.append(rel)
+        R = RofT(tn); Rp = RpofT(tn)
+        W = water_int(C, R)
+        Whist.append(W); Cshist.append(C[-1]); Rhist.append(R); Rphist.append(Rp)
+        if n % (21600 // dt) == 0:                       # 每 6 h 记表6 一行
+            row = []
+            for dj in dist:
+                row.append(interp_dist(C, R, dj) if dj <= R else np.nan)
+            row.append(C[-1])                            # 表面列
+            tab6.append(row)
+        if write_files and n % (60 // dt) == 0:          # 每 60 s 记 result4 一行
+            row = []
+            for dj in xlsx_d:
+                row.append(interp_dist(C, R, dj) if dj <= R else None)
+            row.append(C[-1])
+            rows4.append((tn, row))
+        if C.max() <= CTARGET:
+            gp = Cprev.max() - CTARGET
+            gn = C.max() - CTARGET
+            frac = gp / (gp - gn)
+            tstar = (n - 1) * dt + dt * frac
+            Cstar = Cprev + frac * (C - Cprev)
+            nstar = n
+            break
+    if tstar is None:
+        raise RuntimeError('300 h 内未达烘干判据')
+    R = RofT(tstar)
+    row = [interp_dist(Cstar, R, dj) if dj <= R else np.nan for dj in dist] + [Cstar[-1]]
+    tab6.append(row)
+    if write_files:
+        row = [interp_dist(Cstar, R, dj) if dj <= R else None for dj in xlsx_d] + [Cstar[-1]]
+        rows4.append((tstar, row))
+    return tstar, np.array(tab6), (rows4 if write_files else None), \
+        np.array(iters), np.array(rels), (Whist, Cshist, Rhist, Rphist), nstar, Cstar
+
+if __name__ == "__main__":
+    # ================= 问题4：Δζ=1/160，dt=5 s，直到 max C <= 0.15 =================
+    DT = 5.0
+    tstar, tab6, rows4, iters, rels, hist, nstar, Cstar = run4(1.0 / 160.0, 161, DT)
+    R = RofT(tstar)
+    print('问题4 烘干时长: t* = %.3f s = %.4f h (max C = %.6f, 此时 R = %.4f cm)'
+          % (tstar, tstar / 3600, Cstar.max(), R * 100))
+    print('Picard 统计: 平均 %.2f 轮，最大 %d 轮，退出残差 中位 %.2e / 最大 %.2e'
+          % (iters.mean(), iters.max(), np.median(rels), rels.max()))
+    np.set_printoptions(precision=4, suppress=True)
+    print('表6 水分浓度 (kg/kg)，行=6,12,...h 直至 t*，列=0/0.5/1/1.5/2 cm + 表面:')
+    for k, row in enumerate(tab6):
+        rr = ' '.join('  --' if np.isnan(v) else '%6.4f' % v for v in row)
+        trow = (k + 1) * 6.0 if k + 1 < len(tab6) else tstar / 3600.0
+        print('%7.1fh |%s' % (trow, rr))
+
+    wb = openpyxl.Workbook()
+    ws = wb.active; ws.title = 'Sheet1'
+    ws.cell(1, 1, '时间\\到药材中心的距离')
+    xlsx_d = np.arange(0.0, 0.02001, 0.001)
+    for j in range(len(xlsx_d)):
+        ws.cell(1, 2 + j, round(xlsx_d[j] * 100, 1))
+    ws.cell(1, 2 + len(xlsx_d), '药材表面')
+    for k, (tt, row) in enumerate(rows4):
+        ws.cell(2 + k, 1, round(tt, 1))
+        for j, v in enumerate(row):
+            if v is not None:
+                ws.cell(2 + k, 2 + j, round(v, 4))
+    wb.save(os.path.join(ROOT, 'result4.xlsx'))
+    print('已写出 result4.xlsx（%d 行）' % len(rows4))
+
+    # ================= 验证 =================
+    Whist, Cshist, Rhist, Rphist = hist
+    # V1 动边界质量守恒: d/dt ∫C r dr = 2R'/R·∫C r dr - R·h_m(C_s-C_air)
+    _NZ_save, _DZ_save, _zeta_save = NZ, DZ, zeta
+    NZ, DZ, zeta = 161, 1.0 / 160.0, np.arange(161) * (1.0 / 160.0)
+    W0 = water_int(np.full(NZ, C0), R0)
+    NZ, DZ, zeta = _NZ_save, _DZ_save, _zeta_save
+    lhs = Whist[-1] - W0
+    tt = np.arange(1, nstar + 1) * DT
+    f1 = [2 * rp / r * w for rp, r, w in zip(Rphist, Rhist, Whist)]
+    f2 = [-r * hm * (cs - C_air(t)) for r, cs, t in zip(Rhist, Cshist, tt)]
+    rhs = np.trapezoid([a + b for a, b in zip(f1, f2)], tt)
+    print('验证V1 离散守恒: ΣvΔC = %.6e，∫[2R\'/R·W - R h_m(C_R-C_air)]dt = %.6e，差 %.2e'
+          % (lhs, rhs, lhs - rhs))
+
+    # V2 时间收敛: 前 6 h，dt=5 vs 2.5（同一离散 1/160）
+    def run6h(dt):
+        T, C = np.full(NZ, T0), np.full(NZ, C0)
+        for n in range(1, int(21600 / dt) + 1):
+            T, C, it, rel = step(T, C, (n - 1) * dt, n * dt, dt)
+        R = RofT(21600)
+        dist = np.array([0.0, 0.005, 0.01, 0.015, 0.02])
+        row = [interp_dist(C, R, dj) if dj <= R else np.nan for dj in dist] + [C[-1]]
+        return np.array(row)
+    r5 = run6h(5.0); r25 = run6h(2.5)
+    print('验证V2 时间收敛(6h 行): dt=5 vs 2.5 最大差 %.2e' % np.nanmax(np.abs(r5 - r25)))
+
+    # V3 ζ 空间收敛五点链: 1/20, 1/40, 1/80, 1/160, 1/320（同 dt=5 s）
+    ts = []; t6s = []
+    for dzg, nzg in ((1.0 / 20, 21), (1.0 / 40, 41), (1.0 / 80, 81),
+                     (1.0 / 160, 161), (1.0 / 320, 321)):
+        t_, tab_, _, it_, rl_, _, _, _ = run4(dzg, nzg, DT, write_files=False)
+        ts.append(t_); t6s.append(tab_)
+        print('V3 链 Δζ=1/%d: t* = %.4f h (%d s), 平均 %.2f 轮'
+              % (nzg - 1, t_ / 3600, round(t_), it_.mean()))
+    th = [t / 3600.0 for t in ts]
+    dd1, dd2, dd3, dd4 = th[1] - th[0], th[2] - th[1], th[3] - th[2], th[4] - th[3]
+    p12, p23, p34 = np.log2(dd1 / dd2), np.log2(dd2 / dd3), np.log2(dd3 / dd4)
+    ext = th[4] + dd4 / (2 ** p34 - 1.0)
+    print('V3 实测收敛阶: p12=%.3f (1/20->1/40->1/80), p23=%.3f (1/40->1/80->1/160),'
+          ' p34=%.3f (1/80->1/160->1/320)' % (p12, p23, p34))
+    print('V3 按实测阶外推: t* = %.4f h；最细两档差 = %.4f h；外推-最细 = %.4f h'
+          % (ext, dd4, ext - th[4]))
+    dab = np.nanmax(np.abs(t6s[2][:-1] - t6s[3][:-1]))
+    dbc = np.nanmax(np.abs(t6s[3][:-1] - t6s[4][:-1]))
+    print('V3 表6 对齐行最大差: 1/80->1/160: %.2e, 1/160->1/320: %.2e kg/kg' % (dab, dbc))
+    print('V3 表6 末行差(1/160 vs 1/320): %.2e kg/kg（t* 差 %.4f h）'
+          % (np.nanmax(np.abs(t6s[3][-1] - t6s[4][-1])), th[4] - th[3]))
+
+    # V4 渐近: 常数边界，长时程（R 仍按附件2 收缩并保持 1.198 cm）
+    NZ, DZ, zeta = 161, 1.0 / 160.0, np.arange(161) * (1.0 / 160.0)
+    T, C = np.full(NZ, T0), np.full(NZ, C0)
+    for n in range(1, int(2.5e5 / DT) + 1):
+        T, C, it, rel = step(T, C, (n - 1) * DT, n * DT, DT)
+        if n * DT in (50000, 150000, 250000):
+            print('验证V4 渐近: t=%ds 中心 T=%.4f (目标 %.4f)，表面 C=%.5f (目标 %.5f)，R=%.4f cm'
+                  % (n * DT, T[0], TEND, C[-1], CEND, RofT(n * DT) * 100))
+\end{lstlisting}
+
+\subsection*{表7消融\_表8灵敏度.py}
+\begin{lstlisting}[language=Python]
+# -*- coding: utf-8 -*-
+"""2026 CUMCM A 题 表8 参数灵敏度重算（新求解器：Picard<1e-8、t* 根插值）
+
+问题3: 径向离散 0.25 mm（N=81）、dt=2.5 s，附录3 物性、固定 R；
+问题4: ζ 离散 1/80（N=81）、dt=5 s，附录4 物性、附件2 收缩 R(t)。
+变体: Ta±2 °C、Ca±20%、h±50%、hm±50%（相对题给值），其余参数保持题给值。
+
+依据: 灵敏度取两变体 t* 之差，对空间离散不敏感，用验证离散即可（与 7.7 节说明一致）；
+迭代判据改变引起的 t* 系统性偏移（实测 <0.001 h）在差分中相消，故本表只需重算一遍。
+"""
+import sys, os
+import numpy as np
+import openpyxl
+from scipy.linalg import solve_banded
+from scipy.interpolate import PchipInterpolator
+
+try:
+    sys.stdout.reconfigure(encoding='utf-8')
+except Exception:
+    pass
+
+ROOT = os.path.dirname(os.path.abspath(__file__))
+
+def _annex(name):
+    """定位赛题附件数据:优先脚本同目录(支撑材料布局),其次仓库目录结构。"""
+    for p in (os.path.join(ROOT, name),
+              os.path.join(ROOT, 'OriginalMaterial', 'A题', '附件', name)):
+        if os.path.exists(p):
+            return p
+    raise FileNotFoundError('未找到 %s:请将赛题附件文件放在脚本同目录下' % name)
+
+ANNEX1 = _annex('附件1.xlsx')
+ANNEX2 = _annex('附件2.xlsx')
+
+R0, T0, C0 = 0.02, 28.0, 2.55
+TEND, CEND = 50.165, 0.04986
+CTARGET = 0.15
+PICARD_TOL, PICARD_MAXIT = 1e-8, 20
+
+# ---- 附件数据 ----
+d1 = np.array([row for row in
+               openpyxl.load_workbook(ANNEX1, data_only=True)['Sheet1'].iter_rows(values_only=True)][1:],
+              float)
+d2 = np.array([row for row in
+               openpyxl.load_workbook(ANNEX2, data_only=True)['Sheet1'].iter_rows(values_only=True)][1:],
+              float)
+T2END = d2[-1, 0]; REND = d2[-1, 1] / 100.0
+_Rp = PchipInterpolator(d2[:, 0], d2[:, 1] / 100.0, extrapolate=False)
+
+# ---- 变体参数（模块级，运行中修改）----
+P = dict(dToff=0.0, cscale=1.0, h=25.0, hm=8e-7)
+T_air = lambda t: (np.interp(t, d1[:, 0], d1[:, 1]) + P['dToff']) if t <= 14400 else TEND + P['dToff']
+C_air = lambda t: (np.interp(t, d1[:, 0], d1[:, 2]) * P['cscale']) if t <= 14400 else CEND * P['cscale']
+
+# 附录3 / 附录4 物性
+rho3 = lambda C: 650.0 + 128.0 * C
+cp3 = lambda C: 1450.0 + 2736.0 * C / (C + 1.0)
+k3 = lambda C: 0.21 + 0.38 * C / (C + 1.0)
+D3 = lambda C, T: 2.4e-3 * np.exp(-0.45 / C) * np.exp(-3850.0 / T)
+rho4 = lambda C: 760.0 + 90.0 * C
+cp4 = lambda C: 1850.0 + 2150.0 * C / (C + 1.0)
+k4 = lambda C: 0.12 + 0.20 * C / (C + 1.0)
+D4 = lambda C, T: 4.2e-4 * np.exp(-0.30 / np.maximum(C, 0.02)) * np.exp(-3850.0 / T)
+
+def thomas(a, b, c, rhs):
+    n = len(rhs)
+    ab = np.zeros((3, n))
+    ab[0, 1:] = c[:-1]
+    ab[1, :] = b
+    ab[2, :-1] = a[1:]
+    return solve_banded((1, 1), ab, rhs)
+
+def crank_step(u, K, Cp, beta, bc_prev, bc_next, dt, NZ, DZ, R):
+    """径向（R 固定）或 ζ 系（R 为当前半径）的 Crank--Nicolson 一步，表面节点在真实表面。"""
+    Km = (K[:-1] + K[1:]) / 2
+    R2 = R * R
+    lo = np.zeros(NZ); di = np.zeros(NZ); up = np.zeros(NZ)
+    di[0] = -4 * Km[0] / (DZ ** 2 * R2); up[0] = 4 * Km[0] / (DZ ** 2 * R2)
+    for i in range(1, NZ - 1):
+        lo[i] = Km[i - 1] * (i - 0.5) / (i * DZ ** 2 * R2)
+        di[i] = -(Km[i] * (i + 0.5) + Km[i - 1] * (i - 0.5)) / (i * DZ ** 2 * R2)
+        up[i] = Km[i] * (i + 0.5) / (i * DZ ** 2 * R2)
+    vhat = (1.0 - ((NZ - 1.5) * DZ) ** 2) / 2.0
+    Bc = beta * K[-1]
+    lo[NZ - 1] = Km[NZ - 2] * (NZ - 1.5) / (vhat * R2)
+    di[NZ - 1] = -(lo[NZ - 1] + Bc / (vhat * R2))
+    up[NZ - 1] = 0.0
+    def src(bc):
+        s = np.zeros(NZ); s[NZ - 1] = Bc * bc / (vhat * R2); return s
+    lhs_lo = -0.5 * lo
+    lhs_di = Cp / dt - 0.5 * di
+    lhs_up = -0.5 * up
+    rhs = Cp / dt * u + 0.5 * (lo * np.roll(u, 1) + di * u + up * np.roll(u, -1)) \
+        + 0.5 * (src(bc_next) + src(bc_prev))
+    rhs[0] = Cp[0] / dt * u[0] + 0.5 * (di[0] * u[0] + up[0] * u[1]) \
+        + 0.5 * (src(bc_next)[0] + src(bc_prev)[0])
+    rhs[NZ - 1] = Cp[NZ - 1] / dt * u[NZ - 1] \
+        + 0.5 * (lo[NZ - 1] * u[NZ - 2] + di[NZ - 1] * u[NZ - 1]) \
+        + 0.5 * (src(bc_next)[NZ - 1] + src(bc_prev)[NZ - 1])
+    return thomas(lhs_lo, lhs_di, lhs_up, rhs)
+
+def step(T, C, t_prev, t_cur, dt, NZ, DZ, R, rhoF, cpF, kF, DF):
+    """交错 Picard，T、C 相对变化 < 1e-8 或满 20 轮停止。"""
+    Tn, Cn = T.copy(), C.copy()
+    rel = 0.0
+    for it in range(1, PICARD_MAXIT + 1):
+        Kk = kF(C); Rc = rhoF(C) * cpF(C)
+        T = crank_step(Tn, Kk, Rc, P['h'] * R / Kk[-1], T_air(t_prev), T_air(t_cur), dt, NZ, DZ, R)
+        Tk = T + 273.15
+        Dc = DF(C, Tk)
+        C = crank_step(Cn, Dc, np.ones(NZ), P['hm'] * R / Dc[-1], C_air(t_prev), C_air(t_cur), dt, NZ, DZ, R)
+        if it > 1:
+            rel = max(np.max(np.abs(T - To)) / max(np.max(np.abs(T)), 1.0),
+                      np.max(np.abs(C - Co)) / max(np.max(np.abs(C)), 1.0))
+            if rel < PICARD_TOL:
+                return T, C, it, rel
+        To, Co = T.copy(), C.copy()
+    return T, C, PICARD_MAXIT, rel
+
+def run_case(appendix, shrink, NZ, DZ, dt):
+    """返回 t*（s）。shrink=False 时 R≡R0；True 时 R(t) 取半步中点。"""
+    PF = (rho3, cp3, k3, D3) if appendix == 3 else (rho4, cp4, k4, D4)
+    RofT = (lambda t: float(_Rp(t)) if t <= T2END else REND) if shrink else (lambda t: R0)
+    T, C = np.full(NZ, T0), np.full(NZ, C0)
+    nmax = int(300 * 3600 / dt)
+    for n in range(1, nmax + 1):
+        tm = (n - 0.5) * dt
+        Cprev = C.copy()
+        T, C, it, rel = step(T, C, (n - 1) * dt, n * dt, dt, NZ, DZ, RofT(tm), *PF)
+        if C.max() <= CTARGET:
+            gp = Cprev.max() - CTARGET
+            gn = C.max() - CTARGET
+            return (n - 1) * dt + dt * gp / (gp - gn)
+    raise RuntimeError('300 h 内未达判据')
+
+VARIANTS = [('基准', dict()),
+            ('Ta+2', dict(dToff=2.0)), ('Ta-2', dict(dToff=-2.0)),
+            ('Ca+20%', dict(cscale=1.2)), ('Ca-20%', dict(cscale=0.8)),
+            ('h+50%', dict(h=37.5)), ('h-50%', dict(h=12.5)),
+            ('hm+50%', dict(hm=1.2e-6)), ('hm-50%', dict(hm=4e-7))]
+
+if __name__ == '__main__':
+    # ===== 表7: 物性×几何 2×2 消融（同一验证离散 Δζ=1/160, Δt=5 s；与 7.5 节一致） =====
+    print('==== 表7 消融（Δζ=1/160, Δt=5 s） ====')
+    ts = {}
+    for name, ap, sh in (('附录3×固定', 3, False), ('附录3×收缩', 3, True),
+                         ('附录4×固定', 4, False), ('附录4×收缩', 4, True)):
+        ts[name] = run_case(ap, sh, 161, 1.0 / 160.0, 5.0)
+        print('%s: t* = %.4f h (%d s)' % (name, ts[name] / 3600, round(ts[name])))
+    print('收缩净效应: 附录3 Δt* = %.4f h（%.1f%%），附录4 Δt* = %.4f h（%.1f%%）'
+          % ((ts['附录3×收缩'] - ts['附录3×固定']) / 3600,
+             (ts['附录3×收缩'] / ts['附录3×固定'] - 1) * 100,
+             (ts['附录4×收缩'] - ts['附录4×固定']) / 3600,
+             (ts['附录4×收缩'] / ts['附录4×固定'] - 1) * 100))
+    print()
+    for label, cfg in (('问题3（ζ 离散 1/80 ⇒ 物理 0.25 mm, dt=2.5 s）',
+                        dict(appendix=3, shrink=False, NZ=81, DZ=1.0/80.0, dt=2.5)),
+                       ('问题4（Δζ=1/80, dt=5 s）',
+                        dict(appendix=4, shrink=True, NZ=81, DZ=1.0/80.0, dt=5.0))):
+        print('==== %s ====' % label)
+        rows = []
+        base = None
+        for name, v in VARIANTS:
+            for k in P:  # 重置为基准再叠加变体
+                P[k] = dict(dToff=0.0, cscale=1.0, h=25.0, hm=8e-7)[k]
+            P.update(v)
+            t = run_case(**cfg)
+            rows.append((name, t))
+            if name == '基准':
+                base = t
+        for name, t in rows:
+            print('%s: t* = %.4f h, Δt* = %+.4f h（%+.1f%%）'
+                  % (name, t / 3600, (t - base) / 3600, (t / base - 1) * 100))
+        print()
+\end{lstlisting}
+
+\subsection*{verify\_q1.py}
+\begin{lstlisting}[language=Python]
+# -*- coding: utf-8 -*-
+"""问题1 补充验证:表2 各单元格 0.125/0.0625/0.03125 mm 三套离散的差值定位,
+判断四位小数可靠性的实际薄弱位置(评审口径:Richardson E(h/2)≈|u_h-u_{h/2}|/3)。
+"""
+import sys
+sys.stdout.reconfigure(encoding='utf-8')
+sys.path.insert(0, __file__.rsplit('\\', 1)[0] if '\\' in __file__ else '.')
+import numpy as np
+import q1_solver as Q
+
+t_ev = [100, 300, 600, 900, 1200, 1500, 1800]
+
+old = (Q.dr, Q.N)
+# 0.125 mm 粗离散（Δt=0.125 s）
+Q.dr, Q.N = 1.25e-4, 161
+_, C125, _, _ = Q.solve(14400, 0.125, Q.T_air, Q.C_air,
+                        record={tt: [0, 40, 80, 120, 160] for tt in t_ev})
+# 0.0625 mm 中离散（Δt=0.0625 s，时空同时折半）
+Q.dr, Q.N = 6.25e-5, 321
+_, C62, _, _ = Q.solve(28800, 0.0625, Q.T_air, Q.C_air,
+                       record={tt: [0, 80, 160, 240, 320] for tt in t_ev})
+# 0.03125 mm 主离散（Δt=0.0625 s，与生产一致）
+Q.dr, Q.N = 3.125e-5, 641
+_, C31, _, _ = Q.solve(57600, 0.0625, Q.T_air, Q.C_air,
+                       record={tt: [0, 160, 320, 480, 640] for tt in t_ev})
+Q.dr, Q.N = old
+
+d1 = np.abs(C62 - C31)   # 0.0625 -> 0.03125
+d2 = np.abs(C125 - C62)  # 0.125 -> 0.0625
+cols = ['0', '0.5', '1', '1.5', '2']
+print('表2 各单元格 |C(0.0625mm)-C(0.03125mm)| (行=时间s, 列=0/0.5/1/1.5/2cm):')
+for tt, row in zip(t_ev, d1):
+    print('%5d | ' % tt + '  '.join('%.2e' % v for v in row))
+i, j = np.unravel_index(d1.argmax(), d1.shape)
+print('最大差 %.2e 位于 t=%ds, 列=%scm；Richardson 误差(0.03125mm) ≈ %.2e'
+      % (d1.max(), t_ev[i], cols[j], d1.max() / 3))
+print()
+print('0.125mm->0.0625mm 最大差 %.2e (Richardson 误差(0.0625mm) ≈ %.2e)'
+      % (d2.max(), d2.max() / 3))
+print()
+print('表2 末行(1800s) 0.125/0.0625/0.03125mm:', np.round(C125[-1], 4),
+      np.round(C62[-1], 4), np.round(C31[-1], 4))
+print('表2 首行(100s)  0.125/0.0625/0.03125mm:', np.round(C125[0], 4),
+      np.round(C62[0], 4), np.round(C31[0], 4))
+\end{lstlisting}
+
+\subsection*{verify\_q3.py}
+\begin{lstlisting}[language=Python]
+# -*- coding: utf-8 -*-
+"""问题3 验证与增强脚本(评审报告问题2/14 的补充):
+A) Picard 两轮耦合残差量化；B) t* 三档离散(0.5/0.25/0.125 mm)+ Richardson 外推；
+C) 灵敏度:Ta±2°C、Ca±20%、h±50%、hm±50% 对 t*。
+复用 q3_solver 的函数(q3_solver 主流程已加 __main__ 守卫)。
+"""
+import sys
+sys.stdout.reconfigure(encoding='utf-8')
+sys.path.insert(0, __file__.rsplit('\\', 1)[0] if '\\' in __file__ else '.')
+import numpy as np
+import q3_solver as Q
+
+DT3 = 2.5
+CTARGET = 0.15
+
+
+def full_run(drg, ng, dt=DT3, Ta=None, Ca=None, h=None, hm=None, tag=''):
+    """全程求解至 max C<=0.15,返回 t*。参数覆盖用模块全局临时替换。"""
+    old = (Q.TEND, Q.CEND, Q.h, Q.hm)
+    if Ta is not None:
+        Q.TEND = Ta
+    if Ca is not None:
+        Q.CEND = Ca
+    if h is not None:
+        Q.h = h
+    if hm is not None:
+        Q.hm = hm
+    tstar, _, _, _ = Q.run_drying(drg, ng, dt, sample6h=False)
+    Q.TEND, Q.CEND, Q.h, Q.hm = old
+    return tstar
+
+
+if __name__ == '__main__':
+    print('===== A) Picard 两轮耦合残差 (0.25mm 离散, dt=2.5) =====')
+    Q.N, Q.dr, Q.r = 81, 2.5e-4, np.arange(81) * 2.5e-4
+    T, C = np.full(81, Q.T0), np.full(81, Q.C0)
+    for n in range(1, int(60000 / DT3) + 1):
+        tn, tp = n * DT3, (n - 1) * DT3
+        Tn, Cn = T.copy(), C.copy()
+        Kk = Q.k23(C); Rc = Q.rho23(C) * Q.cp23(C)
+        T1 = Q.crank_step(Tn, Kk, Rc, Q.h / Kk[-1], Q.T_air(tp), Q.T_air(tn), DT3)
+        Dc1 = Q.D23(C, T1 + 273.15)
+        C1 = Q.crank_step(Cn, Dc1, np.ones(81), Q.hm / Dc1[-1], Q.C_air(tp), Q.C_air(tn), DT3)
+        Kk2 = Q.k23(C1); Rc2 = Q.rho23(C1) * Q.cp23(C1)
+        T2 = Q.crank_step(Tn, Kk2, Rc2, Q.h / Kk2[-1], Q.T_air(tp), Q.T_air(tn), DT3)
+        Dc2 = Q.D23(C1, T2 + 273.15)
+        C2 = Q.crank_step(Cn, Dc2, np.ones(81), Q.hm / Dc2[-1], Q.C_air(tp), Q.C_air(tn), DT3)
+        dC_pic = np.max(np.abs(C2 - C1)); dC_step = np.max(np.abs(C2 - Cn))
+        dT_pic = np.max(np.abs(T2 - T1))
+        if tn in (3600, 21600, 129600, 190800):
+            print('t=%6ds: Picard |ΔC|=%.3e (步变化 %.3e, 比 %.1e) | |ΔT|=%.3e'
+                  % (tn, dC_pic, dC_step, dC_pic / dC_step, dT_pic))
+        T, C = T2, C2
+        if C.max() <= CTARGET:
+            break
+
+    print('===== B) t* 三离散收敛 + 外推 =====')
+    t05 = full_run(5e-4, 41, tag='0.5mm')
+    t025 = full_run(2.5e-4, 81, tag='0.25mm')
+    t0125 = full_run(1.25e-4, 161, tag='0.125mm')
+    print('t*(0.5mm)=%.4f h  t*(0.25mm)=%.4f h  t*(0.125mm)=%.4f h'
+          % (t05 / 3600, t025 / 3600, t0125 / 3600))
+    ext = (4 * t025 - t05) / 3
+    ext2 = (4 * t0125 - t025) / 3
+    print('Richardson(0.5,0.25): %.4f h ; (0.25,0.125): %.4f h ; |ext2-ext|=%.4f h'
+          % (ext / 3600, ext2 / 3600, abs(ext2 - ext) / 3600))
+
+    print('===== C) 灵敏度 (0.25mm, dt=2.5) =====')
+    base = t025
+    for tag, kw in [('Ta+2', dict(Ta=52.165)), ('Ta-2', dict(Ta=48.165)),
+                    ('Ca+20%', dict(Ca=0.04986 * 1.2)), ('Ca-20%', dict(Ca=0.04986 * 0.8)),
+                    ('h+50%', dict(h=37.5)), ('h-50%', dict(h=12.5)),
+                    ('hm+50%', dict(hm=1.2e-6)), ('hm-50%', dict(hm=4e-7))]:
+        ts = full_run(2.5e-4, 81, tag=tag, **kw)
+        print('%-8s t* = %.4f h (Δ %+.3f h, %+.1f%%)' % (tag, ts / 3600, (ts - base) / 3600,
+              (ts - base) / base * 100))
+\end{lstlisting}
+
+\subsection*{verify\_q4.py}
+\begin{lstlisting}[language=Python]
+# -*- coding: utf-8 -*-
+"""问题4 验证与增强脚本（评审报告问题4/5/6/14 的复验 + 消融 + 灵敏度）。
+复用 q4_solver 的函数（q4_solver 主流程已加 __main__ 守卫,导入不触发求解）。
+A) 6h 行离散收敛 N=21/41/81；B) N=81 时间收敛 dt=5 vs 2.5；
+C) Picard 两轮耦合残差量化；D) N=81 生产复算(t*、表6、V1 守恒)；
+E) t* 离散收敛 21/41/81 + Richardson 外推；F) 消融:附录4 + 固定 R=2cm；
+G) 灵敏度:Ta±2、Ca±20%、h±50%、hm±50% 对 t*。
+"""
+import sys
+sys.stdout.reconfigure(encoding='utf-8')
+sys.path.insert(0, __file__.rsplit('\\', 1)[0] if '\\' in __file__ else '.')
+import numpy as np
+import q4_solver as Q
+
+DT = 5.0
+CTARGET = 0.15
+DIST = np.array([0.0, 0.005, 0.01, 0.015, 0.02])
+
+
+def row6h(dz, nz, dt=DT):
+    """前 6 h 的表6 行(含表面列),指定离散。"""
+    old = (Q.NZ, Q.DZ, Q.zeta)
+    Q.NZ, Q.DZ = nz, dz
+    Q.zeta = np.arange(nz) * dz
+    T, C = np.full(nz, Q.T0), np.full(nz, Q.C0)
+    for n in range(1, int(21600 / dt) + 1):
+        T, C = Q.step(T, C, (n - 1) * dt, n * dt, dt)
+    R = Q.RofT(21600)
+    row = [float(np.interp(d / R, Q.zeta, C)) if d <= R else np.nan for d in DIST] + [C[-1]]
+    Q.NZ, Q.DZ, Q.zeta = old
+    return np.array(row)
+
+
+def full_run(dz, nz, dt=DT, fixed_R=False, Ta=None, Ca=None, h=None, hm=None,
+             tag='', sample=False):
+    """全程求解至 max C<=0.15。fixed_R: 消融实验(附录4 物性 + R 恒为 2cm)。
+    Ta/Ca/h/hm 传 None 用默认;非 None 时临时覆盖 q4_solver 的模块全局。"""
+    old = (Q.NZ, Q.DZ, Q.zeta, Q.TEND, Q.CEND, Q.h, Q.hm)
+    Q.NZ, Q.DZ = nz, dz
+    Q.zeta = np.arange(nz) * dz
+    if Ta is not None:
+        Q.TEND = Ta
+    if Ca is not None:
+        Q.CEND = Ca
+    if h is not None:
+        Q.h = h
+    if hm is not None:
+        Q.hm = hm
+    R0c = 0.02
+    T, C = np.full(nz, Q.T0), np.full(nz, Q.C0)
+    tstar = None
+    Whist, Cshist, Rhist, Rphist, tt_hist = [], [], [], [], []
+    tab6 = []
+    nmax = int(300 * 3600 / dt)
+    for n in range(1, nmax + 1):
+        tn = n * dt
+        tp = tn - dt
+        tm = 0.5 * (tp + tn)
+        R = R0c if fixed_R else Q.RofT(tm)
+        Tn, Cn = T.copy(), C.copy()
+        for _ in range(2):
+            Kk = Q.k4(C); Rc = Q.rho4(C) * Q.cp4(C)
+            T = Q.crank_step(Tn, Kk, Rc, R, Q.h * R / Kk[-1], Q.T_air(tp), Q.T_air(tn), dt)
+            Dc = Q.D4(C, T + 273.15)
+            C = Q.crank_step(Cn, Dc, np.ones(nz), R, Q.hm * R / Dc[-1], Q.C_air(tp), Q.C_air(tn), dt)
+        W = Q.water_int(C, R)
+        Whist.append(W); Cshist.append(C[-1]); Rhist.append(R); Rphist.append(0.0 if fixed_R else Q.RpofT(tn))
+        tt_hist.append(tn)
+        if n % int(6 * 3600 / dt) == 0:
+            row = [float(np.interp(d / R, Q.zeta, C)) if d <= R else np.nan for d in DIST] + [C[-1]]
+            tab6.append(row)
+        if C.max() <= CTARGET:
+            tstar = tn
+            row = [float(np.interp(d / R, Q.zeta, C)) if d <= R else np.nan for d in DIST] + [C[-1]]
+            tab6.append(row)
+            break
+    if tstar is None:
+        raise RuntimeError(tag + '300 h 内未达判据')
+    # V1 动边界守恒(同 q4_solver 主流程口径)
+    W0 = Q.water_int(np.full(nz, Q.C0), R0c)
+    lhs = Whist[-1] - W0
+    tt = np.array(tt_hist)
+    f1 = [2 * rp / r * w for rp, r, w in zip(Rphist, Rhist, Whist)]
+    f2 = [-r * Q.hm * (cs - Q.C_air(t)) for r, cs, t in zip(Rhist, Cshist, tt)]
+    rhs = np.trapezoid([a + b for a, b in zip(f1, f2)], tt)
+    out = dict(tstar=tstar, tab6=np.array(tab6), V1=(lhs, rhs, lhs - rhs))
+    if sample:
+        out['C'] = C
+    Q.NZ, Q.DZ, Q.zeta, Q.TEND, Q.CEND, Q.h, Q.hm = old
+    return out
+
+
+if __name__ == '__main__':
+    print('===== A) 6h 行离散收敛 (dt=5s) =====')
+    r21 = row6h(1 / 20, 21)
+    r41 = row6h(1 / 40, 41)
+    r81 = row6h(1 / 80, 81)
+    d2141 = np.nanmax(np.abs(r21 - r41))
+    d4181 = np.nanmax(np.abs(r41 - r81))
+    print('21 vs 41 最大差 %.3e ; 41 vs 81 最大差 %.3e ; 比值 %.2f'
+          % (d2141, d4181, d2141 / d4181))
+    print('41 离散 6h 行:', np.round(r41, 4))
+    print('81 离散 6h 行:', np.round(r81, 4))
+
+    print('===== B) 时间收敛 (N=81, 6h 行, dt=5 vs 2.5) =====')
+    t5 = row6h(1 / 80, 81, 5.0)
+    t25 = row6h(1 / 80, 81, 2.5)
+    print('最大差 %.2e' % np.nanmax(np.abs(t5 - t25)))
+
+    print('===== C) Picard 两轮耦合残差 (N=81, dt=5) =====')
+    Q.NZ, Q.DZ = 81, 1 / 80
+    Q.zeta = np.arange(81) / 80
+    T, C = np.full(81, Q.T0), np.full(81, Q.C0)
+    for n in range(1, int(200000 / DT) + 1):
+        tn, tp = n * DT, (n - 1) * DT
+        tm = 0.5 * (tp + tn)
+        R = Q.RofT(tm)
+        Tn, Cn = T.copy(), C.copy()
+        Kk = Q.k4(C); Rc = Q.rho4(C) * Q.cp4(C)
+        T1 = Q.crank_step(Tn, Kk, Rc, R, Q.h * R / Kk[-1], Q.T_air(tp), Q.T_air(tn), DT)
+        Dc1 = Q.D4(C, T1 + 273.15)
+        C1 = Q.crank_step(Cn, Dc1, np.ones(81), R, Q.hm * R / Dc1[-1], Q.C_air(tp), Q.C_air(tn), DT)
+        Kk2 = Q.k4(C1); Rc2 = Q.rho4(C1) * Q.cp4(C1)
+        T2 = Q.crank_step(Tn, Kk2, Rc2, R, Q.h * R / Kk2[-1], Q.T_air(tp), Q.T_air(tn), DT)
+        Dc2 = Q.D4(C1, T2 + 273.15)
+        C2 = Q.crank_step(Cn, Dc2, np.ones(81), R, Q.hm * R / Dc2[-1], Q.C_air(tp), Q.C_air(tn), DT)
+        dC_pic = np.max(np.abs(C2 - C1)); dC_step = np.max(np.abs(C2 - Cn))
+        dT_pic = np.max(np.abs(T2 - T1)); dT_step = np.max(np.abs(T2 - Tn))
+        if tn in (3600, 21600, 72000, 172800):
+            print('t=%6ds: Picard |ΔC|=%.3e (步变化 %.3e, 比 %.1e) | |ΔT|=%.3e (步变化 %.3e)'
+                  % (tn, dC_pic, dC_step, dC_pic / dC_step, dT_pic, dT_step))
+        T, C = T2, C2
+        if C.max() <= CTARGET:
+            break
+
+    print('===== D) 生产复算 N=81, dt=5 =====')
+    res81 = full_run(1 / 80, 81, tag='N=81 生产')
+    print('t* = %d s = %.4f h' % (res81['tstar'], res81['tstar'] / 3600))
+    print('表6 (N=81):')
+    for k, row in enumerate(res81['tab6']):
+        rr = ' '.join('  --' if np.isnan(v) else '%6.4f' % v for v in row)
+        trow = (k + 1) * 6.0 if k + 1 < len(res81['tab6']) else res81['tstar'] / 3600.0
+        print('%7.1fh |%s' % (trow, rr))
+    lhs, rhs, diff = res81['V1']
+    print('V1 守恒: ΣvΔC=%.6e  ∫(...)dt=%.6e  差 %.2e (相对 %.1e)'
+          % (lhs, rhs, diff, abs(diff) / abs(lhs)))
+
+    print('===== E) t* 离散收敛 21/41/81 =====')
+    res21 = full_run(1 / 20, 21, tag='N=21')
+    res41 = full_run(1 / 40, 41, tag='N=41')
+    t21, t41, t81 = res21['tstar'], res41['tstar'], res81['tstar']
+    print('t*(21)=%.4f h  t*(41)=%.4f h  t*(81)=%.4f h' % (t21 / 3600, t41 / 3600, t81 / 3600))
+    ext = (4 * t81 - t41) / 3
+    print('Richardson 外推(41,81): t*≈%.4f h ; (21,41): t*≈%.4f h'
+          % (ext / 3600, (4 * t41 - t21) / 3 / 3600))
+
+    print('===== F) 消融实验: 附录4 物性 + 固定 R=2cm (N=81, dt=5) =====')
+    resFix = full_run(1 / 80, 81, fixed_R=True, tag='消融固定R')
+    print('t*_无收缩 = %.4f h ; t*_有收缩 = %.4f h ; 收缩贡献 Δt = %.4f h (%.1f%%)'
+          % (resFix['tstar'] / 3600, res81['tstar'] / 3600,
+             (resFix['tstar'] - res81['tstar']) / 3600,
+             (resFix['tstar'] - res81['tstar']) / resFix['tstar'] * 100))
+
+    print('===== G) 灵敏度 (N=81, dt=5) =====')
+    sens = {}
+    for tag, kw in [('基线', {}), ('Ta+2', dict(Ta=52.165)), ('Ta-2', dict(Ta=48.165)),
+                    ('Ca+20%', dict(Ca=0.04986 * 1.2)), ('Ca-20%', dict(Ca=0.04986 * 0.8)),
+                    ('h+50%', dict(h=37.5)), ('h-50%', dict(h=12.5)),
+                    ('hm+50%', dict(hm=1.2e-6)), ('hm-50%', dict(hm=4e-7))]:
+        if tag == '基线':
+            sens[tag] = res81['tstar']
+        else:
+            sens[tag] = full_run(1 / 80, 81, tag=tag, **kw)['tstar']
+        print('%-8s t* = %.4f h (Δ %.3f h)' % (tag, sens[tag] / 3600,
+              (sens[tag] - sens['基线']) / 3600))
+\end{lstlisting}
