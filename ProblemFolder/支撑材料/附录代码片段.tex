@@ -1,0 +1,228 @@
+% !TeX program = xelatex
+% 编译：xelatex 附录代码片段.tex
+% 依赖：ctexart + listings（MiKTeX / TeX Live 均自带），中文无需额外配置。
+% 并入论文：把正文（document 环境内的内容）复制进 A题论文.tex 的附录处，
+%           并在论文导言区加入 \usepackage{listings,xcolor} 与本文件的 \lstset 配置。
+
+\documentclass[12pt,a4paper]{ctexart}
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage[hidelinks]{hyperref}
+
+\linespread{1.25}
+\setlength{\parskip}{0.5em}
+\setlength{\parindent}{2em}
+
+\ctexset{
+  section = {format = {\heiti \zihao{3}}},
+  subsection = {format = {\heiti \zihao{4}}},
+  subsubsection = {format = {\heiti \zihao{-4}}},
+}
+
+% ---------- 代码样式（小字号等宽、带行号与边框） ----------
+\lstset{
+  language        = Python,
+  basicstyle      = \ttfamily\zihao{6},
+  keywordstyle    = \color{blue!70!black},
+  commentstyle    = \color{green!40!black}\itshape,
+  stringstyle     = \color{red!60!black},
+  numbers         = left,
+  numberstyle     = \tiny\color{gray},
+  numbersep       = 6pt,
+  frame           = single,
+  framerule       = 0.4pt,
+  rulecolor       = \color{gray!55},
+  breaklines      = true,
+  breakatwhitespace = false,
+  columns         = fullflexible,
+  keepspaces      = true,
+  showstringspaces = false,
+  tabsize         = 4,
+  xleftmargin     = 1.8em,
+  framexleftmargin = 1.8em,
+  aboveskip       = 0.6em,
+  belowskip       = 0.8em,
+}
+
+\begin{document}
+
+\section*{附录：程序核心代码片段}
+
+\noindent 核心步骤摘录；完整源程序见支撑材料（\texttt{q1--q4\_solver.py}、\texttt{q78\_sensitivity.py}、\texttt{verify\_q*.py}）。
+全套参数：$R=0.02$ m，$h=25$ W/(m$^2\!\cdot$K)，$h_m=8\times10^{-7}$ m/s。
+
+\subsection*{1\quad 求解内核}
+
+\subsubsection*{1.1\quad 三对角追赶法}
+
+\begin{lstlisting}
+def thomas(a, b, c, f):
+    n = len(f); p = np.zeros(n); q = np.zeros(n)
+    p[0] = c[0] / b[0]; q[0] = f[0] / b[0]
+    for i in range(1, n):
+        m = b[i] - a[i] * p[i - 1]; p[i] = c[i] / m; q[i] = (f[i] - a[i] * q[i - 1]) / m
+    x = np.zeros(n); x[-1] = q[-1]
+    for i in range(n - 2, -1, -1): x[i] = q[i] - p[i] * x[i + 1]
+    return x
+\end{lstlisting}
+
+\subsubsection*{1.2\quad 守恒型有限体积离散 + Crank--Nicolson 单步}
+
+\noindent 随体坐标 $\zeta$ 下（$R$ 取常数即退化为径向格式），$C_v$ 为容量系数，
+$\beta$ 为表面 Robin 系数（热 $hR/k_s$、质 $h_mR/D_s$）：
+
+\begin{lstlisting}
+def crank(u, K, Cv, beta, b0, b1, dt, R, N, dz):
+    Km = (K[:-1] + K[1:]) / 2; r2 = R * R
+    a = np.zeros(N); b = np.zeros(N); c = np.zeros(N)
+    b[0] = -4 * Km[0] / (dz ** 2 * r2); c[0] = -b[0]
+    for i in range(1, N - 1):
+        a[i] = Km[i - 1] * (i - 0.5) / (i * dz ** 2 * r2)
+        c[i] = Km[i] * (i + 0.5) / (i * dz ** 2 * r2)
+        b[i] = -(a[i] + c[i])
+    v = (1.0 - ((N - 1.5) * dz) ** 2) / 2.0; B = beta * K[-1]
+    a[N - 1] = Km[N - 2] * (N - 1.5) / (v * r2)
+    b[N - 1] = -(a[N - 1] + B / (v * r2)); c[N - 1] = 0.0
+    s = np.zeros(N); s[N - 1] = B / (v * r2)
+    L = lambda y: a * np.roll(y, 1) + b * y + c * np.roll(y, -1)
+    f = Cv / dt * u + 0.5 * L(u) + 0.5 * (b0 + b1) * s
+    return thomas(-0.5 * a, Cv / dt - 0.5 * b, -0.5 * c, f)
+\end{lstlisting}
+
+\subsubsection*{1.3\quad 交错 Picard 耦合步}
+
+\begin{lstlisting}
+def picard(T, C, t0, t1, dt, R, N, dz, rho, cp, k, D):
+    Tn, Cn = T.copy(), C.copy()
+    for it in range(1, 21):
+        K = k(C)
+        T = crank(Tn, K, rho(C) * cp(C), h * R / K[-1], Tair(t0), Tair(t1), dt, R, N, dz)
+        Dc = D(C, T + 273.15)
+        C = crank(Cn, Dc, np.ones(N), hm * R / Dc[-1], Cair(t0), Cair(t1), dt, R, N, dz)
+        if it > 1 and max(np.max(np.abs(T - Tp)) / max(np.max(T), 1.0),
+                          np.max(np.abs(C - Cp)) / max(np.max(C), 1.0)) < 1e-8:
+            break
+        Tp, Cp = T.copy(), C.copy()
+    return T, C
+\end{lstlisting}
+
+\subsection*{2\quad 物性与离散参数}
+
+\begin{lstlisting}
+# 附录2（问题1：常数物性 + 非线性 D）
+rho2, cp2, k2 = 820.0, 2600.0, 0.36
+D2 = lambda C: 7e-9 * np.exp(-0.89 / C)
+
+# 附录3（问题2、3）
+rho3 = lambda C: 650.0 + 128.0 * C
+cp3 = lambda C: 1450.0 + 2736.0 * C / (C + 1.0)
+k3 = lambda C: 0.21 + 0.38 * C / (C + 1.0)
+D3 = lambda C, T: 2.4e-3 * np.exp(-0.45 / C) * np.exp(-3850.0 / T)
+
+# 附录4（问题4）
+rho4 = lambda C: 760.0 + 90.0 * C
+cp4 = lambda C: 1850.0 + 2150.0 * C / (C + 1.0)
+k4 = lambda C: 0.12 + 0.20 * C / (C + 1.0)
+D4 = lambda C, T: 4.2e-4 * np.exp(-0.30 / np.maximum(C, 0.02)) * np.exp(-3850.0 / T)
+\end{lstlisting}
+
+\begin{table}[htbp]
+\centering
+\zihao{6}
+\setlength{\tabcolsep}{4pt}
+\renewcommand{\arraystretch}{1.25}
+\begin{tabular}{@{}lllll@{}}
+\toprule
+项目 & 问题 1 & 问题 2 & 问题 3 & 问题 4 \\
+\midrule
+物性 & 附录 2 & 附录 3 & 附录 3 & 附录 4 \\
+空间离散 & $\Delta r=0.03125$ mm，$N=641$ & $\Delta r=0.125$ mm，$N=161$
+         & $\Delta r=0.0625$ mm，$N=321$ & $\Delta\zeta=1/160$，$N=161$ \\
+时间步长 & $\Delta t=0.125$ s & $\Delta t=0.25$ s & $\Delta t=2.5$ s & $\Delta t=5$ s \\
+几何 & $R=2$ cm 固定 & 固定 & 固定 & $R(t)$ 附件 2 \\
+求解区间 & 0--1800 s & 0--10800 s & 至判据 & 至判据 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection*{3\quad 烘房条件与收缩动边界}
+
+\begin{lstlisting}
+Tair = lambda t: np.interp(t, d1[:, 0], d1[:, 1]) if t <= 14400 else 50.165
+Cair = lambda t: np.interp(t, d1[:, 0], d1[:, 2]) if t <= 14400 else 0.04986
+
+_Rp = PchipInterpolator(d2[:, 0], d2[:, 1] / 100.0, extrapolate=False)   # 附件2 R(t)
+RofT = lambda t: _Rp(t) if t <= 259200 else 0.01198
+\end{lstlisting}
+
+\subsection*{4\quad 烘干时长：判据与事件求根}
+
+\begin{lstlisting}
+CT = 0.15
+for n in range(1, nmax + 1):
+    Cp_ = C.copy()
+    T, C = picard(T, C, (n - 1) * dt, n * dt, dt, R, N, dz, rho4, cp4, k4, D4)
+    if C.max() <= CT:                      # g=max C-CT 在相邻时间层间线性求根
+        g = (Cp_.max() - CT) / (Cp_.max() - C.max())
+        tstar = (n - 1 + g) * dt
+        Cstar = Cp_ + g * (C - Cp_)
+        break
+\end{lstlisting}
+
+\subsection*{5\quad 固定距离采样（表 6）}
+
+\begin{lstlisting}
+def interp_dist(C, R, dj):
+    return float(PchipInterpolator(np.arange(len(C)) * dz, C)(dj / R))
+\end{lstlisting}
+
+\subsection*{6\quad 验证}
+
+\subsubsection*{6.1\quad Bessel 级数解析锚点（问题 1）}
+
+\begin{lstlisting}
+f = lambda b: b * j1(b) - h * R / k2 * j0(b)
+bs = np.array([brentq(f, s, s + 0.5) for s in np.arange(0.05, 200, 0.5) if f(s) * f(s + 0.5) < 0][:40])
+An = 2 * j1(bs) / (bs * (j0(bs) ** 2 + j1(bs) ** 2))
+Texact = lambda x, t: Ta + (T0 - Ta) * (An * np.exp(-k2 / (rho2 * cp2) * bs ** 2 * t / R ** 2)
+                                         * j0(bs * x / R)).sum()
+\end{lstlisting}
+
+\subsubsection*{6.2\quad 离散守恒恒等式}
+
+\begin{lstlisting}
+v = np.zeros(N); v[0] = dz ** 2 / 8
+v[1:N - 1] = np.arange(1, N - 1) * dz ** 2
+v[N - 1] = (1.0 - ((N - 1.5) * dz) ** 2) / 2.0
+W = lambda C, R: R * R * (C * v).sum()          # 校验 W(C_f)-W(C_0) = -R∫h_m(C_R-C_air)dt
+\end{lstlisting}
+
+\subsubsection*{6.3\quad 烘干时长收敛链与 Richardson 外推}
+
+\begin{lstlisting}
+t = np.array([tstar(dz) for dz in (1 / 80, 1 / 160, 1 / 320)]) / 3600
+p = np.log2((t[1] - t[0]) / (t[2] - t[1])); ext = t[2] + (t[2] - t[1]) / (2 ** p - 1)
+\end{lstlisting}
+
+\subsection*{7\quad 片段与源程序对照}
+
+\begin{table}[htbp]
+\centering
+\zihao{-5}
+\begin{tabular}{@{}ll@{}}
+\toprule
+片段 & 所在源程序 \\
+\midrule
+1.1--1.3 & 四个求解器共用 \\
+2--5 & \texttt{q1}--\texttt{q4\_solver.py}、\texttt{q78\_sensitivity.py} \\
+6.1--6.2 & \texttt{q1\_solver.py}、\texttt{verify\_q1.py}、\texttt{q3/q4\_solver.py} \\
+6.3 & \texttt{verify\_q3.py}、\texttt{verify\_q4.py} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\end{document}
