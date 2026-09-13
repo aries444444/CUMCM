@@ -1,10 +1,9 @@
-This is XeTeX, Version 3.141592653-2.6-0.999997 (MiKTeX 25.4) (preloaded format=xelatex 2026.5.4)  13 SEP 2026 16:08
+This is XeTeX, Version 3.141592653-2.6-0.999997 (MiKTeX 25.4) (preloaded format=xelatex 2026.5.4)  13 SEP 2026 16:18
 entering extended mode
  restricted \write18 enabled.
- file:line:error style messages enabled.
  %&-line parsing enabled.
-**f:/Desktop/CUMCM/正赛/CUMCM/ProblemFolder/A题论文.tex
-(f:/Desktop/CUMCM/正赛/CUMCM/ProblemFolder/A题论文.tex
+**./A题论文.tex
+(A题论文.tex
 LaTeX2e <2025-11-01>
 L3 programming layer <2025-11-06>
 (C:\Program Files\MikTex\tex/latex/ctex\ctexart.cls
@@ -960,34 +959,34 @@ File: ../figures/fig07_q4_radius_shrinkage_curve.pdf Graphic file (type pdf)
  [7] [8] [9] [10] [11]
 File: fig1_overview_solution.png Graphic file (type bmp)
 <fig1_overview_solution.png>
- [12] [13] [14] [15] [16]
+ [12] [13] [14] [15]
 File: ../figures/fig08_q4_moisture_time_evolution.pdf Graphic file (type pdf)
 <use ../figures/fig08_q4_moisture_time_evolution.pdf>
- [17]
+ [16]
 File: ../figures/fig09_ablation_property_geometry.pdf Graphic file (type pdf)
 <use ../figures/fig09_ablation_property_geometry.pdf>
- [18] [19]
+ [17] [18]
 File: ../figures/fig11_grid_convergence_tstar.pdf Graphic file (type pdf)
 <use ../figures/fig11_grid_convergence_tstar.pdf>
- [20] [21]
-[22]
+ [19] [20] [21]
 File: ../figures/fig10_sensitivity_tstar_tornado.pdf Graphic file (type pdf)
 <use ../figures/fig10_sensitivity_tstar_tornado.pdf>
- [23] [24] [25] [26] [27] (A题论文.aux)
+
+[22] [23] [24] [25] (A题论文.aux)
  ***********
 LaTeX2e <2025-11-01>
 L3 programming layer <2022/07/14>
  ***********
 Package rerunfilecheck Info: File `A题论文.out' has not changed.
-(rerunfilecheck)             Checksum: 019677C518EC2A65E09E223392CA6774;4937.
+(rerunfilecheck)             Checksum: 316CC0E2E4FBD472D29443CD03CE93AD;4731.
  ) 
 Here is how much of TeX's memory you used:
- 17182 strings out of 402987
- 380141 string characters out of 5452872
- 808888 words of memory out of 5000000
- 45661 multiletter control sequences out of 15000+600000
+ 17171 strings out of 402987
+ 379283 string characters out of 5452872
+ 808682 words of memory out of 5000000
+ 45651 multiletter control sequences out of 15000+600000
  640652 words of font info for 129 fonts, out of 8000000 for 9000
  1348 hyphenation exceptions out of 8191
- 93i,12n,111p,1232b,522s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 93i,12n,111p,1194b,522s stack positions out of 10000i,1000n,20000p,200000b,200000s
 
-Output written on A题论文.pdf (27 pages).
+Output written on A题论文.pdf (25 pages).

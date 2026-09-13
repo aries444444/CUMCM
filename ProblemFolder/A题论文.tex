@@ -57,7 +57,7 @@
 
 \textbf{针对问题 2}，采用附录 3 的经验公式，其中密度、比热容、导热系数随水分浓度 $C$ 变化，扩散系数 $D(C,T)=2.4\times10^{-3}\mathrm{e}^{-0.45/C}\mathrm{e}^{-3850/T}$ 随 $C$ 与绝对温度 $T$ 变化，建立热质双向弱耦合模型：温度场通过 Arrhenius 因子影响水分扩散，水分场通过物性参数影响温度场；求解 0--3 h 的温度与水分场（表 3、表 4）。\textbf{针对问题 3}，沿用该模型，烘房条件取附件 1 插值（$t\le14400$ s）与恒温段参数 $(50.165\,^\circ\mathrm{C},\,0.04986\ \mathrm{kg/kg})$ 两段拼接，按判据「各处水分浓度 $\le0.15$ kg/kg」求得烘干时长 $t^*=205701$ s，即 \textbf{57.14 h}（约 2.38 天），处于题述「烘干过程一般持续 2--3 天」范围内。
 
-\textbf{针对问题 4}，考虑药材尺寸收缩：采用附录 4 的经验公式，并以附件 2 的半径数据经 Pchip 保形插值构造动边界 $R(t)$；引入随体坐标 $\zeta=r/R(t)$，将热传导与水分扩散方程变换为无对流项的 Lagrange 形式，在同一守恒离散框架下求解。求得含收缩时的烘干时长 $t^*=182897$ s，即 \textbf{50.80 h}（约 2.12 天）。
+\textbf{针对问题 4}，考虑药材尺寸收缩：采用附录 4 的经验公式，并以附件 2 的半径数据经 Pchip 保形插值构造动边界 $R(t)$；引入随体坐标 $\zeta=r/R(t)$，将热传导与水分扩散方程变换为无对流项的 Lagrange 形式，在同一守恒离散框架下求解。求得含收缩时的烘干时长 $t^*=182897.5$ s，即 \textbf{50.80 h}（约 2.12 天）。
 
 \textbf{数值方法与检验}：空间采用离散通量严格闭合的有限体积离散（表面节点位于真实表面，Robin 通量与内部界面通量逐时间层对消），时间采用 Crank--Nicolson 格式，非线性与双向耦合用交错 Picard 迭代处理。模型通过四重检验：与 Bessel 级数解析解对照，温度场四位小数完全一致；空间步长减半收敛比达理论值 4（问题 1、2 实测比值 4.0），验证二阶精度；离散质量守恒闭合差在 $10^{-7}$ 以内（问题 1 达机器精度）；长时程渐近精确收敛到烘房参数。此外对水分汽化潜热作数量级分析：表面蒸发吸热与对流显热之比约 3--5，其不确定性以时长敏感性区间（约 $+40\%\sim50\%$，见 7.6 节）计入结果解读。
 
@@ -347,13 +347,15 @@ D(C,T)=4.2\times10^{-4}\,\mathrm{e}^{-0.30/C}\,\mathrm{e}^{-3850/T}\quad(\mathrm
     \label{fig:overview_solution}
 \end{figure}
 
-以下结果均按题面要求保留四位小数：问题 1、2 给出各时刻的温度与水分浓度两套数据；问题 3、4 给出各时刻的水分浓度，并附烘干结束时刻 $t^*$（205701 s / 182897 s）的一行，与表 5、表 6 的末行一致。
+以下结果均按题面要求保留四位小数：问题 1、2 给出各时刻的温度与水分浓度两套数据；问题 3、4 给出各时刻的水分浓度，并附烘干结束时刻 $t^*$（205701 s / 182897.5 s）的一行，与表 5、表 6 的末行一致。
 
-\subsection{6.1 问题 1：预热平衡阶段（表 1、表 2）}
+\subsection{6.1 问题 1：预热平衡阶段}
 
 空间步长 $\Delta r=0.03125$ mm、时间步长 $\Delta t=0.125$ s，附件 1 时变边界下求解至 1800 s，结果如表 1、表 2 所示。
 
 \begin{center}
+\begin{minipage}{\textwidth}
+\centering
 {\heiti\zihao{-4} 表 1\quad 30 分钟内药材的温度（$^\circ$C）}
 \par\medskip
 {\zihao{5}\begin{tabular}{cccccc}
@@ -371,10 +373,12 @@ D(C,T)=4.2\times10^{-4}\,\mathrm{e}^{-0.30/C}\,\mathrm{e}^{-3850/T}\quad(\mathrm
 1800 & 33.5753 & 33.7720 & 34.3642 & 35.3621 & 36.7856 \\
 \bottomrule
 \end{tabular}}
+\end{minipage}
 \end{center}
 
-\newpage
 \begin{center}
+\begin{minipage}{\textwidth}
+\centering
 {\heiti\zihao{-4} 表 2\quad 30 分钟内药材的水分浓度（kg/kg）}
 \par\medskip
 {\zihao{5}\begin{tabular}{cccccc}
@@ -392,17 +396,20 @@ D(C,T)=4.2\times10^{-4}\,\mathrm{e}^{-0.30/C}\,\mathrm{e}^{-3850/T}\quad(\mathrm
 1800 & 2.5500 & 2.5497 & 2.5383 & 2.3755 & 1.5102 \\
 \bottomrule
 \end{tabular}}
+\end{minipage}
 \end{center}
 
 结果分析：温度场自外向内升温，表面 1800 s 达 36.79 $^\circ$C，中心仅 33.58 $^\circ$C，径向温差 3.2 $^\circ$C；1800 s 时烘房温度 41.51 $^\circ$C，表面温度尚未达到烘房温度。
 
 水分场的变化集中于近表面约 5 mm 的边界层内（特征长度 $\delta\sim D/h_m\approx5$ mm），表面水分浓度由 2.55 kg/kg 降至 1.51 kg/kg，而中心在 1800 s 内基本不变（2.5500 kg/kg）。这一「外层先失水、内部未及响应」的形态正是预热平衡阶段的特征——水分扩散系数仅约 $(4\sim5)\times10^{-9}$ m$^2$/s，水分扩散深度 $\sqrt{Dt}\approx2.6$ mm，远小于半径，故内部含水率尚未显著下降。
 
-\subsection{6.2 问题 2：前 3 小时（表 3、表 4）}
+\subsection{6.2 问题 2：前 3 小时}
 
 按附录 3 经验式与附件 1 边界求解，结果如表 3、表 4 所示。
 
 \begin{center}
+\begin{minipage}{\textwidth}
+\centering
 {\heiti\zihao{-4} 表 3\quad 3 小时内药材的温度（$^\circ$C）}
 \par\medskip
 {\zihao{5}\begin{tabular}{cccccc}
@@ -419,9 +426,12 @@ D(C,T)=4.2\times10^{-4}\,\mathrm{e}^{-0.30/C}\,\mathrm{e}^{-3850/T}\quad(\mathrm
 3.0 & 49.8495 & 49.8553 & 49.8746 & 49.9101 & 49.9664 \\
 \bottomrule
 \end{tabular}}
+\end{minipage}
 \end{center}
 
 \begin{center}
+\begin{minipage}{\textwidth}
+\centering
 {\heiti\zihao{-4} 表 4\quad 3 小时内药材的水分浓度（kg/kg）}
 \par\medskip
 {\zihao{5}\begin{tabular}{cccccc}
@@ -438,13 +448,14 @@ D(C,T)=4.2\times10^{-4}\,\mathrm{e}^{-0.30/C}\,\mathrm{e}^{-3850/T}\quad(\mathrm
 3.0 & 1.7662 & 1.7165 & 1.5702 & 1.3333 & 1.0081 \\
 \bottomrule
 \end{tabular}}
+\end{minipage}
 \end{center}
 
 结果分析：温度场约 2 h 起趋于均匀并逼近烘房温度（3 h 时中心 49.85 $^\circ$C、表面 49.97 $^\circ$C），传热时间尺度（热扩散率 $\alpha=k/(\rho c_p)\approx1.5\times10^{-7}$ m$^2$/s，$R^2/\alpha\approx2800$ s）远小于干燥时间尺度，说明整个烘干过程中药材温度在数小时内即与环境平衡，此后的干燥是典型的「等温干燥」过程。
 
 水分场方面，3 h 时表面降至 1.0081 kg/kg、中心降至 1.7662 kg/kg，径向含水率梯度达 0.76 kg/kg，干燥前沿已明显向内部推进。对比问题 1：附录 3 的 $D$ 比附录 2 的 $D$ 大约 2--3 倍（干燥前期典型含水率下；低含水率端差距更大），且随升温进一步增大，故 3 h 内的失水幅度显著大于预热段。
 
-\subsection{6.3 问题 3：烘干时长与全程水分场（表 5）}
+\subsection{6.3 问题 3：烘干时长与全程水分场}
 
 以 $\max_r C(r,t)\le0.15$ kg/kg 为判据求解至全程，得
 \begin{equation}
@@ -453,6 +464,8 @@ t^*=205701\ \mathrm{s}=\mathbf{57.14\pm0.03\ h}\ \ (\text{约 2.38 天；不确�
 与题述「烘干过程一般持续 2--3 天」一致。每隔 6 h 的水分浓度如表 5 所示。
 
 \begin{center}
+\begin{minipage}{\textwidth}
+\centering
 {\heiti\zihao{-4} 表 5\quad 药材烘干过程的水分浓度（kg/kg）}
 \par\medskip
 {\zihao{5}\begin{tabular}{cccccc}
@@ -473,21 +486,24 @@ t^*=205701\ \mathrm{s}=\mathbf{57.14\pm0.03\ h}\ \ (\text{约 2.38 天；不确�
 烘干结束时间（57.14 h） & 0.1500 & 0.1477 & 0.1402 & 0.1249 & 0.0525 \\
 \bottomrule
 \end{tabular}}
+\end{minipage}
 \end{center}
 
 结果分析：干燥过程呈明显的两阶段形态。前 12 h 含水率快速下降（表面由 2.55 降至 0.164 kg/kg），此阶段表面传质与内部扩散\textbf{共同控制}——传质 Biot 数 $Bi_m=h_mR/D(C_R,T_R)$ 在干燥初期约为 2.8（$C_R=2.55$ kg/kg、$T_R\approx28$ $^\circ$C）、6 h 时约 2.4，内部扩散阻力已为表面传质阻力的 2--3 倍；此后进入降速干燥段——表面 $C_R$ 降至 0.164 kg/kg 使 $D$ 按 $\mathrm{e}^{-0.45/C}$ 急剧衰减，$Bi_m$ 于 12 h 增至约 15、18 h 已超 200，内部扩散完全主导，表面含水率 54 h 时仅 0.0528 kg/kg，已逼近烘房水分浓度 0.04986 kg/kg（表面传质驱动力趋于消失）。
 
 烘干判据由中心点决定（中心始终是含水率最高处），最终 $t^*=57.14$ h。
 
-\subsection{6.4 问题 4：含收缩的烘干时长（表 6）}
+\subsection{6.4 问题 4：含收缩的烘干时长}
 
 附件 2 的 $R(t)$ 经 Pchip 插值代入 $\zeta$ 坐标离散求解，得
 \begin{equation}
-t^*=182897\ \mathrm{s}=\mathbf{50.80\pm0.01\ h}\ \ (\text{约 2.12 天；不确定度估计见 7.2 节}).
+t^*=182897.5\ \mathrm{s}=\mathbf{50.80\pm0.01\ h}\ \ (\text{约 2.12 天；不确定度估计见 7.2 节}).
 \end{equation}
 每隔 6 h 的水分浓度如表 6 所示。
 
 \begin{center}
+\begin{minipage}{\textwidth}
+\centering
 {\heiti\zihao{-4} 表 6\quad 含收缩的药材烘干过程水分浓度（kg/kg）}
 \par\medskip
 {\zihao{5}\begin{tabular}{ccccccc}
@@ -507,6 +523,7 @@ t^*=182897\ \mathrm{s}=\mathbf{50.80\pm0.01\ h}\ \ (\text{约 2.12 天；不确�
 烘干结束时间（50.80 h） & 0.1500 & 0.1413 & 0.1080 & --- & --- & 0.0525 \\
 \bottomrule
 \end{tabular}}
+\end{minipage}
 \end{center}
 
 结果分析：半径在干燥前期快速收缩（前 3.5 h 内由 2 cm 缩至约 1.5 cm），故 1.5 cm、2 cm 两列自 6 h 起即已落在药材之外。与问题 3 对比：$t^*$ 由 57.14 h 缩短为 50.80 h，缩短约 6.3 h（11.1\%）。这一净效应由两个相反方向的因素合成：附录 4 的扩散系数比附录 3 小约 2--5 倍（高含水率端约 5 倍、低含水率端约 2 倍），使干燥变慢；而收缩使算子系数 $D/R^2$ 增大 2.8 倍（等效于扩散路径缩短），使干燥加快。
@@ -520,6 +537,8 @@ t^*=182897\ \mathrm{s}=\mathbf{50.80\pm0.01\ h}\ \ (\text{约 2.12 天；不确�
 由于问题 3 与问题 4 同时更换了物性与几何，两因素贡献须用同一套离散设置的消融对照分离，结果如表 7 所示。四个组合采用同一套验证离散（$\Delta\zeta=1/160$、物理分辨率 0.125 mm、$\Delta t=5$ s，迭代判据与 5.5 节相同）；附录 3 固定几何值 57.0884 h 与问题 3 生产值（57.14 h，0.0625 mm）相差 0.05 h，属该验证离散的空间偏差，各组合受同向影响，表内百分比结论的影响小于 0.1 个百分点。
 
 \begin{center}
+\begin{minipage}{\textwidth}
+\centering
 {\heiti\zihao{-4} 表 7\quad 物性 × 几何的 2×2 消融对照：烘干时长 $t^*$/h}
 \par\medskip
 {\zihao{5}\begin{tabular}{lccc}
@@ -530,6 +549,7 @@ t^*=182897\ \mathrm{s}=\mathbf{50.80\pm0.01\ h}\ \ (\text{约 2.12 天；不确�
 附录 4 物性 & 129.0164 & 50.8049 & $-78.2115$（$-60.6\%$） \\
 \bottomrule
 \end{tabular}}
+\end{minipage}
 \end{center}
 
 表中可见：固定几何下附录 3→附录 4 的物性差异使烘干时长增加 71.93 h，增幅为 $+126.0\%$；收缩在附录 3、附录 4 下分别使时长缩短 31.97 h（$-56.0\%$）与 78.21 h（$-60.6\%$），且 $D$ 越小、干燥越受内部扩散控制时，收缩的加速作用越强；两因素叠加（问题 3→问题 4 的实际组合）的净效应为 $-6.3$ h（约 $-11\%$），收缩加速占主导。
@@ -615,6 +635,8 @@ q_{\mathrm{evap}}=\rho_d\,\Delta H_v\,h_m\,(C_R-C_a),\qquad q_{\mathrm{sens}}=h\
 为评估模型结论对输入参数的稳健性，对问题 3、4 各取 8 个参数变体：烘房温度 $T_a\pm2\ ^\circ$C、烘房水分浓度 $C_a\pm20\%$、对流换热系数 $h\pm50\%$、对流传质系数 $h_m\pm50\%$，其余参数保持题给值，重算烘干时长，结果如表 8 所示（表中数值为各变体与基准烘干时长之差；该差值对空间离散不敏感，故在较粗的验证空间离散上计算：问题 3 取 0.25 mm、问题 4 取 $\Delta\zeta=1/80$）。
 
 \begin{center}
+\begin{minipage}{\textwidth}
+\centering
 {\heiti\zihao{-4} 表 8\quad 烘干时长 $t^*$ 的参数灵敏度}
 \par\medskip
 {\zihao{5}\begin{tabular}{lcc}
@@ -631,6 +653,7 @@ $h_m+50\%$ & $-2.04$（$-3.6\%$） & $-0.75$（$-1.5\%$） \\
 $h_m-50\%$ & $+7.56$（$+13.3\%$） & $+3.34$（$+6.6\%$） \\
 \bottomrule
 \end{tabular}}
+\end{minipage}
 \end{center}
 
 由表 8 可得如下结论：
