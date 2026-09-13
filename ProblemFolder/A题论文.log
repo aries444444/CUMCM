@@ -1,4 +1,4 @@
-This is XeTeX, Version 3.141592653-2.6-0.999997 (MiKTeX 25.4) (preloaded format=xelatex 2026.5.4)  13 SEP 2026 16:07
+This is XeTeX, Version 3.141592653-2.6-0.999997 (MiKTeX 25.4) (preloaded format=xelatex 2026.5.4)  13 SEP 2026 16:08
 entering extended mode
  restricted \write18 enabled.
  file:line:error style messages enabled.
@@ -913,10 +913,6 @@ Package hyperref Info: Link coloring OFF on input line 41.
 \openout3 = `A题论文.out'.
 
 
-
-Package hyperref Warning: Rerun to get /PageLabels entry.
-
-
 Package fontspec Info: 
 (fontspec)             Could not resolve font "SimHei/BI" (it probably doesn't
 (fontspec)             exist).
@@ -944,7 +940,7 @@ Package fontspec Info:
 
 LaTeX Font Info:    Trying to load font information for U+msa on input line 56.
 
-(C:\Program Files\MikTex\tex/latex/amsfonts\umsa.fd
+ (C:\Program Files\MikTex\tex/latex/amsfonts\umsa.fd
 File: umsa.fd 2013/01/14 v3.01 AMS symbols A
 )
 LaTeX Font Info:    Trying to load font information for U+msb on input line 56.
@@ -986,10 +982,10 @@ Package rerunfilecheck Info: File `A题论文.out' has not changed.
 (rerunfilecheck)             Checksum: 019677C518EC2A65E09E223392CA6774;4937.
  ) 
 Here is how much of TeX's memory you used:
- 17184 strings out of 402987
- 380187 string characters out of 5452872
- 808877 words of memory out of 5000000
- 45663 multiletter control sequences out of 15000+600000
+ 17182 strings out of 402987
+ 380141 string characters out of 5452872
+ 808888 words of memory out of 5000000
+ 45661 multiletter control sequences out of 15000+600000
  640652 words of font info for 129 fonts, out of 8000000 for 9000
  1348 hyphenation exceptions out of 8191
  93i,12n,111p,1232b,522s stack positions out of 10000i,1000n,20000p,200000b,200000s
